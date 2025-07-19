@@ -1,0 +1,77 @@
+.appWrapper {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  background: linear-gradient(125deg, 
+    #17153B 0%,
+    #2E236C 25%,
+    #433D8B 50%,
+    #6B5CA5 75%,
+    #C8ACD6 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientAnimation 20s ease infinite;
+}
+
+.backgroundAnimation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floatingIcon {
+  position: fixed;
+  opacity: 0.2;
+  filter: drop-shadow(0 0 40px rgba(200, 172, 214, 0.4));
+  animation: float var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+  will-change: transform;
+  transform-style: preserve-3d;
+  perspective: 1500px;
+  transition: opacity 0.3s ease;
+}
+
+.floatingIcon:hover {
+  opacity: 0.4;
+  filter: drop-shadow(0 0 50px rgba(200, 172, 214, 0.6));
+}
+
+@keyframes float {
+  0% {
+    transform: translate3d(0, 0, 300px) rotate(0deg) scale(var(--scale));
+    opacity: 0.2;
+  }
+  25% {
+    transform: translate3d(200px, 200px, 500px) rotate(45deg) scale(calc(var(--scale) * 1.2));
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(400px, -150px, 400px) rotate(90deg) scale(var(--scale));
+    opacity: 0.2;
+  }
+  75% {
+    transform: translate3d(200px, -200px, 600px) rotate(135deg) scale(calc(var(--scale) * 1.1));
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate3d(0, 0, 300px) rotate(180deg) scale(var(--scale));
+    opacity: 0.2;
+  }
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
