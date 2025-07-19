@@ -1,4 +1,5 @@
 import { Layers, Search, LogIn, UserPlus } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
@@ -6,10 +7,12 @@ export default function Navbar() {
       <div className="container mx-auto flex items-center justify-between flex-wrap">
 
         {/* Left: Logo */}
+        <Link to="/">
         <div className="flex items-center space-x-2 cursor-pointer hover:opacity-90 transition">
           <Layers className="text-[#C8ACD6] w-6 h-6" />
           <span className="text-[#C8ACD6] text-xl font-bold">StackLit</span>
         </div>
+        </Link>
 
         {/* Middle: Search box (desktop only) */}
         <div className="hidden md:flex flex-1 justify-center mx-4">
@@ -27,18 +30,22 @@ export default function Navbar() {
 
         {/* Right: Auth buttons */}
         <div className="flex items-center space-x-2 mt-2 md:mt-0">
+          <Link to="/signup">
           <button className="flex items-center gap-2 bg-[#433D8B] text-white 
             hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
             transition-all duration-300 cursor-pointer">
             <LogIn className="w-4 h-4 cursor-pointer" />
-            Sign In
+            Sign Up
           </button>
+          </Link>
+          <Link to="/signin">
           <button className="flex items-center gap-2 bg-[#433D8B] text-white 
             hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
             transition-all duration-300 cursor-pointer">
             <UserPlus className="w-4 h-4 cursor-pointer" />
             Log In
           </button>
+          </Link>
         </div>
 
         {/* Mobile: Search bar below */}
