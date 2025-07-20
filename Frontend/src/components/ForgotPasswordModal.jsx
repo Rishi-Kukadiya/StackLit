@@ -1,14 +1,15 @@
 import { X, Mail, ArrowRight } from "lucide-react";
 import Navbar from "./Navbar";
 import ErrorPopup from "./ErrorPopup";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Sidebar from "./Sidebar";
+import Sidebar from "./Sidebar";  
 export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({ email: "" });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
@@ -52,6 +53,8 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     if (Object.keys(newErrors).length === 0) {
       // Form is valid, proceed with submission
       console.log("Forgot Password form valid", formData);
+      // Navigate to OTP verification page
+      navigate("/otp-verification");
     } else {
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
@@ -65,9 +68,9 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         <Navbar />
         <Sidebar />
       </div>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-4 sm:p-6 lg:p-8">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
         {/* Modal */}
-        <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-2rem)] sm:max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn">
+        <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-1rem)] sm:max-w-md p-3 sm:p-5 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn my-4 sm:my-6">
           <button
             onClick={onClose}
             className="absolute right-2 top-2 sm:right-4 sm:top-4 text-[#C8ACD6] hover:text-white"
@@ -91,13 +94,15 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
               </label>
               <div className="relative">
                 <input
-                  type="email"
+                  type="text"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]`}
+                  className={
+                    "w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"
+                  }
                   placeholder="Enter your email"
                 />
                 <Mail className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
