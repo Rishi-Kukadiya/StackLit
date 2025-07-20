@@ -12,10 +12,14 @@ import axios from "axios";
 import ErrorPopup from "./ErrorPopup";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import SuccessPopup from "./SuccessPopup";
+import ShimmerLoader from "./ShimmerLoader";
 export default function SignUpModal({ isOpen, onClose }) {
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -23,8 +27,6 @@ export default function SignUpModal({ isOpen, onClose }) {
     confirmPassword: "",
     terms: false,
   });
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
 
   if (!isOpen) return null;
 
@@ -68,19 +70,9 @@ export default function SignUpModal({ isOpen, onClose }) {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
     setFormData((prev) => ({ ...prev, [name]: newValue }));
-
-    const error = validateField(name, newValue);
-    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
-
-    const error = validateField(name, formData[name]);
-    setErrors((prev) => ({ ...prev, [name]: error }));
-  };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -96,13 +88,8 @@ export default function SignUpModal({ isOpen, onClose }) {
       newErrors.profileImage = "Profile image must be less than 2MB";
     }
 
-    setErrors(newErrors);
-    setTouched(
-      Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
-    );
-
     if (Object.keys(newErrors).length === 0) {
-      // Form is valid, send POST request
+      setLoading(true);
       try {
         const data = new FormData();
         data.append("fullName", formData.fullName);
@@ -111,22 +98,45 @@ export default function SignUpModal({ isOpen, onClose }) {
         if (profileImage) {
           data.append("avatar", profileImage);
         }
-        // Replace URL with your backend endpoint
-        console.log("Sending data:", data);
-        const res = await axios.post(`${import.meta.env.VITE_SERVER}/users/register`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
+
+        const res = await axios.post(
+          `${import.meta.env.VITE_SERVER}/users/register`,
+          data,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+
+        setLoading(false);
+        // console.log(res);
+        if (res.data.statusCode !== 200) {
+          setErrorMessage(res.data.message || "Signup failed");
+          setTimeout(() => setErrorMessage("") , 3000);
+          return;
+        }
+        setSuccessMessage(res.data.message || "Signup successful!");
+        setTimeout(() => {
+          setSuccessMessage("");
+          onClose(); 
+        }, 3000);
+        setFormData({
+          fullName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          terms: false,
         });
-        console.log("Signup success:", res.data);
-        // Handle success (navigation, popup, etc.)
+        setProfileImage(null);
+        setPreviewUrl(null);
       } catch (err) {
-        console.log(err)
-        setErrorMessage("Signup failed");
-        setTimeout(() => setErrorMessage(""), 3000);
+        setLoading(false);
+        setErrorMessage(`Signup failed`);
+        setTimeout(() => setErrorMessage("") , 3000);
       }
     } else {
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
-      setTimeout(() => setErrorMessage(""), 3000);
+      setTimeout(() => setErrorMessage("") , 3000);
     }
   };
 
@@ -144,11 +154,12 @@ export default function SignUpModal({ isOpen, onClose }) {
 
   return (
     <>
-       <div className="relative min-h-screen">
-            <Navbar />
-            <Sidebar />
-          </div>
+      <div className="relative min-h-screen">
+        <Navbar />
+        <Sidebar />
+      </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-4 sm:p-6 lg:p-8">
+        {loading && <ShimmerLoader />}
         {/* Modal */}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-2rem)] sm:max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn max-h-[90vh] flex flex-col">
           <button
@@ -220,7 +231,6 @@ export default function SignUpModal({ isOpen, onClose }) {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
-                    onBlur={handleBlur}
                     className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border focus:outline-none focus:border-[#C8ACD6]`}
                     placeholder="Enter your full name"
                   />
@@ -242,7 +252,6 @@ export default function SignUpModal({ isOpen, onClose }) {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    onBlur={handleBlur}
                     className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]`}
                     placeholder="Enter your email"
                   />
@@ -264,16 +273,10 @@ export default function SignUpModal({ isOpen, onClose }) {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    onBlur={handleBlur}
                     className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]`}
                     placeholder="Create a password"
                   />
                   <Lock className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
-                  {/* {errors.password && touched.password && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.password}
-                    </p>
-                  )} */}
                 </div>
               </div>
 
@@ -291,16 +294,10 @@ export default function SignUpModal({ isOpen, onClose }) {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    onBlur={handleBlur}
                     className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]`}
                     placeholder="Confirm your password"
                   />
                   <UserCheck className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
-                  {/* {errors.confirmPassword && touched.confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.confirmPassword}
-                    </p>
-                  )} */}
                 </div>
               </div>
 
@@ -311,7 +308,6 @@ export default function SignUpModal({ isOpen, onClose }) {
                   name="terms"
                   checked={formData.terms}
                   onChange={handleChange}
-                  onBlur={handleBlur}
                   className={`w-4 h-4 rounded bg-[#17153B] border-[#433D8B] text-[#433D8B] focus:ring-[#433D8B] focus:ring-2 focus:ring-offset-0 focus:ring-offset-[#17153B]`}
                 />
                 <label
@@ -332,11 +328,17 @@ export default function SignUpModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Error Popup */}
         {errorMessage && (
           <ErrorPopup
             message={errorMessage}
             onClose={() => setErrorMessage("")}
+          />
+        )}
+
+        {successMessage && (
+          <SuccessPopup
+            message={successMessage}
+            onClose={() => setSuccessMessage("")}
           />
         )}
       </div>
