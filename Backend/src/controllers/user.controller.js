@@ -20,7 +20,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         return { accessToken, refreshToken };
 
     } catch (error) {
-        return res.json( ApiError(500, error?.message || "something went wrong while generating refresh and access tokens"))
+        return res.json(new ApiError(500, error?.message || "something went wrong while generating refresh and access tokens"))
     }
 }
 
@@ -32,7 +32,7 @@ const registerUser = asyncHandler(async (req, res) => {
             field?.trim() || "" === ""
         })
     ) {
-        return res.json( ApiError(400, "fullName ,email,username and password are required."))
+        return res.json(new ApiError(400, "fullName ,email,username and password are required."))
     }
 
     const isUserExist = await User.findOne({
@@ -40,18 +40,18 @@ const registerUser = asyncHandler(async (req, res) => {
     })
 
     if (isUserExist) {
-        return res.json( ApiError(400, "User with email or username already Exists"));
+        return res.json(new ApiError(400, "User with email or username already Exists"));
     }
     console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
 
     if (!avatarLocalPath) {
-        return res.json( ApiError(400, "Avatar file is required."))
+        return res.json(new ApiError(400, "Avatar file is required."))
     }
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
     if (!avatar) {
-        return res.json( ApiError(500, "Error while uploading on cloudinary"))
+        return res.json(new ApiError(500, "Error while uploading on cloudinary"))
     }
 
     const user = await User.create({
@@ -65,7 +65,7 @@ const registerUser = asyncHandler(async (req, res) => {
     )
 
     if (!createdUser) {
-        return res.json( ApiError(500, "Something went wrong while registering user "))
+        return res.json(new ApiError(500, "Something went wrong while registering user "))
 
     }
 
@@ -79,12 +79,12 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-        return res.json( new ApiError(404, "User does not exist!"));
+        return res.json(new ApiError(404, "User does not exist!"));
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
-        return res.json( new ApiError(401, "Password is incorrect"))
+        return res.json(new ApiError(401, "Password is incorrect"))
     }
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
@@ -137,19 +137,19 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incommingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     if (!incommingRefreshToken) {
-        return res.json( new ApiError(401, "Unauthorized request"))
+        return res.json(new ApiError(401, "Unauthorized request"))
     }
     try {
         const decodedToken = jwt.verify(incommingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
         const user = await User.findById(decodedToken?._id);
         if (!user) {
-            return res.json( new ApiError(401, "Invalid refreshToken"));
+            return res.json(new ApiError(401, "Invalid refreshToken"));
         }
         // console.log(user.refreshToken);
 
         if (incommingRefreshToken != user.refreshToken) {
             console.log(incommingRefreshToken);
-            return res.json( new ApiError(401, "Refresh token is expired or used"));
+            return res.json(new ApiError(401, "Refresh token is expired or used"));
         }
         const options = {
             httpOnly: true,
@@ -174,7 +174,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 
     } catch (error) {
-        return res.json( new ApiError(401, error?.message || "invalid refresh token"))
+        return res.json(new ApiError(401, error?.message || "invalid refresh token"))
 
     }
 })
@@ -185,7 +185,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
     if (!isPasswordCorrect) {
-        return res.json( new ApiError(400, "Invalid old password , try forget password if needed"))
+        return res.json(new ApiError(400, "Invalid old password , try forget password if needed"))
     }
     user.password = newPassword;
     await user.save({ validateBeforeSave: false });
@@ -207,10 +207,10 @@ const generateOtp = () => {
 
 const sendOtp = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    if (!email) return res.json( new ApiError(400, "Email is required"));
+    if (!email) return res.json(new ApiError(400, "Email is required"));
 
     const user = await User.findOne({ email });
-    if (!user) return res.json( new ApiError(404, "User not found"));
+    if (!user) return res.json(new ApiError(404, "User not found"));
 
     const { otp, expiry } = generateOtp();
     user.otp = otp;
@@ -230,10 +230,10 @@ const sendOtp = asyncHandler(async (req, res) => {
 
 const verifyOtp = asyncHandler(async (req, res) => {
     const { email, otp } = req.body;
-    if (!email || !otp) return res.json( new ApiError(400, "Email and OTP are required"));
+    if (!email || !otp) return res.json(new ApiError(400, "Email and OTP are required"));
 
     const user = await User.findOne({ email });
-    if (!user) return res.json( new ApiError(404, "User not found"));
+    if (!user) return res.json(new ApiError(404, "User not found"));
 
     const now = new Date();
     if (!user.otp || user.otp !== otp || !user.otpExpiry || user.otpExpiry < now) {
@@ -242,7 +242,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
         user.otpExpiry = undefined;
         await user.save({ validateBeforeSave: false });
 
-        return res.json( new ApiError(400, "Invalid or expired OTP"));
+        return res.json(new ApiError(400, "Invalid or expired OTP"));
     }
 
     // Valid OTP
@@ -252,10 +252,6 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP verified successfully"));
 });
-
-
-
-
 
 
 
