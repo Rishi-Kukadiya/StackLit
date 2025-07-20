@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import axios from "axios";
 import ErrorPopup from "./ErrorPopup";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
@@ -80,7 +81,7 @@ export default function SignUpModal({ isOpen, onClose }) {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate all fields
@@ -90,20 +91,43 @@ export default function SignUpModal({ isOpen, onClose }) {
       if (error) newErrors[key] = error;
     });
 
+    // Check image size (max 2MB)
+    if (profileImage && profileImage.size > 2 * 1024 * 1024) {
+      newErrors.profileImage = "Profile image must be less than 2MB";
+    }
+
     setErrors(newErrors);
     setTouched(
       Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
     );
 
     if (Object.keys(newErrors).length === 0) {
-      // Form is valid, you can proceed with submission
-      console.log("Form is valid", formData);
-      // Add your submission logic here
+      // Form is valid, send POST request
+      try {
+        const data = new FormData();
+        data.append("fullName", formData.fullName);
+        data.append("email", formData.email);
+        data.append("password", formData.password);
+        data.append("confirmPassword", formData.confirmPassword);
+        // data.append("terms", formData.terms);
+        if (profileImage) {
+          data.append("avatar", profileImage);
+        }
+        // Replace URL with your backend endpoint
+        console.log("Sending data:", data);
+        const res = await axios.post(`${import.meta.env.VITE_SERVER}/users/register`, data, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        console.log("Signup success:", res.data);
+        // Handle success (navigation, popup, etc.)
+      } catch (err) {
+        setErrorMessage(err.response?.data?.message || "Signup failed");
+        setTimeout(() => setErrorMessage(""), 3000);
+      }
     } else {
       // Show the first error in the popup
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
-      // Auto-hide error after 3 seconds
       setTimeout(() => setErrorMessage(""), 3000);
     }
   };
