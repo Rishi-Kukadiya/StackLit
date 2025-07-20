@@ -119,7 +119,7 @@ export default function SignUpModal({ isOpen, onClose }) {
         console.log("Signup success:", res.data);
         // Handle success (navigation, popup, etc.)
       } catch (err) {
-        console.log(err.response?.data?.message);
+        console.log(err)
         setErrorMessage("Signup failed");
         setTimeout(() => setErrorMessage(""), 3000);
       }
