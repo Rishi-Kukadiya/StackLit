@@ -219,9 +219,10 @@ const sendOtp = asyncHandler(async (req, res) => {
 
     await sendEmail({
         to: user.email,
-        subject: "Reset your StackLit password",
-        text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
+        subject: "StackLit OTP Verification",
+        otp: otp
     });
+
 
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP sent successfully"));
@@ -248,10 +249,33 @@ const verifyOtp = asyncHandler(async (req, res) => {
     // Valid OTP
     user.otp = undefined;
     user.otpExpiry = undefined;
+    user.isOtpVerified = true;
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP verified successfully"));
 });
+
+const forgetPassword = asyncHandler(async (req, res) => {
+    const { newPassword } = req.body;
+    const user = await User.findById(req.user?._id);
+
+    if (!newPassword) {
+        return res.json(new ApiError(400, "Please provide new password"))
+    }
+    const isSamePassword = await user.isPasswordCorrect(newPassword);
+    if (isSamePassword) {
+        return res.json(new ApiError(400,"Old and New Password cannot be same.") )
+    }
+    user.password = newPassword;
+    user.isOtpVerified = false;
+
+    await user.save({ validateBeforeSave: false });
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, "Password changed successfully")
+        )
+})
 
 
 
@@ -262,5 +286,6 @@ export {
     changeCurrentPassword,
     refreshAccessToken,
     sendOtp,
-    verifyOtp
+    verifyOtp,
+    forgetPassword
 };

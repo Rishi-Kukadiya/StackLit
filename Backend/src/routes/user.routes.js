@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, registerUser, sendOtp, verifyOtp } from "../controllers/user.controller.js";
+import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, registerUser, sendOtp, verifyOtp, forgetPassword } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
+import checkOtpVerified from "../middlewares/checkOtpVerified.js";
 const userRouter = Router();
 userRouter.route('/register').post(
     upload.fields([
@@ -20,6 +21,9 @@ userRouter.route("/logout").post(
 userRouter.route("/refresh-token").post(refreshAccessToken)
 userRouter.route("/change-password").post(verifyJWT, changeCurrentPassword)
 userRouter.post("/send-otp", verifyJWT , sendOtp);
-userRouter.post("/verify-otp",verifyJWT, verifyOtp);
+userRouter.post("/verify-otp", verifyJWT, verifyOtp);
+
+userRouter.post("/forget-password", verifyJWT, checkOtpVerified, forgetPassword);
+
 
 export default userRouter;
