@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        index: true
     },
     email: {
         type: String,
@@ -28,10 +27,10 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     otp: {
-        type : String
+        type: String
     },
     otpExpiry: {
-        type : Date
+        type: Date
     }
 
 }, { timestamps: true })
@@ -53,7 +52,6 @@ userSchema.methods.generateAccessToken = function () {
         {
             _id: this._id,
             email: this.email,
-            username: this.username,
             fullname: this.fullname
         },
         process.env.ACCESS_TOKEN_SECRET,
