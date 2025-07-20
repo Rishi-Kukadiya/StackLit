@@ -3,6 +3,7 @@ import Navbar from "./Navbar";
 import ErrorPopup from "./ErrorPopup";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import Sidebar from "./Sidebar";
 export default function SignInModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     email: '',
@@ -74,7 +75,10 @@ export default function SignInModal({ isOpen, onClose }) {
 
   return (
     <>
-      <Navbar />
+     <div className="relative min-h-screen">
+                <Navbar />
+                <Sidebar />
+              </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-4 sm:p-6 lg:p-8">
         {/* Modal */}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-2rem)] sm:max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn">

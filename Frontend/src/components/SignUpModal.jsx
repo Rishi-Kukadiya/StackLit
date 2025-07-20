@@ -10,7 +10,7 @@ import {
 import { useState, useEffect } from "react";
 import ErrorPopup from "./ErrorPopup";
 import Navbar from "./Navbar";
-
+import Sidebar from "./Sidebar";
 export default function SignUpModal({ isOpen, onClose }) {
   const [profileImage, setProfileImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -122,7 +122,10 @@ export default function SignUpModal({ isOpen, onClose }) {
 
   return (
     <>
-    <Navbar />
+       <div className="relative min-h-screen">
+            <Navbar />
+            <Sidebar />
+          </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-4 sm:p-6 lg:p-8">
         {/* Modal */}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-2rem)] sm:max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn max-h-[90vh] flex flex-col">
