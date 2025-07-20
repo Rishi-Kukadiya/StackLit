@@ -28,23 +28,23 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right: Auth buttons */}
-        <div className="flex items-center space-x-2 mt-2 md:mt-0">
+        {/* Right: Auth buttons (hidden on mobile, visible on md+) */}
+        <div className="hidden md:flex items-center space-x-2 mt-2 md:mt-0">
           <Link to="/signup">
-          <button className="flex items-center gap-2 bg-[#433D8B] text-white 
-            hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-            transition-all duration-300 cursor-pointer">
-            <LogIn className="w-4 h-4 cursor-pointer" />
-            Sign Up
-          </button>
+            <button className="flex items-center gap-2 bg-[#433D8B] text-white 
+              hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
+              transition-all duration-300 cursor-pointer">
+              <LogIn className="w-4 h-4 cursor-pointer" />
+              Sign Up
+            </button>
           </Link>
           <Link to="/signin">
-          <button className="flex items-center gap-2 bg-[#433D8B] text-white 
-            hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-            transition-all duration-300 cursor-pointer">
-            <UserPlus className="w-4 h-4 cursor-pointer" />
-            Log In
-          </button>
+            <button className="flex items-center gap-2 bg-[#433D8B] text-white 
+              hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
+              transition-all duration-300 cursor-pointer">
+              <UserPlus className="w-4 h-4 cursor-pointer" />
+              Log In
+            </button>
           </Link>
         </div>
 
