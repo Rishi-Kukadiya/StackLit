@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema({
     },
     refreshToken: {
         type: String
+    },
+    otp: {
+        type : String
+    },
+    otpExpiry: {
+        type : Date
     }
 
 }, { timestamps: true })
@@ -37,6 +43,7 @@ userSchema.pre("save", async function (next) {
 })
 
 userSchema.methods.isPasswordCorrect = async function (password) {
+    if (!password) return false;
     return await bcrypt.compare(password, this.password);
 }
 
