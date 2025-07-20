@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../utils/cloudinary.js";
 import jwt, { decode } from "jsonwebtoken"
 import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -145,7 +146,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Invalid refreshToken");
         }
         // console.log(user.refreshToken);
-        
+
         if (incommingRefreshToken != user.refreshToken) {
             console.log(incommingRefreshToken);
             throw new ApiError(401, "Refresh token is expired or used");
@@ -156,7 +157,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
         const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
 
-        
+
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)
@@ -195,10 +196,74 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         )
 })
 
+
+
+// 🔢 OTP Generator (6-digit, 5-min expiry)
+const generateOtp = () => {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    return { otp, expiry };
+};
+
+// 📤 Send OTP
+const sendOtp = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if (!email) throw new ApiError(400, "Email is required");
+
+    const user = await User.findOne({ email });
+    if (!user) throw new ApiError(404, "User not found");
+
+    const { otp, expiry } = generateOtp();
+    user.otp = otp;
+    user.otpExpiry = expiry;
+    await user.save({ validateBeforeSave: false });
+
+    await sendEmail({
+        to: user.email,
+        subject: "Reset your StackLit password",
+        text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
+    });
+
+
+    return res.status(200).json(new ApiResponse(200, {}, "OTP sent successfully"));
+});
+
+// ✅ Verify OTP
+const verifyOtp = asyncHandler(async (req, res) => {
+    const { email, otp } = req.body;
+    if (!email || !otp) throw new ApiError(400, "Email and OTP are required");
+
+    const user = await User.findOne({ email });
+    if (!user) throw new ApiError(404, "User not found");
+
+    const now = new Date();
+    if (!user.otp || user.otp !== otp || !user.otpExpiry || user.otpExpiry < now) {
+        // Optionally clear OTP to prevent brute-force
+        user.otp = undefined;
+        user.otpExpiry = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        throw new ApiError(400, "Invalid or expired OTP");
+    }
+
+    // Valid OTP
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, {}, "OTP verified successfully"));
+});
+
+
+
+
+
 export {
     registerUser,
     loginUser,
     logoutUser,
     changeCurrentPassword,
-    refreshAccessToken
-}
+    refreshAccessToken,
+    sendOtp,
+    verifyOtp
+};
