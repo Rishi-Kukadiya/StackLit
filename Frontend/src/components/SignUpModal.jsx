@@ -108,8 +108,6 @@ export default function SignUpModal({ isOpen, onClose }) {
         data.append("fullName", formData.fullName);
         data.append("email", formData.email);
         data.append("password", formData.password);
-        data.append("confirmPassword", formData.confirmPassword);
-        // data.append("terms", formData.terms);
         if (profileImage) {
           data.append("avatar", profileImage);
         }
@@ -121,11 +119,11 @@ export default function SignUpModal({ isOpen, onClose }) {
         console.log("Signup success:", res.data);
         // Handle success (navigation, popup, etc.)
       } catch (err) {
-        setErrorMessage(err.response?.data?.message || "Signup failed");
+        console.log(err.response?.data?.message);
+        setErrorMessage("Signup failed");
         setTimeout(() => setErrorMessage(""), 3000);
       }
     } else {
-      // Show the first error in the popup
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
       setTimeout(() => setErrorMessage(""), 3000);
