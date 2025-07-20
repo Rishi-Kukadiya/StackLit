@@ -19,7 +19,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         return { accessToken, refreshToken };
 
     } catch (error) {
-        throw new ApiError(500, error?.message ||  "something went wrong while generating refresh and access tokens")
+        throw new ApiError(500, error?.message || "something went wrong while generating refresh and access tokens")
     }
 }
 
@@ -50,12 +50,12 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
     if (!avatar) {
-        throw new ApiError(500,"Error while uploading on cloudinary")
+        throw new ApiError(500, "Error while uploading on cloudinary")
     }
 
     const user = await User.create({
         fullName,
-        email, avatar:avatar?.secure_url,
+        email, avatar: avatar?.secure_url,
         password,
     })
 
@@ -76,7 +76,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if (!user) {
         throw new ApiError(404, "User does not exist!");
     }
@@ -129,14 +129,14 @@ const logoutUser = asyncHandler(async (req, res) => {
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
         .json(
-            new ApiResponse(200,{} , "User loggedOut sucessfully")
+            new ApiResponse(200, {}, "User loggedOut sucessfully")
         )
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incommingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     if (!incommingRefreshToken) {
-        throw new ApiError(401,"Unauthorized request")
+        throw new ApiError(401, "Unauthorized request")
     }
     try {
         const decodedToken = jwt.verify(incommingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
@@ -144,43 +144,47 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         if (!user) {
             throw new ApiError(401, "Invalid refreshToken");
         }
-        if (incommingRefreshToken !== user.refreshToken) {
+        // console.log(user.refreshToken);
+        
+        if (incommingRefreshToken != user.refreshToken) {
             console.log(incommingRefreshToken);
             throw new ApiError(401, "Refresh token is expired or used");
         }
         const options = {
             httpOnly: true,
-            secure : true
+            secure: true
         }
-        const { accessToken, newRefreshToken } = await User.generateAccessAndRefreshTokens(user._id);
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
 
+        
         return res
             .status(200)
-            .cookie("accessToken",accessToken,options)
-            .cookie("refreshToken", refreshToken, options)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
             .json(
                 new ApiResponse(200,
                     {
                         accessToken,
-                        refreshToken:newRefreshToken
+                        refreshToken: newRefreshToken
                     },
                     "Access token refreshed Successfully"
                 )
-            )
-        
+            );
+
+
     } catch (error) {
         throw new ApiError(401, error?.message || "invalid refresh token")
-        
+
     }
 })
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
-    const user = await findById(req.user?._id);
+    const user = await User.findById(req.user?._id);
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
     if (!isPasswordCorrect) {
-        throw new ApiError(400 , "Invalid old password , try forget password if needed")
+        throw new ApiError(400, "Invalid old password , try forget password if needed")
     }
     user.password = newPassword;
     await user.save({ validateBeforeSave: false });
