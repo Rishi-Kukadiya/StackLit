@@ -13,7 +13,6 @@ const checkOtpVerified = asyncHandler(async (req, res, next) => {
 
     user.isOtpVerified = false;
     req.user = user;
-    await user.save();
     next();
 });
 

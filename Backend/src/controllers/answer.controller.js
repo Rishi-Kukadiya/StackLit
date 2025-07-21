@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { Answer } from "../models/answer.model.js";
 import { Question } from "../models/question.model.js";
+import { Like } from "../models/like.model.js";
 const postAnswer = asyncHandler(async (req, res) => {
     try {
         const { questionId, content, tags } = req.body;
@@ -72,35 +73,25 @@ const deleteAnswer = asyncHandler(async (req, res) => {
     if (!answerId) {
         return res.json(new ApiError(400, "Answer ID is required."));
     }
-    const question = await Question.findById(questionId);
-    if (!question) {
-        return res.json(new ApiError(404, "Question not found"));
+    const answer = await Answer.findById(answerId);
+    if (!answer) {
+        return res.json(new ApiError(404, "Answer not found"));
     }
-    if (question.owner.toString() !== req?.user?._id.toString()) {
+    if (answer.owner.toString() !== req?.user?._id.toString()) {
         return res.json(new ApiError(403, "You are not authorized to delete this question."));
     }
 
-    // Delete All Answers related to the question
-    const answers = await Answer.find({ questionId });
-    const answerIds = answers.map(ans => ans._id);
-    await Answer.deleteMany({ questionId })
-
-    // Delete likes and dislikes on this question
-    await Like.deleteMany({ target: questionId, targetType: "Question" });
-
-    // Delete all likes and dislikes on its answers
-    if (answerIds.length > 0) {
-        await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } })
+    const response = await Answer.findByIdAndDelete(answer._id);
+    await Like.deleteMany({ target: answerId, targetType: "Answer" });
+    if (!response) {
+        return res.json(new ApiError(500, "Error while deleting Answer"));
     }
 
-    // Delete the question
-    await question.deleteOne();
-
     return res.status(200).json(
-        new ApiResponse(200, null, "Question, its answers, and related likes/dislikes deleted.")
+        new ApiResponse(200, null, "Answer and related likes/dislikes deleted.")
     );
 
 
 })
 
-export { postAnswer };
+export { postAnswer, deleteAnswer };

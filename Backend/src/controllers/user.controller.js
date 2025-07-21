@@ -256,11 +256,11 @@ const verifyOtp = asyncHandler(async (req, res) => {
 });
 
 const forgetPassword = asyncHandler(async (req, res) => {
-    const { newPassword } = req.body;
-    const user = req.user;
+    const { newPassword,email } = req.body;
+    const user = await User.findOne({ email });
 
-    console.log(req.user);
-    
+    // console.log(user);
+
     if (!newPassword) {
         user.isOtpVerified = false;
         await user.save();
@@ -272,11 +272,11 @@ const forgetPassword = asyncHandler(async (req, res) => {
         await user.save();
         return res.json(new ApiError(400, "Old and New Password cannot be same."))
     }
-    
-    user.password = bcrypt.hash(newPassword, 10);;
+
+    user.password = newPassword;
     user.isOtpVerified = false;
 
-    await user.save({ validateBeforeSave: false });
+    await user.save();
     return res
         .status(200)
         .json(
