@@ -1,4 +1,4 @@
-import { Tag, Eye, ThumbsUp, Clock, User, ArrowRight, ChevronLeft } from "lucide-react";
+import { Tag, Eye, ThumbsUp, Clock, User, ArrowRight, ChevronLeft, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
@@ -45,10 +45,26 @@ Is this the correct way to handle async operations? Any suggestions for error ha
   ]
 };
 
+const mockAnswers = [
+  {
+    id: 1,
+    content: "Here's a detailed explanation...",
+    author: {
+      username: "codemaster",
+      profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=codemaster"
+    },
+    createdAt: "2025-07-16T10:30:00Z",
+    likes: 23,
+    dislikes: 2
+  },
+  // ...add more mock answers
+];
+
 export default function QuestionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [question] = useState(mockQuestion);
+  const [answers] = useState(mockAnswers);
   const [showTooltip, setShowTooltip] = useState(null);
 
   const formatDate = (dateString) => {
@@ -65,11 +81,15 @@ export default function QuestionPage() {
     <div className="fixed top-0 w-full z-50">
       <Navbar />
     </div>
-    <div className="fixed top-0 left-0 h-full z-40">
+    
+    {/* Update sidebar container */}
+    <div className="fixed top-0 left-0 h-full z-40 lg:block">
       <Sidebar />
     </div>
-    <div className="pt-16 min-h-screen overflow-y-auto relative z-10 sm:ml-64 transition-all duration-300">
-      <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
+
+    {/* Update main content container */}
+    <div className="pt-16 min-h-screen overflow-y-auto relative z-10 w-full px-4 lg:pl-64 transition-all duration-300">
+      <div className="max-w-4xl mx-auto">
         {/* Add Back Button */}
         <button 
           onClick={() => navigate(-1)}
@@ -205,6 +225,80 @@ export default function QuestionPage() {
           </div>
 
 
+        </div>
+
+        {/* Add Answers Section */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            {question.answerers.length} Answers
+          </h2>
+
+          {/* Answers List */}
+          <div className="space-y-6">
+            {answers.map((answer) => (
+              <div 
+                key={answer.id}
+                className="relative bg-transparent rounded-lg p-4 sm:p-6
+                          border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
+                          transform transition-all duration-300
+                          shadow-[0_0_15px_rgba(200,172,214,0.2)]"
+              >
+                {/* Answer Author Info */}
+                <div className="flex items-center gap-3 mb-4">
+                  <img 
+                    src={answer.author.profilePhoto}
+                    alt={answer.author.username}
+                    className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
+                  />
+                  <div>
+                    <h3 className="text-white font-medium">{answer.author.username}</h3>
+                    <span className="text-[#C8ACD6] text-xs">
+                      answered {formatDate(answer.createdAt)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Answer Content */}
+                <div className="text-[#C8ACD6] space-y-4 mb-4">
+                  <p className="whitespace-pre-wrap">{answer.content}</p>
+                </div>
+
+                {/* Answer Footer */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
+                                border border-[#433D8B]/20">
+                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
+                      <ThumbsUp className="w-4 h-4" />
+                    </button>
+                    <span className="text-white text-sm font-medium">
+                      {answer.likes}
+                    </span>
+                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
+                      <ThumbsUp className="w-4 h-4 transform rotate-180" />
+                    </button>
+                    <span className="text-white text-sm font-medium">
+                      {answer.dislikes}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Add Answer Form */}
+        <div className="mt-8 mb-8">
+          <button 
+            className="w-full bg-[#433D8B]/60 hover:bg-[#17153B]/70 
+                     text-white rounded-lg py-4 px-6
+                     border border-[#C8ACD6]/30 
+                     transition-all duration-300
+                     flex items-center justify-center gap-2"
+          >
+            <MessageSquare className="w-5 h-5" />
+            Write Your Answer
+          </button>
         </div>
       </div>
     </div>
