@@ -76,7 +76,8 @@ export default function ResetPasswordPage({ onClose }) {
       setLoading(true);
       try {
         const data = new FormData();
-        data.append("password", formData.password);
+        data.append("email", sessionStorage.getItem("email"));
+        data.append("newPassword", formData.password);
         const res = await axios.post(
           `${import.meta.env.VITE_SERVER}/users/forget-password`,
           data,
@@ -88,7 +89,10 @@ export default function ResetPasswordPage({ onClose }) {
         setLoading(false);
         if (res.data.statusCode !== 200) {
           setErrorMessage(res.data.message || "Server error");
-          setTimeout(() => setErrorMessage(""), 2000);
+          setTimeout(() => {
+            setErrorMessage(""),
+            navigate("/forgot-password");
+          }, 2000);
           return;
         }
 
