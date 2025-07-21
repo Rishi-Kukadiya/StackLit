@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { Bell, LogOut } from "lucide-react";
 
-export default function Navbar() {
+export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
@@ -20,7 +20,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [profileOpen]);
   return (
-    <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md">
+    <nav className={`bg-[#17153B] text-white px-4 py-3 shadow-md ${className}`}>
       <div className="container mx-auto flex items-center justify-between flex-wrap">
         {/* Left: Logo */}
         <Link to="/">

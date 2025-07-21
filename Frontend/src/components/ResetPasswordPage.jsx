@@ -4,7 +4,7 @@ import ErrorPopup from "./ErrorPopup";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
-export default function ResetPasswordPage() {
+export default function ResetPasswordPage({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -14,7 +14,12 @@ export default function ResetPasswordPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Get email from URL search params
+  const searchParams = new URLSearchParams(window.location.search);
+  const userEmail = searchParams.get('email');
 
   const validateField = (name, value) => {
     let error = '';
@@ -53,7 +58,7 @@ export default function ResetPasswordPage() {
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     Object.keys(formData).forEach(key => {
@@ -64,16 +69,39 @@ export default function ResetPasswordPage() {
     setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
 
     if (Object.keys(newErrors).length === 0) {
-      // Form is valid, proceed with submission
-      console.log('Reset Password form valid', formData);
-      // Here you would call your API to reset the password
-      
-      // For demo purposes, show success message and redirect
-      setErrorMessage("Password reset successful!");
-      setTimeout(() => {
-        setErrorMessage("");
-        navigate('/signin'); // Redirect to sign in page
-      }, 2000);
+      setIsLoading(true);
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/users/reset-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            newPassword: formData.password
+          })
+        });
+
+        const data = await response.json();
+        console.log('Password reset response:', data);
+
+        if (response.ok) {
+          setErrorMessage("Password reset successful!");
+          setTimeout(() => {
+            setErrorMessage("");
+            navigate('/signin'); // Redirect to sign in page
+          }, 2000);
+        } else {
+          setErrorMessage(data.message || "Failed to reset password. Please try again.");
+          setTimeout(() => setErrorMessage(""), 3000);
+        }
+      } catch (error) {
+        console.error('Error during password reset:', error);
+        setErrorMessage("Something went wrong. Please try again.");
+        setTimeout(() => setErrorMessage(""), 3000);
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
@@ -89,6 +117,12 @@ export default function ResetPasswordPage() {
             </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-1rem)] sm:max-w-md p-3 sm:p-5 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn my-4 sm:my-6">
+          <button
+            onClick={onClose}
+            className="absolute right-2 top-2 sm:right-4 sm:top-4 text-[#C8ACD6] hover:text-white"
+          >
+            <X size={20} className="sm:w-6 sm:h-6" />
+          </button>
           <h2 className="text-xl sm:text-2xl font-bold mb-2 text-white text-center">Reset Password</h2>
           <p className="text-[#C8ACD6] text-center mb-4 sm:mb-6 text-sm sm:text-base">
             Create a new password for your account
@@ -163,9 +197,10 @@ export default function ResetPasswordPage() {
 
             <button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-[#433D8B] text-white py-1.5 sm:py-2 rounded-lg hover:bg-[#2E236C] border border-[#C8ACD6] transition-all text-sm sm:text-base mt-2 flex items-center justify-center space-x-2"
             >
-              <span>Reset Password</span>
+              <span>{isLoading ? 'Resetting Password...' : 'Reset Password'}</span>
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </form>
