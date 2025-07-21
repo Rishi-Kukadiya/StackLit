@@ -21,6 +21,11 @@ const questionSchema = new mongoose.Schema({
         {
             type: String
         }
+    ],
+    tags: [
+        {
+            type:String
+        }
     ]
 }, { timestamps: true });
 

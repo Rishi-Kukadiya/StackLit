@@ -9,6 +9,8 @@ const checkOtpVerified = asyncHandler(async (req, res, next) => {
         return res.json(new ApiError(403, "OTP not verified"));
     }
 
+    user.isOtpVerified = false;
+    await user.save();
     next();
 });
 
