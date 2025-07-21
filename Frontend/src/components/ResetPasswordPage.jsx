@@ -76,7 +76,7 @@ export default function ResetPasswordPage({ onClose }) {
       setLoading(true);
       try {
         const data = new FormData();
-        data.append("email", formData.password);
+        data.append("password", formData.password);
         const res = await axios.post(
           `${import.meta.env.VITE_SERVER}/users/forget-password`,
           data,
@@ -93,10 +93,10 @@ export default function ResetPasswordPage({ onClose }) {
         }
 
 
-        setSuccessMessage(res.data.message || "Otp sent successfully");
+        setSuccessMessage(res.data.message || "Password reset successfully");
         setTimeout(() => {
           setSuccessMessage("");
-          navigate("/otp-verification");
+           navigate("/signin"); 
         }, 2000);
 
         
@@ -105,13 +105,6 @@ export default function ResetPasswordPage({ onClose }) {
         setErrorMessage("Network error or server down");
         setTimeout(() => setErrorMessage(""), 1000);
       }
-
-      // For demo purposes, show success message and redirect
-      setErrorMessage("Password reset successful!");
-      setTimeout(() => {
-        setErrorMessage("");
-        navigate("/signin"); // Redirect to sign in page
-      }, 2000);
     } else {
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
@@ -126,6 +119,7 @@ export default function ResetPasswordPage({ onClose }) {
         <Sidebar />
       </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
+       {loading && <ShimmerLoader />}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-1rem)] sm:max-w-md p-3 sm:p-5 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn my-4 sm:my-6">
           <button
             onClick={onClose}
