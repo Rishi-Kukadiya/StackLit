@@ -8,10 +8,11 @@ import ForgotPasswordModal from "./Components/ForgotPasswordModal";
 import OtpVerificationPage from "./Components/OtpVerificationPage";
 import ResetPasswordPage from "./Components/ResetPasswordPage";
 import Home from "./Components/Home";
+import { UserProvider } from "./Components/UserContext";
 function App() {
   const navigate = useNavigate();
   return (
-    <>
+    <UserProvider>
       <CanvasBackground />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -21,7 +22,7 @@ function App() {
         <Route path="/otp-verification" element={<OtpVerificationPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
-    </>
+    </UserProvider>
   );
 }
 
