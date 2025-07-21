@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import ShimmerLoader from "./ShimmerLoader";
 import SuccessPopup from "./SuccessPopup";
-export default function ResetPasswordPage({onClose}) {
+import axios from "axios";
+export default function ResetPasswordPage({ onClose }) {
   const [formData, setFormData] = useState({
     password: "",
     confirmPassword: "",
@@ -18,7 +19,6 @@ export default function ResetPasswordPage({onClose}) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
 
   const navigate = useNavigate();
 
@@ -59,7 +59,7 @@ export default function ResetPasswordPage({onClose}) {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     const newErrors = {};
     Object.keys(formData).forEach((key) => {
@@ -73,8 +73,38 @@ export default function ResetPasswordPage({onClose}) {
 
     if (Object.keys(newErrors).length === 0) {
       // Form is valid, proceed with submission
-      console.log("Reset Password form valid", formData);
-      // Here you would call your API to reset the password
+      setLoading(true);
+      try {
+        const data = new FormData();
+        data.append("email", formData.password);
+        const res = await axios.post(
+          `${import.meta.env.VITE_SERVER}/users/forget-password`,
+          data,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        setLoading(false);
+        if (res.data.statusCode !== 200) {
+          setErrorMessage(res.data.message || "Server error");
+          setTimeout(() => setErrorMessage(""), 2000);
+          return;
+        }
+
+
+        setSuccessMessage(res.data.message || "Otp sent successfully");
+        setTimeout(() => {
+          setSuccessMessage("");
+          navigate("/otp-verification");
+        }, 2000);
+
+        
+      } catch (err) {
+        setLoading(false);
+        setErrorMessage("Network error or server down");
+        setTimeout(() => setErrorMessage(""), 1000);
+      }
 
       // For demo purposes, show success message and redirect
       setErrorMessage("Password reset successful!");
@@ -143,9 +173,6 @@ export default function ResetPasswordPage({onClose}) {
                     <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
-                {/* {errors.password && touched.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                )} */}
               </div>
             </div>
 
@@ -181,9 +208,6 @@ export default function ResetPasswordPage({onClose}) {
                     <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
-                {/* {errors.confirmPassword && touched.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
-                )} */}
               </div>
             </div>
 
@@ -205,12 +229,12 @@ export default function ResetPasswordPage({onClose}) {
           />
         )}
 
-         {successMessage && (
-                  <SuccessPopup
-                    message={successMessage}
-                    onClose={() => setSuccessMessage("")}
-                  />
-          )}
+        {successMessage && (
+          <SuccessPopup
+            message={successMessage}
+            onClose={() => setSuccessMessage("")}
+          />
+        )}
       </div>
     </>
   );
