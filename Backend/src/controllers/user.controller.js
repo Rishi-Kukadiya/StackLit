@@ -250,6 +250,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
     user.otp = undefined;
     user.otpExpiry = undefined;
     user.isOtpVerified = true;
+    req.user = user;
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP verified successfully"));
@@ -280,9 +281,6 @@ const forgetPassword = asyncHandler(async (req, res) => {
             new ApiResponse(200, {}, "Password changed successfully")
         )
 })
-
-
-
 export {
     registerUser,
     loginUser,

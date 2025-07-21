@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { parse } from "dotenv";
 import { Answer } from "../models/answer.model.js";
+import { Like } from "../models/like.model.js";
 
 const postQuestion = asyncHandler(async (req, res) => {
     try {
@@ -36,8 +37,8 @@ const postQuestion = asyncHandler(async (req, res) => {
 
         let parsedTags = [];
         parsedTags = tags.split(',')
-        
-        
+
+
 
 
         const question = await Question.create({
@@ -76,8 +77,25 @@ const deleteQuestion = asyncHandler(async (req, res) => {
     // Delete All Answers related to the question
     const answers = await Answer.find({ questionId });
     const answerIds = answers.map(ans => ans._id);
+    await Answer.deleteMany({ questionId })
+
+    // Delete likes and dislikes on this question
+    await Like.deleteMany({ target: questionId, targetType: "Question" });
+
+    // Delete all likes and dislikes on its answers
+    if (answerIds.length > 0) {
+        await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } })
+    }
+
+    // Delete the question
+    await question.deleteOne();
+
+    return res.status(200).json(
+        new ApiResponse(200, null, "Question, its answers, and related likes/dislikes deleted.")
+    );
+
 
 })
 
 
-export { postQuestion };
+export { postQuestion,deleteQuestion };

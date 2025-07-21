@@ -67,8 +67,40 @@ const postAnswer = asyncHandler(async (req, res) => {
 })
 
 const deleteAnswer = asyncHandler(async (req, res) => {
-    
-})
 
+    const { answerId } = req.params;
+    if (!answerId) {
+        return res.json(new ApiError(400, "Answer ID is required."));
+    }
+    const question = await Question.findById(questionId);
+    if (!question) {
+        return res.json(new ApiError(404, "Question not found"));
+    }
+    if (question.owner.toString() !== req?.user?._id.toString()) {
+        return res.json(new ApiError(403, "You are not authorized to delete this question."));
+    }
+
+    // Delete All Answers related to the question
+    const answers = await Answer.find({ questionId });
+    const answerIds = answers.map(ans => ans._id);
+    await Answer.deleteMany({ questionId })
+
+    // Delete likes and dislikes on this question
+    await Like.deleteMany({ target: questionId, targetType: "Question" });
+
+    // Delete all likes and dislikes on its answers
+    if (answerIds.length > 0) {
+        await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } })
+    }
+
+    // Delete the question
+    await question.deleteOne();
+
+    return res.status(200).json(
+        new ApiResponse(200, null, "Question, its answers, and related likes/dislikes deleted.")
+    );
+
+
+})
 
 export { postAnswer };
