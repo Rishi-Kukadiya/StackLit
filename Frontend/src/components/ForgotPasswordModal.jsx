@@ -3,12 +3,17 @@ import Navbar from "./Navbar";
 import ErrorPopup from "./ErrorPopup";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Sidebar from "./Sidebar";  
+import Sidebar from "./Sidebar";
+import SuccessPopup from "./SuccessPopup";
+import ShimmerLoader from "./ShimmerLoader";
+import axios from "axios";
 export default function ForgotPasswordModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({ email: "" });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -39,7 +44,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     Object.keys(formData).forEach((key) => {
@@ -50,11 +55,41 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
     setTouched(
       Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
     );
+
     if (Object.keys(newErrors).length === 0) {
-      // Form is valid, proceed with submission
-      console.log("Forgot Password form valid", formData);
-      // Navigate to OTP verification page
-      navigate("/otp-verification");
+      setLoading(true);
+
+      try {
+        const data = new FormData();
+        data.append("email", formData.email);
+
+        const res = await axios.post(
+          `${import.meta.env.VITE_SERVER}/users/send-otp`,
+          data,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        setLoading(false);
+        if (res.data.statusCode !== 200) {
+          setErrorMessage(res.data.message || "Server error");
+          setTimeout(() => setErrorMessage(""), 2000);
+          return;
+        }
+
+        setSuccessMessage(res.data.message || "Otp sent successfully");
+        setTimeout(() => {
+          setSuccessMessage("");
+          navigate("/otp-verification");
+        }, 2000);
+
+        
+      } catch (err) {
+        setLoading(false);
+        setErrorMessage("Network error or server down");
+        setTimeout(() => setErrorMessage(""), 1000);
+      }
     } else {
       const firstError = Object.values(newErrors)[0];
       setErrorMessage(firstError);
@@ -69,6 +104,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
         <Sidebar />
       </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
+        {loading && <ShimmerLoader />}
         {/* Modal */}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-1rem)] sm:max-w-md p-3 sm:p-5 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn my-4 sm:my-6">
           <button
@@ -133,6 +169,13 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
           <ErrorPopup
             message={errorMessage}
             onClose={() => setErrorMessage("")}
+          />
+        )}
+
+        {successMessage && (
+          <SuccessPopup
+            message={successMessage}
+            onClose={() => setSuccessMessage("")}
           />
         )}
       </div>
