@@ -304,6 +304,7 @@ export default function SignInModal({ isOpen, onClose }) {
           setTimeout(() => setErrorMessage(""), 2000);
           return;
         }
+        
         setSuccessMessage(res.data.message || "SignIn successful!");
         setTimeout(() => {
           setSuccessMessage("");
