@@ -26,4 +26,7 @@ app.use("/api/v1/questions", questionRouter);
 import answerRouter from "./src/routes/answer.routes.js";
 app.use("/api/v1/answers", answerRouter);
 
+import likeRouter from "./src/routes/like.routes.js";
+app.use("/api/v1/likes", likeRouter);
+
 export { app }

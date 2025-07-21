@@ -250,6 +250,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
     user.otp = undefined;
     user.otpExpiry = undefined;
     user.isOtpVerified = true;
+    req.user = user;
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP verified successfully"));
@@ -260,11 +261,15 @@ const forgetPassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user?._id);
 
     if (!newPassword) {
+         user.isOtpVerified = false;
+        await user.save(); 
         return res.json(new ApiError(400, "Please provide new password"))
     }
     const isSamePassword = await user.isPasswordCorrect(newPassword);
     if (isSamePassword) {
-        return res.json(new ApiError(400,"Old and New Password cannot be same.") )
+        user.isOtpVerified = false;
+        await user.save(); 
+        return res.json(new ApiError(400, "Old and New Password cannot be same."))
     }
     user.password = newPassword;
     user.isOtpVerified = false;
@@ -276,9 +281,6 @@ const forgetPassword = asyncHandler(async (req, res) => {
             new ApiResponse(200, {}, "Password changed successfully")
         )
 })
-
-
-
 export {
     registerUser,
     loginUser,
