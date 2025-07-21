@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import jwt, { decode } from "jsonwebtoken"
-import mongoose from "mongoose";
+import bcrypt from "bcrypt"
 import { User } from "../models/user.model.js";
 import sendEmail from "../utils/sendEmail.js";
 
@@ -250,7 +250,6 @@ const verifyOtp = asyncHandler(async (req, res) => {
     user.otp = undefined;
     user.otpExpiry = undefined;
     user.isOtpVerified = true;
-    req.user = user;
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json(new ApiResponse(200, {}, "OTP verified successfully"));
@@ -258,20 +257,23 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
 const forgetPassword = asyncHandler(async (req, res) => {
     const { newPassword } = req.body;
-    const user = await User.findById(req.user?._id);
+    const user = req.user;
 
+    console.log(req.user);
+    
     if (!newPassword) {
-         user.isOtpVerified = false;
-        await user.save(); 
+        user.isOtpVerified = false;
+        await user.save();
         return res.json(new ApiError(400, "Please provide new password"))
     }
-    const isSamePassword = await user.isPasswordCorrect(newPassword);
+    const isSamePassword = await user?.isPasswordCorrect(newPassword);
     if (isSamePassword) {
         user.isOtpVerified = false;
-        await user.save(); 
+        await user.save();
         return res.json(new ApiError(400, "Old and New Password cannot be same."))
     }
-    user.password = newPassword;
+    
+    user.password = bcrypt.hash(newPassword, 10);;
     user.isOtpVerified = false;
 
     await user.save({ validateBeforeSave: false });
