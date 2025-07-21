@@ -20,10 +20,10 @@ userRouter.route("/logout").post(
 )
 userRouter.route("/refresh-token").post(refreshAccessToken)
 userRouter.route("/change-password").post(verifyJWT, changeCurrentPassword)
-userRouter.post("/send-otp", verifyJWT , sendOtp);
-userRouter.post("/verify-otp", verifyJWT, verifyOtp);
+userRouter.post("/send-otp" , sendOtp);
+userRouter.post("/verify-otp",  verifyOtp);
 
-userRouter.post("/forget-password", verifyJWT, checkOtpVerified, forgetPassword);
+userRouter.post("/forget-password", checkOtpVerified, forgetPassword);
 
 
 export default userRouter;

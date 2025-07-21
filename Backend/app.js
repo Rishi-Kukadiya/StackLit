@@ -20,4 +20,10 @@ app.use(cookieParser())
 import userRouter from "./src/routes/user.routes.js";
 app.use("/api/v1/users", userRouter);
 
+import questionRouter from "./src/routes/question.routes.js";
+app.use("/api/v1/questions", questionRouter);
+
+import answerRouter from "./src/routes/answer.routes.js";
+app.use("/api/v1/answers", answerRouter);
+
 export { app }
