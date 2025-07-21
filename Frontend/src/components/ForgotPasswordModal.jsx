@@ -78,6 +78,8 @@ export default function ForgotPasswordModal({ isOpen, onClose }) {
           return;
         }
 
+        sessionStorage.setItem("email", formData.email);
+        setFormData({ email: "" });
         setSuccessMessage(res.data.message || "Otp sent successfully");
         setTimeout(() => {
           setSuccessMessage("");
