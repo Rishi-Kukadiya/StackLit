@@ -14,9 +14,9 @@ const answerSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    image: {
+    images:[ {
         type: String
-    },
+    }],
     tags: [
         {
             type: String

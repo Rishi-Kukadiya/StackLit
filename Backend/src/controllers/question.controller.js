@@ -3,9 +3,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import { parse } from "dotenv";
 import { Answer } from "../models/answer.model.js";
 import { Like } from "../models/like.model.js";
+
 
 const postQuestion = asyncHandler(async (req, res) => {
     try {
@@ -22,42 +22,98 @@ const postQuestion = asyncHandler(async (req, res) => {
             return res.json(new ApiError(403, "Unauthorized request"));
         }
 
-        let imageLocalPath = "";
-        if (req.files && req.files.image && req.files.image.length > 0) {
-            imageLocalPath = req.files.image[0].path;
-        }
+        let imageUrls = [];
 
-        let image = "";
-        if (imageLocalPath) {
-            image = await uploadOnCloudinary(imageLocalPath);
-            if (!image) {
-                return res.json(new ApiError(500, "Error while uploading on Cloudinary"));
+        if (req.files && req.files.image && req.files.image.length > 0) {
+            const images = req.files.image.slice(0, 5); 
+            for (const file of images) {
+                const cloudinaryImage = await uploadOnCloudinary(file.path);
+                if (!cloudinaryImage) {
+                    return res.json(new ApiError(500, "Error while uploading images to Cloudinary"));
+                }
+                imageUrls.push(cloudinaryImage.secure_url);
             }
         }
 
-        let parsedTags = [];
-        parsedTags = tags.split(',')
-
-
-
+        const parsedTags = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
         const question = await Question.create({
-            title, content, image: image?.secure_url || "", owner: req?.user?._id, tags: parsedTags.length > 0 ? parsedTags : []
+            title,
+            content,
+            images: imageUrls, 
+            owner: req.user._id,
+            tags: parsedTags
         });
+
         if (!question) {
-            return res.json(new ApiError(500, "Error while posting Question"))
+            return res.json(new ApiError(500, "Error while posting question"));
         }
 
         return res.json(
             new ApiResponse(201, question, "Question posted successfully")
-        )
+        );
     } catch (error) {
         console.log(error.message);
         return res.json(
             new ApiError(500, "Error while posting question")
-        )
+        );
     }
-})
+});
+
+
+const getQuestionDetails = asyncHandler(async (req, res) => {
+    const { questionId } = req.params;
+    console.log(questionId);
+    
+
+    if (!questionId) {
+        return res.json(new ApiError(400, "Question ID is required"));
+    }
+
+    const question = await Question.findById(questionId)
+        .populate("owner", "username email avatar") 
+        .lean();
+
+    if (!question) {
+        return res.json(new ApiError(404, "Question not found"));
+    }
+
+    const questionLikes = await Like.find({ target: questionId, targetType: "Question" }).lean();
+    const totalLikes = questionLikes.filter(like => like.isLike).length;
+    const totalDislikes = questionLikes.filter(like => !like.isLike).length;
+
+    
+    const answers = await Answer.find({ questionId })
+        .populate("owner", "username fullName avatar")
+        .lean();
+
+    
+    const answerIds = answers.map(a => a._id);
+    const answerLikes = await Like.find({ target: { $in: answerIds }, targetType: "Answer" }).lean();
+
+    const answerMap = {};
+    answers.forEach(ans => {
+        const likesForAnswer = answerLikes.filter(l => String(l.target) === String(ans._id));
+        answerMap[ans._id] = {
+            ...ans,
+            likes: likesForAnswer.filter(l => l.isLike).length,
+            dislikes: likesForAnswer.filter(l => !l.isLike).length
+        };
+    });
+
+    const finalAnswers = Object.values(answerMap);
+
+    return res.json(
+        new ApiResponse(200, {
+            question: {
+                ...question,
+                likes: totalLikes,
+                dislikes: totalDislikes
+            },
+            answers: finalAnswers
+        }, "Question details fetched successfully")
+    );
+});
 
 
 const deleteQuestion = asyncHandler(async (req, res) => {
@@ -98,4 +154,4 @@ const deleteQuestion = asyncHandler(async (req, res) => {
 })
 
 
-export { postQuestion,deleteQuestion };
+export { postQuestion, deleteQuestion, getQuestionDetails };

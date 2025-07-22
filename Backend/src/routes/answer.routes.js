@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteAnswer, postAnswer } from "../controllers/answer.controller.js";
+import { deleteAnswer, getAnswerDetails, postAnswer } from "../controllers/answer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 const answerRouter = Router();
@@ -8,11 +8,16 @@ answerRouter.route('/post-answer').post(
     upload.fields([
         {
             name: "image",
-            maxCount: 1
+            maxCount: 5
         }
     ]),
     postAnswer
 );
+
+answerRouter.route("/get-answer/:answerId").get(
+    verifyJWT,
+    getAnswerDetails
+)
 answerRouter.route("/delete-answer/:answerId").delete(
     verifyJWT,
     deleteAnswer
