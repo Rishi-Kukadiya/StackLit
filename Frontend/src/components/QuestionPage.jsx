@@ -122,6 +122,14 @@ export default function QuestionPage() {
   const [question] = useState(mockQuestion);
   const [answers] = useState(mockAnswers);
   const [showTooltip, setShowTooltip] = useState(null);
+  const [expandedAnswers, setExpandedAnswers] = useState({});
+
+  // Function to truncate text to first few lines
+  const truncateContent = (content) => {
+    const lines = content.split('\n').filter(line => line.trim());
+    if (lines.length <= 2) return content;
+    return lines.slice(0, 2).join('\n') + '...';
+  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -147,15 +155,17 @@ export default function QuestionPage() {
         <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
           <div className="space-y-6"> {/* Increased space-y to create more gap */}
             {/* Back Button - Positioned independently */}
-            <div className="sticky top-12 mb-10 z-[60] w-fit"> {/* Changed positioning */}
+            <div className="sticky top-16 sm:top-20 mb-15 z-[60] w-fit px-4 sm:px-0"> {/* Updated positioning and padding */}
               <button
                 onClick={() => navigate(-1)}
                 className="flex items-center gap-2 text-[#C8ACD6] hover:text-white 
                         transition-all duration-300 group
-                        bg-[#2E236C]/60 p-2 rounded-lg"
+                        bg-[#2E236C]/60 backdrop-blur-sm p-2.5 rounded-lg
+                        border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
+                        shadow-[0_0_10px_rgba(200,172,214,0.1)]"
               >
                 <ChevronLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
-                <span className="inline text-sm font-medium">Back</span>
+                <span className="inline text-sm font-medium">Back to Questions</span>
               </button>
             </div>
 
@@ -316,16 +326,30 @@ export default function QuestionPage() {
 
                     {/* Answer Content */}
                     <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
-                      {answer.content.split('```').map((block, index) => {
-                        if (index % 2 === 1) { // Code block
-                          return (
-                            <pre key={index} className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30">
-                              <code className="text-white whitespace-pre-wrap">{block}</code>
-                            </pre>
-                          );
-                        }
-                        return <p key={index} className="whitespace-pre-wrap">{block}</p>;
-                      })}
+                      <div className={`relative ${!expandedAnswers[answer.id] ? 'max-h-32 overflow-hidden' : ''}`}>
+                        {answer.content.split('```').map((block, index) => {
+                          if (index % 2 === 1) { // Code block
+                            return (
+                              <pre key={index} className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30">
+                                <code className="text-white whitespace-pre-wrap">{block}</code>
+                              </pre>
+                            );
+                          }
+                          return <p key={index} className="whitespace-pre-wrap">{block}</p>;
+                        })}
+                        
+                        {!expandedAnswers[answer.id] && (
+                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
+                        )}
+                      </div>
+                      
+                      <button
+                        onClick={() => setExpandedAnswers(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
+                        className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
+                      >
+                        {expandedAnswers[answer.id] ? 'Show less' : 'Read more'}
+                        <ChevronLeft className={`w-4 h-4 transform transition-transform ${expandedAnswers[answer.id] ? 'rotate-90' : '-rotate-90'}`} />
+                      </button>
                     </div>
 
                     {/* Answer Footer */}
