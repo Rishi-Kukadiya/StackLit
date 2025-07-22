@@ -73,19 +73,25 @@ export default function QuestionPage() {
                 mx-auto w-full
                 lg:ml-64 lg:w-[calc(100%-16rem)]">
       <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
-        {/* Add Back Button */}
+        {/* Updated Back Button */}
         <button 
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 mb-4 text-[#C8ACD6] hover:text-white transition-all duration-300 group"
+          className="flex items-center gap-2 text-[#C8ACD6] hover:text-white 
+                    transition-all duration-300 group
+                    fixed left-4 z-[60] bg-[#2E236C]/60 p-2 rounded-lg
+                    md:static md:bg-transparent md:p-0 md:mb-4
+                    top-[7rem] md:top-auto" // Increased top spacing and z-index
         >
           <ChevronLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium">Back to Questions</span>
+          <span className="inline text-sm font-medium">Back</span>
         </button>
 
+        {/* Question Content */}
         <div className="relative bg-transparent rounded-lg p-4 sm:p-6
               transform transition-all duration-300
               border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
-              shadow-[0_0_15px_rgba(200,172,214,0.2)]">
+              shadow-[0_0_15px_rgba(200,172,214,0.2)]
+              mt-20 md:mt-0"> {/* Increased margin-top for mobile */}
           
           {/* Row 1: User Info Section */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 border-b border-[#433D8B]/50 pb-4">
