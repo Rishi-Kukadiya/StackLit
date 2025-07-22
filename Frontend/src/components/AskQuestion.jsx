@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 // import TiptapEditor from "./TiptapEditor";
 import TiptapEditor from "./QuillEditor";
 import axios from "axios";
 import ShimmerLoader from "./ShimmerLoader";
-import { ImagePlus, X, Tag as TagIcon } from "lucide-react";
+import { ImagePlus, X, Tag as TagIcon, ArrowLeft } from "lucide-react";
 
 export default function AskQuestion() {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
@@ -104,30 +107,69 @@ export default function AskQuestion() {
         <main className="flex-1 overflow-hidden flex items-start justify-center p-4 sm:p-6 lg:p-8">
           <div className="w-full max-w-2xl h-[calc(100vh-8rem)] sm:h-[calc(100vh-8.5rem)] lg:h-[calc(100vh-9rem)]">
             {/* Form Container - Better Centered */}
-            <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden h-full flex flex-col">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-[#2E236C]/80 to-[#433D8B]/80 px-4 sm:px-6 py-6 sm:py-8 text-center border-b border-white/20 flex-shrink-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  Ask a Question
-                </h1>
-                <p className="text-white/80 text-xs sm:text-sm">
-                  Share your question with our community
-                </p>
-              </div>
+            <motion.div 
+              className="relative group h-full"
+              initial={{ scale: 1 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {/* Background Effects */}
+              <motion.div 
+                className="absolute inset-0 bg-[#2E236C]/5 rounded-lg"
+                initial={{ opacity: 0.5 }}
+                whileHover={{ opacity: 0.8 }}
+                transition={{ duration: 0.3 }}
+              />
+              
+              {/* Main Content Container */}
+              <motion.div 
+                className="relative h-full rounded-lg p-4 sm:p-6 
+                         border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
+                         flex flex-col w-full overflow-hidden
+                         shadow-[0_0_15px_rgba(200,172,214,0.2)]
+                         bg-transparent z-10"
+                whileHover={{
+                  boxShadow: "0 0 25px rgba(200,172,214,0.3)",
+                }}
+                transition={{ duration: 0.3 }}>
+                {/* Header */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-[#433D8B]/50 pb-4">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                      Ask a Question
+                    </h1>
+                    <p className="text-[#C8ACD6] text-sm">
+                      Share your question with our community
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[#2E236C]/40 
+                            hover:bg-[#2E236C]/60 text-[#C8ACD6] hover:text-white 
+                            transition-all duration-300 rounded-lg
+                            border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
+                            shadow-sm hover:shadow-[0_0_10px_rgba(200,172,214,0.2)]"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back</span>
+                  </button>
+                </div>
 
               {/* Form Content - Scrollable */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                 <form id="question-form" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                   {/* Title Field */}
                   <div className="space-y-2">
-                    <label className="block text-white font-semibold text-sm">
+                    <label className="block text-white font-semibold text-sm drop-shadow-lg">
                       Question Title *
                     </label>
                     <input
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-4 py-4 rounded-2xl bg-white/5 backdrop-blur-sm text-white border border-white/30 focus:outline-none focus:border-[#C8ACD6] focus:ring-2 focus:ring-[#C8ACD6]/20 transition-all duration-300 placeholder-white/60"
+                      className="w-full px-4 py-4 rounded-lg bg-[#2E236C]/30 text-white border border-[#433D8B]/20 
+                               focus:outline-none focus:border-[#C8ACD6]/30 focus:ring-2 focus:ring-[#C8ACD6]/20 
+                               transition-all duration-300 placeholder-white/50"
                       placeholder="What's your question? Be clear and specific..."
                       required
                     />
@@ -138,14 +180,16 @@ export default function AskQuestion() {
                     <label className="block text-white font-semibold text-sm">
                       Question Details *
                     </label>
-                    <div className="rounded-2xl border border-white/30 bg-white/5 backdrop-blur-sm overflow-hidden focus-within:border-[#C8ACD6] focus-within:ring-2 focus-within:ring-[#C8ACD6]/20 transition-all duration-300">
+                    <div className="rounded-lg border border-[#433D8B]/20 bg-[#2E236C]/30 overflow-hidden 
+                                 focus-within:border-[#C8ACD6]/30 focus-within:ring-2 focus-within:ring-[#C8ACD6]/20 
+                                 transition-all duration-300">
                       <TiptapEditor value={content} setValue={setContent} />
                     </div>
                   </div>
 
                   {/* Images Field */}
                   <div className="space-y-3">
-                    <label className="text-white font-semibold flex items-center gap-2 text-sm">
+                    <label className="text-white font-semibold flex items-center gap-2 text-sm drop-shadow-lg">
                       <ImagePlus className="w-5 h-5 text-[#C8ACD6]" /> 
                       Images (max 5)
                     </label>
@@ -155,7 +199,7 @@ export default function AskQuestion() {
                       accept="image/*"
                       multiple
                       onChange={handleImageChange}
-                      className="w-full px-4 py-4 rounded-2xl bg-white/5 backdrop-blur-sm text-white border border-white/30 focus:outline-none focus:border-[#C8ACD6] transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#C8ACD6] file:text-[#2E236C] hover:file:bg-[#C8ACD6]/90 file:cursor-pointer"
+                      className="w-full px-4 py-4 rounded-2xl bg-gradient-to-r from-[#2E236C] to-[#433D8B] text-white border border-white/30 focus:outline-none focus:border-[#C8ACD6] transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#C8ACD6] file:text-[#2E236C] hover:file:bg-[#C8ACD6]/90 file:cursor-pointer"
                       disabled={images.length >= 5}
                     />
                     
@@ -197,7 +241,7 @@ export default function AskQuestion() {
                         type="text"
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
-                        className="flex-1 px-4 py-3 rounded-xl bg-white/5 backdrop-blur-sm text-white border border-white/30 focus:outline-none focus:border-[#C8ACD6] focus:ring-2 focus:ring-[#C8ACD6]/20 transition-all duration-300 placeholder-white/60"
+                        className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-[#2E236C]/90 to-[#433D8B]/90 text-white border border-white/20 focus:outline-none focus:border-[#C8ACD6] focus:ring-2 focus:ring-[#C8ACD6]/20 transition-all duration-300 placeholder-white/50 backdrop-blur-sm"
                         placeholder="Add a tag (e.g., javascript, react)"
                         onKeyPress={(e) => {
                           if (e.key === 'Enter') {
@@ -208,7 +252,11 @@ export default function AskQuestion() {
                       <button 
                         type="button"
                         onClick={handleTagAdd}
-                        className="bg-[#C8ACD6] hover:bg-[#C8ACD6]/90 text-[#2E236C] px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="flex items-center gap-2 px-4 py-3 bg-[#2E236C]/40 
+                                hover:bg-[#2E236C]/60 text-[#C8ACD6] hover:text-white 
+                                transition-all duration-300 rounded-lg
+                                border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
+                                shadow-sm hover:shadow-[0_0_10px_rgba(200,172,214,0.2)]"
                       >
                         Add
                       </button>
@@ -218,13 +266,13 @@ export default function AskQuestion() {
                     {tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag, idx) => (
-                          <span key={idx} className="inline-flex items-center gap-2 bg-[#C8ACD6]/20 text-[#C8ACD6] px-3 py-2 rounded-full font-medium text-sm border border-[#C8ACD6]/30">
+                          <span key={idx} className="inline-flex items-center gap-2 bg-[#C8ACD6]/10 text-[#C8ACD6] px-3 py-2 rounded-full font-medium text-sm border border-[#C8ACD6]/20 backdrop-blur-sm">
                             <TagIcon className="w-3 h-3" />
                             {tag}
                             <button 
                               type="button" 
                               onClick={() => handleTagDelete(idx)} 
-                              className="text-white/80 hover:text-red-400 transition-colors duration-200"
+                              className="text-white/70 hover:text-red-400 transition-colors duration-200"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -245,33 +293,43 @@ export default function AskQuestion() {
 
                 {/* Messages */}
                 {error && (
-                  <div className="mt-4 p-4 bg-red-500/20 border border-red-500/30 rounded-2xl text-red-200 text-center text-sm font-semibold backdrop-blur-sm">
-                    {error}
+                  <div className="relative mt-4 group">
+                    <div className="absolute inset-0 bg-red-500/10 rounded-2xl blur-xl" />
+                    <div className="relative p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-200 text-center text-sm font-semibold backdrop-blur-sm">
+                      {error}
+                    </div>
                   </div>
                 )}
 
                 {success && (
-                  <div className="mt-4 p-4 bg-green-500/20 border border-green-500/30 rounded-2xl text-green-200 text-center text-sm font-semibold backdrop-blur-sm">
-                    {success}
+                  <div className="relative mt-4 group">
+                    <div className="absolute inset-0 bg-green-500/10 rounded-2xl blur-xl" />
+                    <div className="relative p-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-200 text-center text-sm font-semibold backdrop-blur-sm">
+                      {success}
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Submit Button - Fixed at Bottom */}
-              <div className="flex-shrink-0 p-4 sm:p-6 bg-gradient-to-t from-[#17153B] via-[#17153B]/95 to-transparent backdrop-blur-sm border-t border-white/10">
+              <div className="flex-shrink-0 p-4 sm:p-6 border-t border-[#433D8B]/50">
                 <button
                   type="submit"
                   form="question-form"
-                  className="w-full bg-gradient-to-r from-[#C8ACD6] to-[#433D8B] hover:from-[#C8ACD6]/90 hover:to-[#433D8B]/90 
-                           text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg 
-                           shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] 
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 
+                           bg-[#2E236C]/40 hover:bg-[#2E236C]/60 
+                           text-[#C8ACD6] hover:text-white font-bold text-base sm:text-lg
+                           transition-all duration-300 rounded-lg
+                           border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
+                           shadow-sm hover:shadow-[0_0_10px_rgba(200,172,214,0.2)]
                            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   disabled={loading}
                 >
                   {loading ? "Posting Question..." : "Post Question"}
                 </button>
               </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </main>
       </div>
