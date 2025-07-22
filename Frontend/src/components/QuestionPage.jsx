@@ -68,7 +68,10 @@ export default function QuestionPage() {
     {/* <div className="fixed top-0 left-0 h-full z-40"> */}
       <Sidebar />
     {/* </div> */}
-    <div className="pt-16 min-h-screen overflow-y-auto relative z-10 sm:ml-64 transition-all duration-300">
+    <div className="pt-16 min-h-screen overflow-y-auto relative z-10 
+                transition-all duration-300
+                mx-auto w-full
+                lg:ml-64 lg:w-[calc(100%-16rem)]">
       <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
         {/* Add Back Button */}
         <button 
