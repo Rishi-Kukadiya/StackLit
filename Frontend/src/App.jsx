@@ -8,6 +8,7 @@ import ForgotPasswordModal from "./Components/ForgotPasswordModal";
 import OtpVerificationPage from "./Components/OtpVerificationPage";
 import ResetPasswordPage from "./Components/ResetPasswordPage";
 import Home from "./Components/Home";
+import AskQuestion from "./Components/AskQuestion";
 import { UserProvider } from "./Components/UserContext";
 function App() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordModal isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/otp-verification" element={<OtpVerificationPage  isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/reset-password" element={<ResetPasswordPage isOpen={true} onClose={() => navigate("/")} />} />
+        <Route path="/ask" element={<AskQuestion></AskQuestion>}></Route>
       </Routes>
     </UserProvider>
   );
