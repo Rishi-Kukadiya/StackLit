@@ -208,11 +208,11 @@ export default function AskQuestion() {
                       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                         {images.map((img, idx) => (
                           <div key={idx} className="relative group">
-                            <div className="aspect-square rounded-xl overflow-hidden border border-white/30 bg-white/10 backdrop-blur-sm">
+                            <div className="aspect-square rounded-xl overflow-hidden border border-white/30 bg-white/10 backdrop-blur-sm p-1">
                               <img
                                 src={URL.createObjectURL(img)}
                                 alt={`preview-${idx}`}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                               />
                             </div>
                             <button
