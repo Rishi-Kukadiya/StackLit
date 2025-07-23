@@ -4,17 +4,22 @@ import ErrorPopup from "./ErrorPopup";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
-export default function ResetPasswordPage({ isOpen, onClose }) {
+import ShimmerLoader from "./ShimmerLoader";
+import SuccessPopup from "./SuccessPopup";
+import axios from "axios";
+export default function ResetPasswordPage({ onClose }) {
   const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: ''
+    password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const navigate = useNavigate();
   
   // Get email from URL search params
@@ -22,20 +27,20 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
   const userEmail = searchParams.get('email');
 
   const validateField = (name, value) => {
-    let error = '';
+    let error = "";
     switch (name) {
-      case 'password':
+      case "password":
         if (!value) {
-          error = 'Password is required';
+          error = "Password is required";
         } else if (value.length < 6) {
-          error = 'Password must be at least 6 characters';
+          error = "Password must be at least 6 characters";
         }
         break;
-      case 'confirmPassword':
+      case "confirmPassword":
         if (!value) {
-          error = 'Please confirm your password';
+          error = "Please confirm your password";
         } else if (value !== formData.password) {
-          error = 'Passwords do not match';
+          error = "Passwords do not match";
         }
         break;
       default:
@@ -46,61 +51,67 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     const error = validateField(name, value);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
     const error = validateField(name, formData[name]);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     const newErrors = {};
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       const error = validateField(key, formData[key]);
       if (error) newErrors[key] = error;
     });
     setErrors(newErrors);
-    setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+    setTouched(
+      Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
+    );
 
     if (Object.keys(newErrors).length === 0) {
-      setIsLoading(true);
+      // Form is valid, proceed with submission
+      setLoading(true);
       try {
-        const response = await fetch('http://localhost:8000/api/v1/users/reset-password', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userEmail,
-            newPassword: formData.password
-          })
-        });
+        const data = new FormData();
+        data.append("email", sessionStorage.getItem("email"));
+        data.append("newPassword", formData.password);
+        const res = await axios.post(
+          `${import.meta.env.VITE_SERVER}/users/forget-password`,
+          data,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
-        const data = await response.json();
-        console.log('Password reset response:', data);
-
-        if (response.ok) {
-          setErrorMessage("Password reset successful!");
+        setLoading(false);
+        if (res.data.statusCode !== 200) {
+          setErrorMessage(res.data.message || "Server error");
           setTimeout(() => {
-            setErrorMessage("");
-            navigate('/signin'); // Redirect to sign in page
+            setErrorMessage(""),
+            navigate("/forgot-password");
           }, 2000);
-        } else {
-          setErrorMessage(data.message || "Failed to reset password. Please try again.");
-          setTimeout(() => setErrorMessage(""), 3000);
+          return;
         }
-      } catch (error) {
-        console.error('Error during password reset:', error);
-        setErrorMessage("Something went wrong. Please try again.");
-        setTimeout(() => setErrorMessage(""), 3000);
-      } finally {
-        setIsLoading(false);
+
+
+        setSuccessMessage(res.data.message || "Password reset successfully");
+        setTimeout(() => {
+          setSuccessMessage("");
+           navigate("/signin"); 
+        }, 2000);
+
+        
+      } catch (err) {
+        setLoading(false);
+        setErrorMessage("Network error or server down");
+        setTimeout(() => setErrorMessage(""), 1000);
       }
     } else {
       const firstError = Object.values(newErrors)[0];
@@ -111,11 +122,12 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
 
   return (
     <>
-            <div className="relative min-h-screen">
-              <Navbar />
-              <Sidebar />
-            </div>
+      <div className="relative min-h-screen">
+        <Navbar />
+        <Sidebar />
+      </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-2 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
+       {loading && <ShimmerLoader />}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-1rem)] sm:max-w-md p-3 sm:p-5 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn my-4 sm:my-6">
           <button
             onClick={onClose}
@@ -123,14 +135,19 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
           >
             <X size={20} className="sm:w-6 sm:h-6" />
           </button>
-          <h2 className="text-xl sm:text-2xl font-bold mb-2 text-white text-center">Reset Password</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2 text-white text-center">
+            Reset Password
+          </h2>
           <p className="text-[#C8ACD6] text-center mb-4 sm:mb-6 text-sm sm:text-base">
             Create a new password for your account
           </p>
-          
+
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
-              <label htmlFor="password" className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base">
+              <label
+                htmlFor="password"
+                className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base"
+              >
                 New Password
               </label>
               <div className="relative">
@@ -141,7 +158,9 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
                   value={formData.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={"w-full pl-9 sm:pl-10 pr-10 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"}
+                  className={
+                    "w-full pl-9 sm:pl-10 pr-10 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"
+                  }
                   placeholder="Enter new password"
                 />
                 <Lock className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
@@ -156,14 +175,14 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
                     <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
-                {/* {errors.password && touched.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                )} */}
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base"
+              >
                 Confirm New Password
               </label>
               <div className="relative">
@@ -174,7 +193,9 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={"w-full pl-9 sm:pl-10 pr-10 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"}
+                  className={
+                    "w-full pl-9 sm:pl-10 pr-10 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"
+                  }
                   placeholder="Confirm new password"
                 />
                 <Lock className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
@@ -189,9 +210,6 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
                     <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </button>
-                {/* {errors.confirmPassword && touched.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
-                )} */}
               </div>
             </div>
 
@@ -205,12 +223,19 @@ export default function ResetPasswordPage({ isOpen, onClose }) {
             </button>
           </form>
         </div>
-        
+
         {/* Error Popup */}
         {errorMessage && (
-          <ErrorPopup 
-            message={errorMessage} 
+          <ErrorPopup
+            message={errorMessage}
             onClose={() => setErrorMessage("")}
+          />
+        )}
+
+        {successMessage && (
+          <SuccessPopup
+            message={successMessage}
+            onClose={() => setSuccessMessage("")}
           />
         )}
       </div>

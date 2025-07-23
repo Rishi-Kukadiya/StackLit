@@ -3,20 +3,21 @@ import Navbar from "./Navbar";
 import ErrorPopup from "./ErrorPopup";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ShimmerLoader from "./ShimmerLoader";
+import SuccessPopup from "./SuccessPopup";
 import Sidebar from "./Sidebar";
+import axios from "axios";
 export default function OtpVerificationPage({ isOpen, onClose }) {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [errorMessage, setErrorMessage] = useState("");
   const [timer, setTimer] = useState(300); // 5 minutes = 300 seconds
   const [isClickable, setIsClickable] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
 
-  // For demo purposes - you'll replace this with actual email from your state management
-  const userEmail = "user@example.com";
-  console.log("User email for OTP verification: ", userEmail);
-  // console.log("OTP verification response: ", response);
-
+  const userEmail = sessionStorage.getItem("email") || "user@example.com";
   useEffect(() => {
     const countdown = setInterval(() => {
       setTimer((prevTime) => {
@@ -30,16 +31,47 @@ export default function OtpVerificationPage({ isOpen, onClose }) {
     }, 1000);
     return () => clearInterval(countdown);
   }, []);
+
+
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;
-    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    return `${min.toString().padStart(2, "0")}:${sec
+      .toString()
+      .padStart(2, "0")}`;
   };
-  const handleResend = () => {
-    if (!isClickable) return;
-    console.log('Resend OTP');
-    // Call your resend OTP API here
-  };
+
+
+  const handleResubit = async() => {
+      setLoading(true);
+      try {
+        const res = await axios.post(
+          `${import.meta.env.VITE_SERVER}/users/send-otp`,
+          { email: userEmail },
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        setLoading(false);
+        if (res.data.statusCode !== 200) {
+          setErrorMessage(res.data.message || "Server error");
+          setTimeout(() => setErrorMessage(""), 2000);
+          return;
+        }
+
+        setSuccessMessage(res.data.message || "Otp sent successfully");
+        setTimeout(() => {
+          setSuccessMessage("");
+          setOtp(["", "", "", "", "", ""]);
+          setTimer(300); // Reset timer to 5 minutes
+        }, 2000);
+      } catch (err) {
+        setLoading(false);
+        setErrorMessage("Network error or server down");
+        setTimeout(() => setErrorMessage(""), 1000);
+      }
+  }
   const handleChange = (index, value) => {
     // Only allow numbers
     if (value && !/^\d+$/.test(value)) return;
@@ -57,29 +89,55 @@ export default function OtpVerificationPage({ isOpen, onClose }) {
 
   const handleKeyDown = (index, e) => {
     // Handle backspace
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       if (prevInput) prevInput.focus();
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
 
-    const otpValue = otp.join('');
-
+    const otpValue = otp.join("");
     if (otpValue.length !== 6) {
       setErrorMessage("Please enter the complete 6-digit OTP");
       setTimeout(() => setErrorMessage(""), 3000);
       return;
     }
+    setLoading(true);
+     try {
+        const res = await axios.post(
+          `${import.meta.env.VITE_SERVER}/users/verify-otp`,
+          {"email" : userEmail , "otp": otpValue},
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
-    // Here you would verify the OTP with your backend
-    console.log('OTP submitted:', otpValue);
+        setLoading(false);
+        if (res.data.statusCode !== 200) {
+          setErrorMessage(res.data.message || "Server error");
+          setTimeout(() => setErrorMessage(""), 2000);
+          return;
+        }
+
+        // Clear OTP input
+        setOtp(["", "", "", "", "", ""]);
+        setSuccessMessage(res.data.message || "Successfully verified OTP");
+        setTimeout(() => {
+          setSuccessMessage("");
+          navigate("/reset-password");
+        }, 2000);
+
+        
+      } catch (err) {
+        setLoading(false);
+        setErrorMessage("Network error or server down");
+        setTimeout(() => setErrorMessage(""), 1000);
+      }
 
     // For demo purposes, navigate to reset password page
     // In a real app, you would verify the OTP first
-    navigate('/reset-password');
   };
 
   return (
@@ -89,6 +147,7 @@ export default function OtpVerificationPage({ isOpen, onClose }) {
         <Sidebar />
       </div>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17153B]/60 p-4 sm:p-6 lg:p-8">
+      {loading && <ShimmerLoader />}
         <div className="relative bg-[#2E236C] w-full max-w-[calc(100%-2rem)] sm:max-w-md p-4 sm:p-6 md:p-8 rounded-lg shadow-xl backdrop-blur-sm animate-fadeIn max-h-[90vh] flex flex-col">
           <button
             onClick={onClose}
@@ -96,15 +155,18 @@ export default function OtpVerificationPage({ isOpen, onClose }) {
           >
             <X size={20} className="sm:w-6 sm:h-6" />
           </button>
-          <h2 className="text-xl sm:text-2xl font-bold mb-2 text-white text-center">Verify OTP</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-2 text-white text-center">
+            Verify OTP
+          </h2>
           <p className="text-[#C8ACD6] text-center mb-4 sm:mb-6 text-sm sm:text-base">
-            Enter the 6-digit code sent to<br />
+            Enter the 6-digit code sent to
+            <br />
             <span className="text-white font-medium">{userEmail}</span>
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4"> */}
-            <div className="flex flex-nowrap justify-center gap-2 sm:gap-3 md:gap-4 w-full">
+            <div className="flex flex-nowrap justify-center gap-2 sm:gap-3 md:gap-4 w-full">
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -127,14 +189,16 @@ export default function OtpVerificationPage({ isOpen, onClose }) {
               <button
                 type="button"
                 disabled={!isClickable}
-                onClick={handleResend}
-                className={`text-sm sm:text-base underline ${isClickable ? 'text-white hover:text-[#C8ACD6]' : 'text-gray-400 cursor-not-allowed'
-                  }`}
+                onClick={handleResubit}
+                className={`text-sm sm:text-base underline ${
+                  isClickable
+                    ? "text-white hover:text-[#C8ACD6]"
+                    : "text-gray-400 cursor-not-allowed"
+                }`}
               >
                 Resend OTP
               </button>
             </div>
-
 
             <button
               type="submit"
@@ -151,6 +215,13 @@ export default function OtpVerificationPage({ isOpen, onClose }) {
           <ErrorPopup
             message={errorMessage}
             onClose={() => setErrorMessage("")}
+          />
+        )}
+
+        {successMessage && (
+          <SuccessPopup
+            message={successMessage}
+            onClose={() => setSuccessMessage("")}
           />
         )}
       </div>

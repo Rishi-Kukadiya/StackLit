@@ -3,7 +3,7 @@ import { User } from "./user.model.js";
 const answerSchema = new mongoose.Schema({
     questionId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref : "Question"
+        ref: "Question"
     },
     content: {
         type: String,
@@ -14,9 +14,14 @@ const answerSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    image: {
+    images:[ {
         type: String
-    }
+    }],
+    tags: [
+        {
+            type: String
+        }
+    ]
 }, { timestamps: true });
 
 export const Answer = mongoose.model("Answer", answerSchema);

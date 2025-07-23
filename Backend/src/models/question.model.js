@@ -14,10 +14,17 @@ const questionSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    image: {
+    images: [
+        {
         type: String
-    },
+        }
+    ],
     answeredBy: [
+        {
+            type: String
+        }
+    ],
+    tags: [
         {
             type: String
         }

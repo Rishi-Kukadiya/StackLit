@@ -22,9 +22,8 @@ function App() {
         <Route path="/signup" element={<SignUpModal isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/question/:id" element={<QuestionPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordModal isOpen={true} onClose={() => navigate("/")} />} />
-        <Route path="/otp-verification" element={<OtpVerificationPage isOpen={true} onClose={() => navigate("/")} />} />
+        <Route path="/otp-verification" element={<OtpVerificationPage  isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/reset-password" element={<ResetPasswordPage isOpen={true} onClose={() => navigate("/")} />} />
-        <Route path="/ask" element={<AskQuestion />} />
       </Routes>
     </UserProvider>
   );
