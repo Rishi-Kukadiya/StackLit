@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteQuestion, getQuestionDetails, postQuestion } from "../controllers/question.controller.js";
+import { deleteQuestion, getAllQuestions, getQuestionDetails, postQuestion } from "../controllers/question.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 const questionRouter = Router();
@@ -15,12 +15,12 @@ questionRouter.route('/post-question').post(
 );
 
 questionRouter.route("/get-question/:questionId").get(
-    verifyJWT,
     getQuestionDetails
 )
 questionRouter.route("/delete-question/:questionId").delete(
     verifyJWT,
     deleteQuestion
 )
+questionRouter.route("/get-questions").get(getAllQuestions);
 
 export default questionRouter;
