@@ -55,11 +55,11 @@ export default function QuestionCard({ question, isExpanded = false }) {
         <div className="flex items-center gap-3">
           <img
             // src={question.author.profilePhoto}
-            src={question.author.profilePhoto}
-            alt={question.author.username}
+            src={question.owner?.avatar}
+            alt={question.owner?.owner}
             className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
           />
-          <span className="text-white font-medium">{question.author.username}</span>
+          <span className="text-white font-medium">{question.owner?.owner}</span>
 
         </div>
         <div className="flex justify-start gap-4">
