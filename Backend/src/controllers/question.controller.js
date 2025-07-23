@@ -25,7 +25,7 @@ const postQuestion = asyncHandler(async (req, res) => {
         let imageUrls = [];
 
         if (req.files && req.files.image && req.files.image.length > 0) {
-            const images = req.files.image.slice(0, 5); 
+            const images = req.files.image.slice(0, 5);
             for (const file of images) {
                 const cloudinaryImage = await uploadOnCloudinary(file.path);
                 if (!cloudinaryImage) {
@@ -40,7 +40,7 @@ const postQuestion = asyncHandler(async (req, res) => {
         const question = await Question.create({
             title,
             content,
-            images: imageUrls, 
+            images: imageUrls,
             owner: req.user._id,
             tags: parsedTags
         });
@@ -64,14 +64,14 @@ const postQuestion = asyncHandler(async (req, res) => {
 const getQuestionDetails = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
     console.log(questionId);
-    
+
 
     if (!questionId) {
         return res.json(new ApiError(400, "Question ID is required"));
     }
 
     const question = await Question.findById(questionId)
-        .populate("owner", "username email avatar") 
+        .populate("owner", "username email avatar")
         .lean();
 
     if (!question) {
@@ -82,12 +82,12 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
     const totalLikes = questionLikes.filter(like => like.isLike).length;
     const totalDislikes = questionLikes.filter(like => !like.isLike).length;
 
-    
+
     const answers = await Answer.find({ questionId })
         .populate("owner", "username fullName avatar")
         .lean();
 
-    
+
     const answerIds = answers.map(a => a._id);
     const answerLikes = await Like.find({ target: { $in: answerIds }, targetType: "Answer" }).lean();
 
@@ -153,5 +153,142 @@ const deleteQuestion = asyncHandler(async (req, res) => {
 
 })
 
+const editTitle = asyncHandler(async (req, res) => {
+    const { questionId } = req.params;
+    const { title } = req.body;
+    if (!questionId) {
+        return res.json(new ApiError(400, "Question ID is required."));
+    }
+    const question = await Question.findById(questionId);
+    if (!question) {
+        return res.json(new ApiError(404, "Question not found."));
+    }
+    if (question.owner.toString() != req.user._id.toString()) {
+        return res.json(new ApiError(403, "Unauthorized to edit this question."));
+    }
+    question.title = title || question.title;
+    await question.save();
+    return res.json(new ApiResponse(200, question, "Question title updated successfully."));
+})
+const editContent = asyncHandler(async (req, res) => {
+    const { questionId } = req.params;
+    const { content } = req.body;
+    if (!questionId) {
+        return res.json(new ApiError(400, "Question ID is required."));
+    }
+    const question = await Question.findById(questionId);
+    if (!question) {
+        return res.json(new ApiError(404, "Question not found."));
+    }
+    if (question.owner.toString() != req.user._id.toString()) {
+        return res.json(new ApiError(403, "Unauthorized to edit this question."));
+    }
+    question.content = content || question.content;
+    await question.save();
+    return res.json(new ApiResponse(200, question, "Question content updated successfully."));
+})
+const editTags = asyncHandler(async (req, res) => {
+    const { questionId } = req.params;
+    const { tags } = req.body;
+    if (!questionId) {
+        return res.json(new ApiError(400, "Question ID is required."));
+    }
+    const question = await Question.findById(questionId);
+    if (!question) {
+        return res.json(new ApiError(404, "Question not found."));
+    }
+    if (question.owner.toString() != req.user._id.toString()) {
+        return res.json(new ApiError(403, "Unauthorized to edit this question."));
+    }
+    question.tags = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : question.tags;
+    await question.save();
+    return res.json(new ApiResponse(200, question, "Question content updated successfully."));
+})
+const editImages = asyncHandler(async (req, res) => {
+    const { questionId } = req.params;
+    const { retainImages = [] } = req.body;
+    if (!questionId) {
+        return res.json(new ApiError(400, "Question ID is required."));
+    }
+    const question = await Question.findById(questionId);
+    if (!question) {
+        return res.json(new ApiError(404, "Question not found."));
+    }
+    if (question.owner.toString() != req.user._id.toString()) {
+        return res.json(new ApiError(403, "Unauthorized to edit this question."));
+    }
 
-export { postQuestion, deleteQuestion, getQuestionDetails };
+    let updatedImages = Array.isArray(retainImages) ? retainImages : [];
+    if (req.files && req.files.image && req.files.image.length > 0) {
+        const newImages = req.files.image.slice(0, 5 - updatedImages.length);
+        for (const file of newImages) {
+            const uploaded = await uploadOnCloudinary(file.path);
+            if (uploaded?.secure_url) {
+                updatedImages.push(uploaded.secure_url);
+            }
+        }
+    }
+    if (updatedImages.length > 5) {
+        return res.json(new ApiError(400, "Maximum 5 images allowed per question."));
+    }
+    question.images = updatedImages;
+    await question.save();
+    return res.json(new ApiResponse(200, question, "Question Images updated successfully."));
+})
+
+const getAllQuestions = asyncHandler(async (req, res) => {
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const skip = (page - 1) * limit;
+
+    const questions = await Question.find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("owner", "username avatar")
+        .select("-answeredBy -images")
+        .lean();
+
+    const questionIds = questions.map(q => q._id);
+
+    const [likes, answers] = await Promise.all([
+        Like.find({ target: { $in: questionIds }, targetType: "Question" }).lean(),
+        Answer.find({ questionId: { $in: questionIds } })
+            .populate("owner", "avatar")
+            .lean()
+    ]);
+
+    const answerMap = {};
+    for (const ans of answers) {
+        const qId = String(ans.questionId);
+        if (!answerMap[qId]) {
+            answerMap[qId] = [];
+        }
+        answerMap[qId].push(ans.owner?.avatar);
+    }
+
+    const likeMap = {};
+    for (const like of likes) {
+        const qId = String(like.target);
+        if (!likeMap[qId]) likeMap[qId] = { likes: 0, dislikes: 0 };
+        if (like.isLike) likeMap[qId].likes++;
+        else likeMap[qId].dislikes++;
+    }
+
+    const enriched = questions.map(q => {
+        const qId = String(q._id);
+        return {
+            ...q,
+            likes: likeMap[qId]?.likes || 0,
+            dislikes: likeMap[qId]?.dislikes || 0,
+            answerCount: (answerMap[qId]?.length || 0),
+            answerAvatars: answerMap[qId] || []
+        };
+    });
+
+    return res.json(new ApiResponse(200, enriched, "Questions fetched"));
+});
+
+
+export { postQuestion, deleteQuestion, getQuestionDetails, editContent, editImages, editTags, editTitle, getAllQuestions };
