@@ -38,7 +38,7 @@ const postAnswer = asyncHandler(async (req, res) => {
         let imageUrls = [];
 
         if (req.files && req.files.image && req.files.image.length > 0) {
-            const files = req.files.image.slice(0, 5); 
+            const files = req.files.image.slice(0, 5);
 
             for (const file of files) {
                 const uploadedImage = await uploadOnCloudinary(file.path);
@@ -61,7 +61,7 @@ const postAnswer = asyncHandler(async (req, res) => {
             questionId,
             content,
             owner: req.user?._id,
-            images: imageUrls, 
+            images: imageUrls,
             tags: parsedTags
         });
 
@@ -88,7 +88,7 @@ const getAnswerDetails = asyncHandler(async (req, res) => {
         return res.json(new ApiError(400, "Answer ID is required"));
     }
 
-    
+
     const answer = await Answer.findById(answerId).lean();
 
     if (!answer) {
@@ -118,7 +118,7 @@ const getAnswerDetails = asyncHandler(async (req, res) => {
             question: {
                 ...question,
                 likes: likesForQuestion,
-                dislikes : dislikesForQuestion
+                dislikes: dislikesForQuestion
             }
         }, "Answer and related question fetched successfully")
     );
@@ -154,4 +154,4 @@ const deleteAnswer = asyncHandler(async (req, res) => {
 
 })
 
-export { postAnswer, deleteAnswer , getAnswerDetails };
+export { postAnswer, deleteAnswer, getAnswerDetails };
