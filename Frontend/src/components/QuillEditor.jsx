@@ -17,7 +17,6 @@ import {
   Heading1,
   Heading2,
   Quote,
-  Code,
   Undo,
   Redo,
 } from "lucide-react";
