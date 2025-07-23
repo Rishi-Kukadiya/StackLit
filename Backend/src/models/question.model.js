@@ -14,9 +14,11 @@ const questionSchema = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    image: {
+    images: [
+        {
         type: String
-    },
+        }
+    ],
     answeredBy: [
         {
             type: String
@@ -24,7 +26,7 @@ const questionSchema = new mongoose.Schema({
     ],
     tags: [
         {
-            type:String
+            type: String
         }
     ]
 }, { timestamps: true });
