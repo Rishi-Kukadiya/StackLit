@@ -1,12 +1,16 @@
-import { Tag, Clock, User, ThumbsUp, ArrowRight, MessageCircle } from "lucide-react";
+import { Tag, Clock, ThumbsUp, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
-export default function QuestionCard({ question, isExpanded = false }) {
-  console.log('Question data:', question); // Add this line to debug
+export default function QuestionCard({ question }) {
+  console.log('Question data:', question); // Debug log
   const navigate = useNavigate();
-  const [showTooltip, setShowTooltip] = useState(null);
+
+  // Guard against undefined question prop
+  if (!question) {
+    console.error('Question prop is undefined');
+    return null;
+  }
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -18,7 +22,9 @@ export default function QuestionCard({ question, isExpanded = false }) {
   };
 
   // Truncate content to first 2-3 lines (roughly 200 characters)
-  const truncatedContent = question.content.split('```')[0].slice(0, 200) + '...';
+  const truncatedContent = question.content 
+    ? question.content.split('```')[0].slice(0, 200) + '...'
+    : '';
 
   const cardVariants = {
     initial: {
@@ -33,8 +39,8 @@ export default function QuestionCard({ question, isExpanded = false }) {
   };
 
   const handleClick = () => {
-    // Animate out
-    navigate(`/question/${question.id}`);
+    // Animate out and navigate to question detail
+    navigate(`/question/${question._id}`);
   };
 
   return (
