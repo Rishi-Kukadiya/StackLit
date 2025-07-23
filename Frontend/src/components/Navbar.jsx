@@ -18,9 +18,9 @@ export default function Navbar() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [profileOpen]);
+  }, [profileOpen]);  
   return (
-    <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md">
+    <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md ">
       <div className="container mx-auto flex items-center justify-between flex-wrap">
         {/* Left: Logo */}
         <Link to="/">
