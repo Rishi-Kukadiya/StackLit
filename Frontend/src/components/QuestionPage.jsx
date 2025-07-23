@@ -15,115 +15,6 @@ const LoadingSpinner = () => (
     </div>
   </div>
 );
-//   id: 1,
-//   title: "How to implement async/await in React components?",
-//   content: `I'm trying to understand the best practices for handling asynchronous operations in React components. Here's my current implementation:
-
-// \`\`\`javascript
-// const MyComponent = () => {
-//   const [data, setData] = useState(null);
-  
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       const result = await api.getData();
-//       setData(result);
-//     };
-//     fetchData();
-//   }, []);
-  
-//   return <div>{data}</div>;
-// };
-// \`\`\`
-
-// Is this the correct way to handle async operations? Any suggestions for error handling?`,
-//   tags: ["react", "javascript", "async-await", "hooks"],
-//   views: 1234,
-//   likes: 56,
-//   dislikes: 12,
-//   createdAt: "2025-07-15T10:30:00Z",
-//   author: {
-//     id: 1,
-//     username: "techexplorer",
-//     reputation: 3240,
-//     profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=techexplorer"
-//   },
-//   answerers: [
-//     { id: 2, username: "codemaster", profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=codemaster" },
-//     { id: 3, username: "reactdev", profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=reactdev" },
-//     { id: 4, username: "webguru", profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=webguru" }
-//   ]
-// };
-
-// // Add this mock data at the top with your existing mock data
-// const mockAnswers = [
-//   {
-//     id: 1,
-//     content: `Here's a better way to handle async operations in React:
-
-// \`\`\`javascript
-// const MyComponent = () => {
-//   const [data, setData] = useState(null);
-//   const [error, setError] = useState(null);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const result = await api.getData();
-//         setData(result);
-//       } catch (err) {
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchData();
-//   }, []);
-
-//   if (loading) return <LoadingSpinner />;
-//   if (error) return <ErrorMessage error={error} />;
-//   return <div>{data}</div>;
-// };
-// \`\`\``,
-//     author: {
-//       id: 2,
-//       username: "codemaster",
-//       profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=codemaster"
-//     },
-//     createdAt: "2025-07-16T15:30:00Z",
-//     likes: 42,
-//     dislikes: 3
-//   },
-//   {
-//     id: 2,
-//     content: `Curious about optimizing data fetching in React?
-// One option is to create a custom hook like \`useFetch\`, which neatly wraps async logic, state management, and side effects. This keeps components clean and reusable across your app.
-// Or, go even sleeker with libraries like \`react-query\`, which handle caching, refetching, and error boundaries out of the box. They’re both powerful—choose what suits your style.`,
-//     author: {
-//       id: 3,
-//       username: "bytewhisperer",
-//       profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=bytewhisperer"
-//     },
-//     createdAt: "2025-07-18T09:45:00Z",
-//     likes: 35,
-//     dislikes: 1
-//   },
-//   {
-//   id: 3,
-//   content: `Want cleaner React components? Async calls can be simplified with modern tools.
-// Use a custom hook to abstract the logic. Your component stays focused on rendering, and your data fetching becomes reusable.
-// For bigger apps, \`react-query\` is a lifesaver—minimal setup, aggressive caching, and automatic retries. Once you try it, you won’t go back.`,
-//   author: {
-//     id: 4,
-//     username: "frontendninja",
-//     profilePhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=frontendninja"
-//   },
-//   createdAt: "2025-07-20T12:10:00Z",
-//   likes: 53,
-//   dislikes: 5
-// }
-//   // Add more mock answers as needed
-// ];
 
 export default function QuestionPage() {
   const { id } = useParams();
@@ -143,7 +34,9 @@ export default function QuestionPage() {
           withCredentials: true
         });
         
-        console.log('Fetched question:', response.data);
+        // Debug logs
+        console.log('API Response:', response.data.success);
+        console.log('Question Content:', response.data.data);
 
         if (response.data.success) {
           setQuestion(response.data.data);
@@ -166,6 +59,11 @@ export default function QuestionPage() {
       fetchQuestionData();
     }
   }, [id]);
+
+  // Add this new useEffect after your existing useEffect
+  useEffect(() => {
+    // console.log('Question state updated:', question);
+  }, [question]);
 
   // Function to truncate text to first few lines
   const truncateContent = (content) => {
@@ -275,23 +173,25 @@ export default function QuestionPage() {
                 transform transition-all duration-300
                 border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
                 shadow-[0_0_15px_rgba(200,172,214,0.2)]">
+    
               {/* Row 1: User Info Section */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 border-b border-[#433D8B]/50 pb-4">
                 <div className="flex-shrink-0">
                   <img
-                    src={question.owner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                    alt={question.owner?.email || 'User'}
+                    // Replace data.data.question with just question
+                    src={question.question.owner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                    alt={question.question.owner?.email || 'User'}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
                 </div>
                 <div className="flex-grow w-full sm:w-auto">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-white font-medium">{(question.owner?.email?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'}</h3>
+                    <h3 className="text-white font-medium">{(question.question.owner?.email?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'}</h3>
                   </div>
                   <div className="text-[#C8ACD6] text-xs sm:text-sm flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="flex items-center">
                       <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      {formatDate(question.createdAt)}
+                      {formatDate(question.question.createdAt)}
                     </span>
                   </div>
                 </div>
@@ -300,16 +200,16 @@ export default function QuestionPage() {
               {/* Row 2: Question Content */}
               <div className="mb-6">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
-                  {question.title}
+                  {question.question.title}
                 </h1>
-                <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base"
-                     dangerouslySetInnerHTML={{ __html: question.content }}>
+                <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base prose prose-invert max-w-none"
+                     dangerouslySetInnerHTML={{ __html: question.question.content }}>
                 </div>
 
                 {/* Images Section */}
-                {question.images && question.images.length > 0 && (
+                {question.question.images && question.question.images.length > 0 && (
                   <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {question.images.map((imageUrl, index) => (
+                    {question.question.images.map((imageUrl, index) => (
                       <img
                         key={index}
                         src={imageUrl}
@@ -327,7 +227,7 @@ export default function QuestionPage() {
                 {/* Tags and Answerers Row */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex flex-wrap gap-2">
-                    {question && question.tags && question.tags.length > 0 && question.tags.map((tag) => (
+                    {question && question.question.tags && question.question.tags.length > 0 && question.question.tags.map((tag) => (
                       <span
                         key={tag}
                         className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
@@ -356,7 +256,7 @@ export default function QuestionPage() {
                   {/* Answerers */}
                   <div className="flex items-center">
                     <div className="flex -space-x-3">
-                      {(question.answeredBy || []).map((answerer) => (
+                      {(question.question.answeredBy || []).map((answerer) => (
                         <div
                           key={answerer._id}
                           className="relative"
@@ -377,7 +277,7 @@ export default function QuestionPage() {
                       ))}
                     </div>
                     <span className="ml-3 text-[#C8ACD6] text-sm">
-                      {(question.answeredBy || []).length} answers
+                      {(question.question.answeredBy || []).length} answers
                     </span>
                   </div>
                 </div>
@@ -390,13 +290,13 @@ export default function QuestionPage() {
                       <ThumbsUp className="w-5 h-5" />
                     </button>
                     <span className="text-white text-center font-medium min-w-[2rem]">
-                      {question.likes}
+                      {question.question.likes}
                     </span>
                     <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                       <ThumbsUp className="w-5 h-5 transform rotate-180" />
                     </button>
                     <span className="text-white text-center font-medium min-w-[2rem]">
-                      {question.dislikes}
+                      {question.question.dislikes}
                     </span>
                   </div>
 
