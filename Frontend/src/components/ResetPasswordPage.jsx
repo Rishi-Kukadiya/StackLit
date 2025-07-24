@@ -21,6 +21,10 @@ export default function ResetPasswordPage({ onClose }) {
   const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
+  
+  // Get email from URL search params
+  const searchParams = new URLSearchParams(window.location.search);
+  const userEmail = searchParams.get('email');
 
   const validateField = (name, value) => {
     let error = "";
@@ -211,9 +215,10 @@ export default function ResetPasswordPage({ onClose }) {
 
             <button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-[#433D8B] text-white py-1.5 sm:py-2 rounded-lg hover:bg-[#2E236C] border border-[#C8ACD6] transition-all text-sm sm:text-base mt-2 flex items-center justify-center space-x-2"
             >
-              <span>Reset Password</span>
+              <span>{isLoading ? 'Resetting Password...' : 'Reset Password'}</span>
               <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </form>
