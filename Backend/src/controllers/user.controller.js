@@ -6,6 +6,9 @@ import jwt, { decode } from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import { User } from "../models/user.model.js";
 import sendEmail from "../utils/sendEmail.js";
+import { Question } from "../models/question.model.js";
+import { Like } from "../models/like.model.js";
+import { Answer } from "../models/answer.model.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -32,7 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
             field?.trim() || "" === ""
         })
     ) {
-        return res.json(new ApiError(400, "fullName ,email,username and password are required."))
+        return res.json(new ApiError(400, "fullName ,email and password are required."))
     }
 
     const isUserExist = await User.findOne({
@@ -40,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
     })
 
     if (isUserExist) {
-        return res.json(new ApiError(400, "User with email or username already Exists"));
+        return res.json(new ApiError(400, "User with email already Exists"));
     }
     console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
@@ -256,7 +259,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
 });
 
 const forgetPassword = asyncHandler(async (req, res) => {
-    const { newPassword,email } = req.body;
+    const { newPassword, email } = req.body;
     const user = await User.findOne({ email });
 
     // console.log(user);
@@ -283,6 +286,93 @@ const forgetPassword = asyncHandler(async (req, res) => {
             new ApiResponse(200, {}, "Password changed successfully")
         )
 })
+
+
+
+
+const getUsers = asyncHandler(async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const users = await User.find().select("fullName avatar").skip(skip).limit(limit);
+
+        const totalUsers = await User.countDocuments();
+
+        const result = await Promise.all(
+            users.map(async (user) => {
+                const [questionCount, answerCount] = await Promise.all([
+                    Question.countDocuments({ owner: user._id }),
+                    Answer.countDocuments({ owner: user._id }),
+                ]);
+
+                const userQuestions = await Question.find({ owner: user._id }).select("_id views");
+                const userAnswers = await Answer.find({ owner: user._id }).select("_id");
+
+                const questionIds = userQuestions.map(q => q._id);
+                const answerIds = userAnswers.map(a => a._id);
+                const totalViews = userQuestions.reduce((sum, q) => sum + (q.views || 0), 0);
+
+                const likeCount = await Like.countDocuments({
+                    isLike: true,
+                    $or: [
+                        { targetType: "Question", target: { $in: questionIds } },
+                        { targetType: "Answer", target: { $in: answerIds } },
+                    ],
+                });
+
+                const popularity =
+                    questionCount * 1 +
+                    answerCount * 2 +
+                    likeCount * 1.5 +
+                    totalViews * 2;
+
+                return {
+                    _id: user._id,
+                    fullName: user.fullName,
+                    avatar: user.avatar,
+                    questionCount,
+                    answerCount,
+                    likeCount,
+                    totalViews,
+                    popularity: Math.round(popularity),
+                };
+            })
+        );
+
+        result.sort((a, b) => b.popularity - a.popularity);
+
+        res.status(200).json({
+            success: true,
+            totalUsers,
+            currentPage: page,
+            totalPages: Math.ceil(totalUsers / limit),
+            users: result
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(
+            new ApiError(500, "Error while fetching Users.")
+        )
+
+
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export {
     registerUser,
     loginUser,
@@ -291,5 +381,6 @@ export {
     refreshAccessToken,
     sendOtp,
     verifyOtp,
-    forgetPassword
+    forgetPassword,
+    getUsers
 };

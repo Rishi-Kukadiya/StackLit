@@ -71,12 +71,15 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
     }
 
     const question = await Question.findById(questionId)
-        .populate("owner", "username  avatar")
+        .populate("owner", "fullName  avatar")
         .lean();
 
     if (!question) {
         return res.json(new ApiError(404, "Question not found"));
     }
+    const q = await Question.findById(questionId);
+    q.views = q.views + 1;
+    await q.save({ validateBeforeSave: true });
 
     const questionLikes = await Like.find({ target: questionId, targetType: "Question" }).lean();
     const totalLikes = questionLikes.filter(like => like.isLike).length;
@@ -84,7 +87,7 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
 
 
     const answers = await Answer.find({ questionId })
-        .populate("owner", "username fullName avatar")
+        .populate("owner", "fullName avatar")
         .lean();
 
 
@@ -102,6 +105,7 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
     });
 
     const finalAnswers = Object.values(answerMap);
+
 
     return res.json(
         new ApiResponse(200, {
@@ -246,7 +250,7 @@ const getAllQuestions = asyncHandler(async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("owner", "username avatar")
+        .populate("owner", "fullName avatar")
         .select("-answeredBy -images")
         .lean();
 
