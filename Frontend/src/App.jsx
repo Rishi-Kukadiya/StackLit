@@ -11,10 +11,12 @@ import Home from "./Components/Home";
 import AskQuestion from "./Components/AskQuestion";
 import { UserProvider } from "./Components/UserContext";
 import QuestionPage from "./Components/QuestionPage";
+import { QuestionProvider } from './contexts/QuestionContext';
 function App() {
   const navigate = useNavigate();
   return (
     <UserProvider>
+      <QuestionProvider>
       <CanvasBackground />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -26,6 +28,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/ask" element={<AskQuestion></AskQuestion>}></Route>
       </Routes>
+      </QuestionProvider>
     </UserProvider>
   );
 }
