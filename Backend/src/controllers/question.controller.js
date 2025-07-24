@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { Answer } from "../models/answer.model.js";
+import { User } from "../models/user.model.js";
 import { Like } from "../models/like.model.js";
 
 
@@ -294,5 +295,77 @@ const getAllQuestions = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(200, enriched, "Questions fetched"));
 });
 
+const getUnansweredQuestions = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-export { postQuestion, deleteQuestion, getQuestionDetails, editContent, editImages, editTags, editTitle, getAllQuestions };
+
+        const answeredQuestionIds = await Answer.distinct("question");
+
+
+        const unansweredQuestions = await Question.find({
+            _id: { $nin: answeredQuestionIds },
+        })
+            .sort({ views: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const questionsWithStats = await Promise.all(
+            unansweredQuestions.map(async (question) => {
+                const [likeCount, dislikeCount, owner] = await Promise.all([
+                    Like.countDocuments({
+                        target: question._id,
+                        targetType: "Question",
+                        isLike: true,
+                    }),
+                    Like.countDocuments({
+                        target: question._id,
+                        targetType: "Question",
+                        isLike: false,
+                    }),
+                    User.findById(question.owner).select("fullName avatar").lean(),
+                ]);
+
+                return {
+                    _id: question._id,
+                    title: question.title,
+                    content: question.content,
+                    tags: question.tags,
+                    views: question.views || 0,
+                    createdAt: question.createdAt,
+                    likeCount,
+                    dislikeCount,
+                    owner: {
+                        _id: owner._id,
+                        fullName: owner.fullName,
+                        avatar: owner.avatar,
+                    },
+                };
+            })
+        );
+
+        const totalUnanswered = await Question.countDocuments({
+            _id: { $nin: answeredQuestionIds },
+        });
+
+        res.status(200).json({
+            success: true,
+            currentPage: page,
+            totalPages: Math.ceil(totalUnanswered / limit),
+            totalUnanswered,
+            questions: questionsWithStats,
+        });
+    } catch (error) {
+        console.error("Error fetching unanswered questions:", error);
+        res.status(500).json(
+            new ApiError(500, "Internal Server Error")
+        );
+    }
+};
+
+
+
+export { postQuestion, deleteQuestion, getQuestionDetails, editContent, editImages, editTags, editTitle, getAllQuestions, getUnansweredQuestions };
