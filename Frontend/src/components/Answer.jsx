@@ -15,6 +15,8 @@ export default function Answer() {
   const location = useLocation();
   const questionId = location.state?.questionId;
   const questionTitle = location.state?.questionTitle;
+  const ownerAvatar = location.state?.ownerAvatar;
+  const ownerName = location.state?.ownerName;
   const navigate = useNavigate();
   const { user } = useUser();
   const [content, setContent] = useState("");
@@ -84,6 +86,7 @@ export default function Answer() {
 
     try {
       const formData = new FormData();
+      formData.append("questionId", questionId);
       formData.append("content", content);
       const tagsStrings = tags.join(",");
       formData.append("tags", tagsStrings);
@@ -96,7 +99,6 @@ export default function Answer() {
       );
 
       if (res.data.statusCode === 201) {
-        setTitle("");
         setContent("");
         setImages([]);
         setTags([]);
@@ -158,31 +160,46 @@ export default function Answer() {
                 transition={{ duration: 0.3 }}
               >
                 {/* Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-[#433D8B]/50 pb-4">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                      Post an Answer
-                    </h1>
-                    {questionTitle && (
-                      <p className="text-[#C8ACD6] text-sm mt-1">
-                        For question: <span className="font-semibold text-white">{questionTitle}</span>
-                      </p>
-                    )}
-                    <p className="text-[#C8ACD6] text-sm">
-                      Share your answer with our community
-                    </p>
+                <div className="flex flex-col gap-4 mb-6 border-b border-[#433D8B]/50 pb-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {(ownerAvatar || ownerName) && (
+                        <div className="flex items-center gap-2 bg-[#2E236C]/30 px-3 py-2 rounded-lg border border-[#433D8B]/20">
+                          <img
+                            src={ownerAvatar}
+                            alt={ownerName}
+                            className="w-8 h-8 rounded-full border-2 border-[#C8ACD6]"
+                          />
+                          <span className="text-white font-medium text-sm">
+                            {ownerName}
+                          </span>
+                        </div>
+                      )}
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white ml-4">
+                        Post an Answer
+                      </h1>
+                    </div>
+                    <button
+                      onClick={() => navigate(-1)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[#2E236C]/40 
+                              hover:bg-[#2E236C]/60 text-[#C8ACD6] hover:text-white 
+                              transition-all duration-300 rounded-lg
+                              border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
+                              shadow-sm hover:shadow-[0_0_10px_rgba(200,172,214,0.2)]"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span className="text-sm font-medium">Back</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[#2E236C]/40 
-                            hover:bg-[#2E236C]/60 text-[#C8ACD6] hover:text-white 
-                            transition-all duration-300 rounded-lg
-                            border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
-                            shadow-sm hover:shadow-[0_0_10px_rgba(200,172,214,0.2)]"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span className="text-sm font-medium">Back</span>
-                  </button>
+                  {questionTitle && (
+                    <p className="text-[#C8ACD6] text-base mt-2 font-semibold">
+                      For question:{" "}
+                      <span className="text-white">{questionTitle}</span>
+                    </p>
+                  )}
+                  <p className="text-[#C8ACD6] text-sm mt-2">
+                    Share your answer with our community
+                  </p>
                 </div>
 
                 {/* Form Content - Scrollable */}
@@ -192,7 +209,6 @@ export default function Answer() {
                     onSubmit={handleSubmit}
                     className="space-y-4 sm:space-y-6"
                   >
-
                     {/* Content Field */}
                     <div className="space-y-2">
                       <label className="block text-white font-semibold text-sm">
@@ -207,7 +223,6 @@ export default function Answer() {
                       </div>
                     </div>
 
-                    {/* Images Field */}
                     <div className="space-y-3">
                       <label className="text-white font-semibold flex items-center gap-2 text-sm drop-shadow-lg">
                         <ImagePlus className="w-5 h-5 text-[#C8ACD6]" />
