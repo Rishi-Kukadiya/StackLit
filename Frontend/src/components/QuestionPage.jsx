@@ -33,7 +33,7 @@ export default function QuestionPage() {
         const response = await axios.get(`${import.meta.env.VITE_SERVER}/questions/get-question/${id}`, {
           withCredentials: true
         });
-        
+
         // Debug logs
         console.log('API Response:', response.data.success);
         console.log('Question Content:', response.data.data);
@@ -109,7 +109,7 @@ export default function QuestionPage() {
           <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
             <div className="text-red-400 text-center p-8">
               <p>{error}</p>
-              <button 
+              <button
                 onClick={() => navigate(-1)}
                 className="mt-4 text-[#C8ACD6] hover:text-white transition-colors"
               >
@@ -173,7 +173,7 @@ export default function QuestionPage() {
                 transform transition-all duration-300
                 border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
                 shadow-[0_0_15px_rgba(200,172,214,0.2)]">
-    
+
               {/* Row 1: User Info Section */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 border-b border-[#433D8B]/50 pb-4">
                 <div className="flex-shrink-0">
@@ -203,7 +203,7 @@ export default function QuestionPage() {
                   {question.question.title}
                 </h1>
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base prose prose-invert max-w-none"
-                     dangerouslySetInnerHTML={{ __html: question.question.content }}>
+                  dangerouslySetInnerHTML={{ __html: question.question.content }}>
                 </div>
 
                 {/* Images Section */}
@@ -219,7 +219,6 @@ export default function QuestionPage() {
                     ))}
                   </div>
                 )}
-                </div>
               </div>
 
               {/* Row 3: Footer Section */}
@@ -252,155 +251,158 @@ export default function QuestionPage() {
                       </span>
                     ))} */}
                   </div>
-
-                  {/* Answerers */}
-                  <div className="flex items-center">
-                    <div className="flex -space-x-3">
-                      {(question.question.answeredBy || []).map((answerer) => (
-                        <div
-                          key={answerer._id}
-                          className="relative"
-                          onMouseEnter={() => setShowTooltip(answerer._id)}
-                          onMouseLeave={() => setShowTooltip(null)}
-                        >
-                          <img
-                            src={answerer.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                            alt={answerer.email || 'User'}
-                            className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
-                          />
-                          {showTooltip === answerer._id && (
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
-                              {answerer.email?.split('@')[0] || 'Anonymous'}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <span className="ml-3 text-[#C8ACD6] text-sm">
-                      {(question.question.answeredBy || []).length} answers
-                    </span>
-                  </div>
                 </div>
-
-                {/* Interaction Row: likes and dislikes and Post Answer */}
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {/* Voting */}
-                  <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
-                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                      <ThumbsUp className="w-5 h-5" />
-                    </button>
-                    <span className="text-white text-center font-medium min-w-[2rem]">
-                      {question.question.likes}
-                    </span>
-                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                      <ThumbsUp className="w-5 h-5 transform rotate-180" />
-                    </button>
-                    <span className="text-white text-center font-medium min-w-[2rem]">
-                      {question.question.dislikes}
-                    </span>
+                {/* Answerers */}
+                <div className="flex items-center">
+                  <div className="flex -space-x-3">
+                    {(question.question.answeredBy || []).map((answerer) => (
+                      <div
+                        key={answerer._id}
+                        className="relative"
+                        onMouseEnter={() => setShowTooltip(answerer._id)}
+                        onMouseLeave={() => setShowTooltip(null)}
+                      >
+                        <img
+                          src={answerer.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                          alt={answerer.email || 'User'}
+                          className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
+                        />
+                        {showTooltip === answerer._id && (
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
+                            {answerer.email?.split('@')[0] || 'Anonymous'}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-
-                  {/* Post Answer Button */}
-                  <button
-                    onClick={() => {/* Add your answer handling logic here */ }}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#433D8B]/60 text-white rounded-lg
-                           hover:bg-[#17153B]/70 transition-all duration-300 border border-[#C8ACD6]/30
-                           w-full sm:w-auto justify-center sm:justify-start"
-                  >
-                    <span className="text-sm font-medium">Post Your Answer</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  {/* <span className="ml-3 text-[#C8ACD6] text-sm">
+                    {(question.question.answeredBy || []).length} answers
+                  </span> */}
                 </div>
               </div>
+
+              {/* Interaction Row: likes and dislikes and Post Answer */}
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {/* Voting */}
+                <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
+                  <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
+                    <ThumbsUp className="w-5 h-5" />
+                  </button>
+                  <span className="text-white text-center font-medium min-w-[2rem]">
+                    {question.question.likes}
+                  </span>
+                  <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
+                    <ThumbsUp className="w-5 h-5 transform rotate-180" />
+                  </button>
+                  <span className="text-white text-center font-medium min-w-[2rem]">
+                    {question.question.dislikes}
+                  </span>
+                </div>
+
+                {/* Post Answer Button */}
+                <button
+                  onClick={() => {/* Add your answer handling logic here */ }}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#433D8B]/60 text-white rounded-lg
+                  hover:bg-[#17153B]/70 transition-all duration-300 border border-[#C8ACD6]/30
+                  w-full sm:w-auto justify-center sm:justify-start"
+                >
+                  <span className="text-sm font-medium">Post Your Answer</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                  <span className="ml-3 text-[#C8ACD6] text-sm">
+                    {(question.question.answeredBy || []).length} answers
+                  </span>
+              </div>
             </div>
+          </div>
 
-            {/* Answers Section - Newly Added */}
-            <div className="mt-12 space-y-8">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <MessageSquare className="w-6 h-6" />
-                {answers.length} Answers
-              </h2>
+          {/* Answers Section - Newly Added */}
+          <div className="mt-12 space-y-8">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <MessageSquare className="w-6 h-6" />
+              {answers.length} Answers
+            </h2>
 
-              {answers.map((answer) => (
-                <div
-                  key={answer.id}
-                  className="relative bg-transparent rounded-lg p-4 sm:p-6
+            {answers.map((answer) => (
+              <div
+                key={answer.id}
+                className="relative bg-transparent rounded-lg p-4 sm:p-6
                           transform transition-all duration-300
                           border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
                           shadow-[0_0_15px_rgba(200,172,214,0.2)]"
-                >
-                  {/* Answer Author Info */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <img
-                      src={answer.author.profilePhoto}
-                      alt={answer.author.username}
-                      className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
-                    />
-                    <div>
-                      <h3 className="text-white font-medium">{answer.author.username}</h3>
-                      <span className="text-[#C8ACD6] text-xs">
-                        answered {formatDate(answer.createdAt)}
-                      </span>
-                    </div>
+              >
+                {/* Answer Author Info */}
+                <div className="flex items-center gap-3 mb-4">
+                  <img
+                    src={answer.author.profilePhoto}
+                    alt={answer.author.username}
+                    className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
+                  />
+                  <div>
+                    <h3 className="text-white font-medium">{answer.author.username}</h3>
+                    <span className="text-[#C8ACD6] text-xs">
+                      answered {formatDate(answer.createdAt)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Answer Content */}
+                <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
+                  <div className={`relative ${!expandedAnswers[answer.id] ? 'max-h-32 overflow-hidden' : ''}`}>
+                    {answer.content.split('```').map((block, index) => {
+                      if (index % 2 === 1) { // Code block
+                        return (
+                          <pre key={index} className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30">
+                            <code className="text-white whitespace-pre-wrap">{block}</code>
+                          </pre>
+                        );
+                      }
+                      return <p key={index} className="whitespace-pre-wrap">{block}</p>;
+                    })}
+
+                    {!expandedAnswers[answer.id] && (
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
+                    )}
                   </div>
 
-                  {/* Answer Content */}
-                  <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
-                    <div className={`relative ${!expandedAnswers[answer.id] ? 'max-h-32 overflow-hidden' : ''}`}>
-                      {answer.content.split('```').map((block, index) => {
-                        if (index % 2 === 1) { // Code block
-                          return (
-                            <pre key={index} className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30">
-                              <code className="text-white whitespace-pre-wrap">{block}</code>
-                            </pre>
-                          );
-                        }
-                        return <p key={index} className="whitespace-pre-wrap">{block}</p>;
-                      })}
-                      
-                      {!expandedAnswers[answer.id] && (
-                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
-                      )}
-                    </div>
-                    
-                    <button
-                      onClick={() => setExpandedAnswers(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
-                      className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
-                    >
-                      {expandedAnswers[answer.id] ? 'Show less' : 'Read more'}
-                      <ChevronLeft className={`w-4 h-4 transform transition-transform ${expandedAnswers[answer.id] ? 'rotate-90' : '-rotate-90'}`} />
+                  <button
+                    onClick={() => setExpandedAnswers(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
+                    className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
+                  >
+                    {expandedAnswers[answer.id] ? 'Show less' : 'Read more'}
+                    <ChevronLeft className={`w-4 h-4 transform transition-transform ${expandedAnswers[answer.id] ? 'rotate-90' : '-rotate-90'}`} />
+                  </button>
+                </div>
+
+                {/* Answer Footer */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
+                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
+                      <ThumbsUp className="w-4 h-4" />
                     </button>
-                  </div>
-
-                  {/* Answer Footer */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
-                      <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                        <ThumbsUp className="w-4 h-4" />
-                      </button>
-                      <span className="text-white text-center font-medium min-w-[2rem]">
-                        {answer.likes}
-                      </span>
-                      <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                        <ThumbsUp className="w-4 h-4 transform rotate-180" />
-                      </button>
-                      <span className="text-white text-center font-medium min-w-[2rem]">
-                        {answer.dislikes}
-                      </span>
-                    </div>
+                    <span className="text-white text-center font-medium min-w-[2rem]">
+                      {answer.likes}
+                    </span>
+                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
+                      <ThumbsUp className="w-4 h-4 transform rotate-180" />
+                    </button>
+                    <span className="text-white text-center font-medium min-w-[2rem]">
+                      {answer.dislikes}
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
 
-              {/* No answers message */}
-              {answers.length === 0 && (
-                <div className="text-center text-[#C8ACD6] text-sm sm:text-base py-4">
-                  No answers yet. Be the first to answer this question!
-                </div>
-              )}
-            </div>
+            {/* No answers message */}
+            {answers.length === 0 && (
+              <div className="text-center text-[#C8ACD6] text-sm sm:text-base py-4">
+                No answers yet. Be the first to answer this question!
+              </div>
+            )}
           </div>
         </div>
+      </div>
     </>
   );
 }
