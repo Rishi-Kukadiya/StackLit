@@ -10,6 +10,7 @@ import ResetPasswordPage from "./Components/ResetPasswordPage";
 import Home from "./Components/Home";
 import AskQuestion from "./Components/AskQuestion";
 import { UserProvider } from "./Components/UserContext";
+import Answer from "./Components/Answer";
 function App() {
   const navigate = useNavigate();
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/otp-verification" element={<OtpVerificationPage  isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/reset-password" element={<ResetPasswordPage isOpen={true} onClose={() => navigate("/")} />} />
         <Route path="/ask" element={<AskQuestion></AskQuestion>}></Route>
+        <Route path="/answer" element={<Answer></Answer>}></Route>
       </Routes>
     </UserProvider>
   );
