@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import { useUser } from "./UserContext";
@@ -12,6 +12,9 @@ import ShimmerLoader from "./ShimmerLoader";
 import { ImagePlus, X, Tag as TagIcon, ArrowLeft } from "lucide-react";
 
 export default function Answer() {
+  const location = useLocation();
+  const questionId = location.state?.questionId;
+  const questionTitle = location.state?.questionTitle;
   const navigate = useNavigate();
   const { user } = useUser();
   const [content, setContent] = useState("");
@@ -158,8 +161,13 @@ export default function Answer() {
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-[#433D8B]/50 pb-4">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                      Post a Answer
+                      Post an Answer
                     </h1>
+                    {questionTitle && (
+                      <p className="text-[#C8ACD6] text-sm mt-1">
+                        For question: <span className="font-semibold text-white">{questionTitle}</span>
+                      </p>
+                    )}
                     <p className="text-[#C8ACD6] text-sm">
                       Share your answer with our community
                     </p>

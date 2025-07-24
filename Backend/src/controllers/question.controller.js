@@ -71,7 +71,7 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
     }
 
     const question = await Question.findById(questionId)
-        .populate("owner", "username email avatar")
+        .populate("owner", "username  avatar")
         .lean();
 
     if (!question) {

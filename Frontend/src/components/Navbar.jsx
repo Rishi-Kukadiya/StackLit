@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { Bell, LogOut } from "lucide-react";
 
-export default function Navbar() {
+export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
@@ -44,26 +44,22 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right: Auth buttons (hidden on mobile, visible on md+) */}
-        <div className="hidden md:flex items-center space-x-2 mt-2 md:mt-0">
+        {/* Right: Auth buttons (only visible on large screens) */}
+        <div className="hidden lg:flex items-center space-x-2 mt-2 lg:mt-0">
           {!user ? (
             <>
               <Link to="/signup">
-                <button
-                  className="flex items-center gap-2 bg-[#433D8B] text-white 
-              hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-              transition-all duration-300 cursor-pointer"
-                >
+                <button className="flex items-center gap-2 bg-[#433D8B] text-white 
+          hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
+          transition-all duration-300 cursor-pointer">
                   <LogIn className="w-4 h-4 cursor-pointer" />
                   Sign Up
                 </button>
               </Link>
               <Link to="/signin">
-                <button
-                  className="flex items-center gap-2 bg-[#433D8B] text-white 
-              hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-              transition-all duration-300 cursor-pointer"
-                >
+                <button className="flex items-center gap-2 bg-[#433D8B] text-white 
+          hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
+          transition-all duration-300 cursor-pointer">
                   <UserPlus className="w-4 h-4 cursor-pointer" />
                   Log In
                 </button>
@@ -126,4 +122,3 @@ export default function Navbar() {
       </div>
     </nav>
   )};
-// ...existing code...
