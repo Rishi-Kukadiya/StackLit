@@ -19,6 +19,7 @@ export function QuestionProvider({ children }) {
         },
         withCredentials: true
       });
+      console.log('API Response:', response);
       
       if (response.data.success) {
         const newQuestions = response.data.data;
