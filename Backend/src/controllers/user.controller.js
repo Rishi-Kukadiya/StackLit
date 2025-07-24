@@ -3,7 +3,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import jwt, { decode } from "jsonwebtoken"
-import bcrypt from "bcrypt"
 import { User } from "../models/user.model.js";
 import sendEmail from "../utils/sendEmail.js";
 import { Question } from "../models/question.model.js";
@@ -77,6 +76,7 @@ const registerUser = asyncHandler(async (req, res) => {
     )
 
 })
+
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -286,8 +286,6 @@ const forgetPassword = asyncHandler(async (req, res) => {
             new ApiResponse(200, {}, "Password changed successfully")
         )
 })
-
-
 
 
 const getUsers = asyncHandler(async (req, res) => {
