@@ -5,6 +5,7 @@ import { fetchUsers, resetUsers } from "../redux/userSlice";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import ShimmerLoader from "./ShimmerLoader";
+import avtart from "../assets/avtart.jpg";
 
 export default function Users() {
   const dispatch = useDispatch();
@@ -63,10 +64,7 @@ export default function Users() {
                     <HelpCircle className="w-5 h-5 text-[#C8ACD6] opacity-70" />
                   </div>
                   <img
-                    src={
-                      user.avatar ||
-                      "https://api.dicebear.com/7.x/avataaars/svg?seed=default"
-                    }
+                    src={user.avatar || avtart}
                     alt={user.fullName}
                     className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-[#C8ACD6] shadow-lg mb-3 sm:mb-4 object-cover"
                   />
