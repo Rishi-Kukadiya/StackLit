@@ -2,7 +2,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudinary.js";
 import { Answer } from "../models/answer.model.js";
 import { Question } from "../models/question.model.js";
 import { Like } from "../models/like.model.js";
@@ -127,31 +127,82 @@ const getAnswerDetails = asyncHandler(async (req, res) => {
 
 
 
+// const deleteAnswer = asyncHandler(async (req, res) => {
+
+//     const { answerId } = req.params;
+//     if (!answerId) {
+//         return res.json(new ApiError(400, "Answer ID is required."));
+//     }
+//     const answer = await Answer.findById(answerId);
+//     if (!answer) {
+//         return res.json(new ApiError(404, "Answer not found"));
+//     }
+//     if (answer.owner.toString() !== req?.user?._id.toString()) {
+//         return res.json(new ApiError(403, "You are not authorized to delete this question."));
+//     }
+
+//     const response = await Answer.findByIdAndDelete(answer._id);
+//     await Like.deleteMany({ target: answerId, targetType: "Answer" });
+//     if (!response) {
+//         return res.json(new ApiError(500, "Error while deleting Answer"));
+//     }
+
+//     return res.status(200).json(
+//         new ApiResponse(200, null, "Answer and related likes/dislikes deleted.")
+//     );
+
+
+// })
+
+
 const deleteAnswer = asyncHandler(async (req, res) => {
+   try {
+     const { answerId } = req.params;
+ 
+     if (!answerId) {
+         return res.json(new ApiError(400, "Answer ID is required."))
+     }
+ 
+     const answer = await Answer.findById(answerId);
+ 
+     if (!answer) {
+         return res.json(new ApiError(404, "Answer not found"))
+     }
+ 
+     if (answer.owner.toString() !== req?.user?._id.toString()) {
+         return res.json(new ApiError(403, "You are not authorized to delete this answer."))
+     }
+ 
+     if (answer.images && answer.images.length > 0) {
+         const deletionPromises = answer.images.map((imageUrl) =>
+             deleteImageFromCloudinary(imageUrl)
+         );
+         await Promise.all(deletionPromises);
+     }
+ 
+     await Answer.findByIdAndDelete(answerId);
+ 
+     
+     await Like.deleteMany({ target: answerId, targetType: "Answer" });
+ 
+     return res
+         .status(200)
+         .json(
+             new ApiResponse(
+                 200,
+                 {},
+                 "Answer and all associated data deleted successfully."
+             )
+         );
+   } catch (error) {
+       console.log(error);
+       return res.json(
+           new ApiError(500,"Error while deleting answer")
+       )
+       
+    
+   }
+});
 
-    const { answerId } = req.params;
-    if (!answerId) {
-        return res.json(new ApiError(400, "Answer ID is required."));
-    }
-    const answer = await Answer.findById(answerId);
-    if (!answer) {
-        return res.json(new ApiError(404, "Answer not found"));
-    }
-    if (answer.owner.toString() !== req?.user?._id.toString()) {
-        return res.json(new ApiError(403, "You are not authorized to delete this question."));
-    }
-
-    const response = await Answer.findByIdAndDelete(answer._id);
-    await Like.deleteMany({ target: answerId, targetType: "Answer" });
-    if (!response) {
-        return res.json(new ApiError(500, "Error while deleting Answer"));
-    }
-
-    return res.status(200).json(
-        new ApiResponse(200, null, "Answer and related likes/dislikes deleted.")
-    );
-
-
-})
 
 export { postAnswer, deleteAnswer, getAnswerDetails };

@@ -33,5 +33,37 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
+const deleteImageFromCloudinary = async (secureUrl) => {
+    if (!secureUrl) return;
+
+    try {
+        // This more robustly extracts the public_id, handling folders correctly.
+        const urlParts = secureUrl.split('/');
+        const uploadIndex = urlParts.indexOf('upload');
+        if (uploadIndex === -1) {
+            console.error(`Invalid Cloudinary URL, 'upload' not found: ${secureUrl}`);
+            return;
+        }
+        const publicIdWithExtension = urlParts.slice(uploadIndex + 2).join('/');
+        const publicId = publicIdWithExtension.substring(0, publicIdWithExtension.lastIndexOf('.'));
+
+        if (!publicId) {
+            console.error(`Could not extract public_id from URL: ${secureUrl}`);
+            return;
+        }
+
+        // Use `destroy` with resource_type specified to avoid ambiguity
+        const result = await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+
+        if (result.result === 'ok') {
+            console.log(`Successfully deleted asset with public_id: ${publicId}`);
+        } else {
+            console.warn(`Cloudinary deletion failed for public_id ${publicId}:`, result.result);
+        }
+    } catch (error) {
+        console.error(`Error deleting asset from Cloudinary:`, error);
+    }
+};
+
 export default uploadOnCloudinary;
-export { cloudinary };
+export { cloudinary, deleteImageFromCloudinary };
