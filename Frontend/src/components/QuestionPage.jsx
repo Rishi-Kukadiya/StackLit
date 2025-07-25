@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-
+import { Link } from "react-router";
 // Add a loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-8">
@@ -34,9 +34,8 @@ export default function QuestionPage() {
           withCredentials: true
         });
 
-        // Debug logs
-        console.log('API Response:', response.data.success);
-        console.log('Question Content:', response.data.data);
+
+        // console.log('Question Content:', response.data.data);
 
         if (response.data.success) {
           setQuestion(response.data.data);
@@ -186,7 +185,7 @@ export default function QuestionPage() {
                 </div>
                 <div className="flex-grow w-full sm:w-auto">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-white font-medium">{(question.question.owner?.email?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'}</h3>
+                    <h3 className="text-white font-medium">{(question.question.owner?.fullName?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'}</h3>
                   </div>
                   <div className="text-[#C8ACD6] text-xs sm:text-sm flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="flex items-center">
@@ -238,18 +237,6 @@ export default function QuestionPage() {
                         {tag}
                       </span>
                     ))}
-                    {/* {question.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
-                               rounded-lg text-sm border border-[#433D8B]/20 
-                               hover:border-[#C8ACD6]/30 hover:text-white 
-                               transition-all duration-300"
-                      >
-                        <Tag className="w-4 h-4" />
-                        {tag}
-                      </span>
-                    ))} */}
                   </div>
                 </div>
                 {/* Answerers */}
@@ -275,9 +262,6 @@ export default function QuestionPage() {
                       </div>
                     ))}
                   </div>
-                  {/* <span className="ml-3 text-[#C8ACD6] text-sm">
-                    {(question.question.answeredBy || []).length} answers
-                  </span> */}
                 </div>
               </div>
 
@@ -301,7 +285,14 @@ export default function QuestionPage() {
 
                 {/* Post Answer Button */}
                 <button
-                  onClick={() => {/* Add your answer handling logic here */ }}
+                  onClick={() => navigate("/answer", {
+                    state: {
+                      questionId: question.question._id,
+                      questionTitle: question.question.title,
+                      ownerAvatar: question.question.owner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+                      ownerName: (question.question.owner?.fullName?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'
+                    }
+                  })}
                   className="flex items-center gap-2 px-4 py-2 bg-[#433D8B]/60 text-white rounded-lg
                   hover:bg-[#17153B]/70 transition-all duration-300 border border-[#C8ACD6]/30
                   w-full sm:w-auto justify-center sm:justify-start"
@@ -334,12 +325,12 @@ export default function QuestionPage() {
                 {/* Answer Author Info */}
                 <div className="flex items-center gap-3 mb-4">
                   <img
-                    src={answer.author.profilePhoto}
-                    alt={answer.author.username}
+                    src={answer.owner.avatar}
+                    alt={answer.owner.fullName}
                     className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
                   <div>
-                    <h3 className="text-white font-medium">{answer.author.username}</h3>
+                    <h3 className="text-white font-medium">{answer.owner.fullName}</h3>
                     <span className="text-[#C8ACD6] text-xs">
                       answered {formatDate(answer.createdAt)}
                     </span>

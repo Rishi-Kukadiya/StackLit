@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/drei": "^10.5.1",
     "@react-three/fiber": "^9.2.0",
+    "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.11",
     "@tiptap/extension-image": "^3.0.7",
     "@tiptap/react": "^3.0.7",
@@ -24,6 +25,7 @@
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
     "react-router": "^7.7.0",
     "react-router-dom": "^7.7.0",
     "react-tsparticles": "^2.12.2",

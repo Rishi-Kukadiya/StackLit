@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 export default function QuestionCard({ question }) {
-  console.log('Question data:', question); // Debug log
+  // console.log('Question data:', question); // Debug log
   const navigate = useNavigate();
 
   // Guard against undefined question prop
@@ -21,7 +21,6 @@ export default function QuestionCard({ question }) {
     });
   };
 
-  // Truncate content to first 2-3 lines (roughly 200 characters)
   const truncatedContent = question.content 
     ? question.content.split('```')[0].slice(0, 200) + '...'
     : '';
@@ -39,7 +38,6 @@ export default function QuestionCard({ question }) {
   };
 
   const handleClick = () => {
-    // Animate out and navigate to question detail
     navigate(`/question/${question._id}`);
   };
 
@@ -65,7 +63,7 @@ export default function QuestionCard({ question }) {
             alt={question.owner?.owner}
             className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
           />
-          <span className="text-white font-medium">{question.owner?.owner}</span>
+          <span className="text-white font-medium">{question.owner?.fullName}</span>
 
         </div>
         <div className="flex justify-start gap-4">
@@ -81,10 +79,6 @@ export default function QuestionCard({ question }) {
                     transition-all duration-300 rounded-lg
                     border border-[#433D8B]/30 hover:border-[#C8ACD6]/50
                     shadow-sm hover:shadow-[0_0_10px_rgba(200,172,214,0.2)]"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Add your answer functionality here
-          }}
         >
           <MessageCircle className="w-4 h-4" />
           <span className="text-sm font-medium">Answer</span>
