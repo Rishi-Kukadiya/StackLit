@@ -2,7 +2,7 @@ import { Question } from "../models/question.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudinary.js";
 import { Answer } from "../models/answer.model.js";
 import { User } from "../models/user.model.js";
 import { Like } from "../models/like.model.js";
@@ -121,42 +121,99 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
 });
 
 
-const deleteQuestion = asyncHandler(async (req, res) => {
+// const deleteQuestion = asyncHandler(async (req, res) => {
 
+//     const { questionId } = req.params;
+//     if (!questionId) {
+//         return res.json(new ApiError(400, "Question ID is required."));
+//     }
+//     const question = await Question.findById(questionId);
+//     if (!question) {
+//         return res.json(new ApiError(404, "Question not found"));
+//     }
+//     if (question.owner.toString() !== req?.user?._id.toString()) {
+//         return res.json(new ApiError(403, "You are not authorized to delete this question."));
+//     }
+
+//     // Delete All Answers related to the question
+//     const answers = await Answer.find({ questionId });
+//     const answerIds = answers.map(ans => ans._id);
+//     await Answer.deleteMany({ questionId })
+
+//     // Delete likes and dislikes on this question
+//     await Like.deleteMany({ target: questionId, targetType: "Question" });
+
+//     // Delete all likes and dislikes on its answers
+//     if (answerIds.length > 0) {
+//         await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } })
+//     }
+
+//     // Delete the question
+//     await question.deleteOne();
+
+//     return res.status(200).json(
+//         new ApiResponse(200, null, "Question, its answers, and related likes/dislikes deleted.")
+//     );
+
+
+// })
+
+
+
+const deleteQuestion = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
+
     if (!questionId) {
         return res.json(new ApiError(400, "Question ID is required."));
     }
+
     const question = await Question.findById(questionId);
     if (!question) {
         return res.json(new ApiError(404, "Question not found"));
     }
+
     if (question.owner.toString() !== req?.user?._id.toString()) {
         return res.json(new ApiError(403, "You are not authorized to delete this question."));
     }
 
-    // Delete All Answers related to the question
-    const answers = await Answer.find({ questionId });
-    const answerIds = answers.map(ans => ans._id);
-    await Answer.deleteMany({ questionId })
 
-    // Delete likes and dislikes on this question
-    await Like.deleteMany({ target: questionId, targetType: "Question" });
-
-    // Delete all likes and dislikes on its answers
-    if (answerIds.length > 0) {
-        await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } })
+    if (question.images && question.images.length > 0) {
+        for (const img of question.images) {
+            await deleteImageFromCloudinary(img);
+        }
     }
 
-    // Delete the question
+    const answers = await Answer.find({ questionId });
+    const answerIds = answers.map(ans => ans._id);
+
+
+    for (const ans of answers) {
+        if (ans.images && ans.images.length > 0) {
+            for (const img of ans.images) {
+                await deleteImageFromCloudinary(img);
+            }
+        }
+    }
+
+
+    await Answer.deleteMany({ questionId });
+
+
+    await Like.deleteMany({ target: questionId, targetType: "Question" });
+
+
+    if (answerIds.length > 0) {
+        await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } });
+    }
+
     await question.deleteOne();
 
     return res.status(200).json(
-        new ApiResponse(200, null, "Question, its answers, and related likes/dislikes deleted.")
+        new ApiResponse(200, null, "Question, its answers, images, and related likes/dislikes deleted.")
     );
+});
 
 
-})
 
 const editTitle = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
@@ -209,37 +266,102 @@ const editTags = asyncHandler(async (req, res) => {
     await question.save();
     return res.json(new ApiResponse(200, question, "Question content updated successfully."));
 })
+
+// const editImages = asyncHandler(async (req, res) => {
+//     const { questionId } = req.params;
+//     const { retainImages = [] } = req.body;
+//     if (!questionId) {
+//         return res.json(new ApiError(400, "Question ID is required."));
+//     }
+//     const question = await Question.findById(questionId);
+//     if (!question) {
+//         return res.json(new ApiError(404, "Question not found."));
+//     }
+//     if (question.owner.toString() != req.user._id.toString()) {
+//         return res.json(new ApiError(403, "Unauthorized to edit this question."));
+//     }
+
+//     let updatedImages = Array.isArray(retainImages) ? retainImages : [];
+//     if (req.files && req.files.image && req.files.image.length > 0) {
+//         const newImages = req.files.image.slice(0, 5 - updatedImages.length);
+//         for (const file of newImages) {
+//             const uploaded = await uploadOnCloudinary(file.path);
+//             if (uploaded?.secure_url) {
+//                 updatedImages.push(uploaded.secure_url);
+//             }
+//         }
+//     }
+//     if (updatedImages.length > 5) {
+//         return res.json(new ApiError(400, "Maximum 5 images allowed per question."));
+//     }
+//     question.images = updatedImages;
+//     await question.save();
+//     return res.json(new ApiResponse(200, question, "Question Images updated successfully."));
+// })
+
+
 const editImages = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
-    const { retainImages = [] } = req.body;
+    // Correctly handle the already-parsed array from the request body.
+    const retainImages = Array.isArray(req.body?.retainImages) ? req.body.retainImages : [];
+
     if (!questionId) {
-        return res.json(new ApiError(400, "Question ID is required."));
-    }
-    const question = await Question.findById(questionId);
-    if (!question) {
-        return res.json(new ApiError(404, "Question not found."));
-    }
-    if (question.owner.toString() != req.user._id.toString()) {
-        return res.json(new ApiError(403, "Unauthorized to edit this question."));
+        return req.json(
+            new ApiError(400, "Question ID is required.")
+        )
     }
 
-    let updatedImages = Array.isArray(retainImages) ? retainImages : [];
-    if (req.files && req.files.image && req.files.image.length > 0) {
-        const newImages = req.files.image.slice(0, 5 - updatedImages.length);
-        for (const file of newImages) {
-            const uploaded = await uploadOnCloudinary(file.path);
+    const question = await Question.findById(questionId);
+    if (!question) {
+        return res.json(
+            new ApiError(404, "Question not found.")
+        )
+    }
+
+    if (question.owner.toString() !== req.user?._id.toString()) {
+        return res.json(
+            new ApiError(403, "Unauthorized to edit this question.")
+        )
+    }
+
+    const existingImages = question.images || [];
+    const imagesToDelete = existingImages.filter(img => !retainImages.includes(img));
+
+    // Efficiently delete images in parallel
+    if (imagesToDelete.length > 0) {
+        await Promise.all(imagesToDelete.map(url => deleteImageFromCloudinary(url)));
+    }
+
+    let updatedImages = [...retainImages];
+    const maxNewUploads = 5 - updatedImages.length;
+
+    if (req.files?.images && req.files.images.length > 0 && maxNewUploads > 0) {
+        const filesToUpload = req.files.images.slice(0, maxNewUploads);
+
+        const uploadPromises = filesToUpload.map(file => uploadOnCloudinary(file.path));
+        const uploadResults = await Promise.all(uploadPromises);
+
+        uploadResults.forEach(uploaded => {
             if (uploaded?.secure_url) {
                 updatedImages.push(uploaded.secure_url);
             }
-        }
+        });
     }
+
     if (updatedImages.length > 5) {
-        return res.json(new ApiError(400, "Maximum 5 images allowed per question."));
+        return res.json(new ApiError(400, "Cannot have more than 5 images per question."));
     }
+
     question.images = updatedImages;
-    await question.save();
-    return res.json(new ApiResponse(200, question, "Question Images updated successfully."));
-})
+    await question.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, question, "Question images updated successfully."));
+});
+
+
+
 
 const getAllQuestions = asyncHandler(async (req, res) => {
     let { page = 1, limit = 10 } = req.query;

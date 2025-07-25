@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, registerUser, sendOtp, verifyOtp, forgetPassword, getUsers } from "../controllers/user.controller.js";
+import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, registerUser, sendOtp, verifyOtp, forgetPassword, getUsers, removeAvatar } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import checkOtpVerified from "../middlewares/checkOtpVerified.js";
@@ -26,5 +26,6 @@ userRouter.route("/verify-otp").post(verifyOtp);
 userRouter.route("forget-password").post(checkOtpVerified, forgetPassword);
 userRouter.route("/get-users").get(getUsers);
 
+userRouter.route("/remove-avatar").patch(verifyJWT, removeAvatar);
 
 export default userRouter;

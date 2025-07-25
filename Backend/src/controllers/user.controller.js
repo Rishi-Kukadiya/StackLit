@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudinary.js";
 import jwt, { decode } from "jsonwebtoken"
 import { User } from "../models/user.model.js";
 import sendEmail from "../utils/sendEmail.js";
@@ -359,6 +359,56 @@ const getUsers = asyncHandler(async (req, res) => {
 });
 
 
+const editFullName = asyncHandler(async (req, res) => {
+    const userId = req?.user?._id;
+    const { fullName } = req.body;
+    if (!fullName) {
+        res.json(new ApiError(400, "Full name is required"));
+    }
+    const user = await User.findByIdAndUpdate(userId, { fullName }, { new: true, runValidators: true }).select("fullName email avatar");
+    return res.status(200).json(
+        new ApiResponse(200, user, "Full name updated successfully")
+    )
+})
+
+const editEmail = asyncHandler(async (req, res) => {
+    const userId = req?.user?._id;
+    const { email } = req.body;
+    if (!email) {
+        return res.json(new ApiError(400, "Email is required"));
+    }
+
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { email },
+        { new: true }
+    ).select("fullName email avatar")
+
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "Email updated successfully")
+    )
+})
+
+const removeAvatar = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user?._id;
+        const user = await User.findById(userId).select("-password -refreshToken");
+        deleteImageFromCloudinary(user.avatar);
+        user.avatar = "";
+        const updatedUser = await user.save();
+        return res.json(
+            new ApiResponse(200, updatedUser,"Avatar removed Successfully")
+        )
+    } catch (error) {
+        console.log(error.message);
+        return res.json(
+            new ApiError(500,"Error while removing Avatar of User.")
+        )
+        
+    }
+})
+
 
 
 
@@ -380,5 +430,8 @@ export {
     sendOtp,
     verifyOtp,
     forgetPassword,
-    getUsers
+    getUsers,
+    removeAvatar,
+    editEmail,
+    editFullName
 };
