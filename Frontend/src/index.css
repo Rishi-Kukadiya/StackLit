@@ -1,5 +1,30 @@
 @import "tailwindcss";
+
 /* Custom Scrollbar Styles */
+html,
+body {
+  overflow-x: hidden;
+}
+
+
+
+/* Customize scrollbar for WebKit browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  /* optional: for horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #17153B;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#2E236C, #433D8B, #C8ACD6);
+  border-radius: 10px;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
@@ -33,6 +58,8 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
