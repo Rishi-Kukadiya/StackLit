@@ -1,40 +1,156 @@
-import { Tag, Clock, ThumbsUp, MessageCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { Tag, Clock, ThumbsUp, MessageCircle, ThumbsDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-
+import avtart from "../assets/avtart.jpg";
+import { useState } from "react";
+import ErrorPopup from "./ErrorPopup";
+import { useUser } from "./UserContext";
+import axios from "axios";
 export default function QuestionCard({ question }) {
-  // console.log('Question data:', question); // Debug log
+  const [liked, setLiked] = useState(question.userReaction === "like");
+  const [disliked, setDisliked] = useState(question.userReaction === "dislike");
+  const [likesCount, setLikesCount] = useState(question.likes || 0);
+  const [dislikesCount, setDislikesCount] = useState(question.dislikes || 0);
+  const [loadingReaction, setLoadingReaction] = useState(false);
+  const { user } = useUser();
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const handleLike = async (e) => {
+    e.stopPropagation();
+    // Check if user is logged in
+    if (!user) {
+      setError("You must be logged in to ask a question.");
+      setTimeout(() => {
+        setError("");
+        navigate("/signin");
+      }, 2000);
+      return;
+    }
 
-  // Guard against undefined question prop
+    if (loadingReaction) return;
+
+    setLoadingReaction(true);
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikesCount((prev) => prev - 1);
+
+        const formdata = new FormData();
+        formdata.append("targetId", question._id);
+        formdata.append("targetType", "Question");
+        formdata.append("isLike", false);
+
+        await axios.post(
+          `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+          formdata,
+          { withCredentials: true }
+        );
+      } else {
+        setLiked(true);
+        setDisliked(false);
+        setLikesCount((prev) => prev + 1);
+        if (disliked) setDislikesCount((prev) => prev - 1);
+
+        const formdata = new FormData();
+        formdata.append("targetId", question._id);
+        formdata.append("targetType", "Question");
+        formdata.append("isLike", true);
+
+        await axios.post(
+          `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+          formdata,
+          { withCredentials: true }
+        );
+      }
+    } catch (err) {
+      setError("Failed to react:", err);
+    } finally {
+      setLoadingReaction(false);
+    }
+  };
+
+  const handleDislike = async (e) => {
+    e.stopPropagation();
+    // Check if user is logged in
+    if (!user) {
+      setError("You must be logged in to ask a question.");
+      setTimeout(() => {
+        setError("");
+        navigate("/signin");
+      }, 2000);
+      return;
+    }
+
+    if (loadingReaction) return;
+
+    setLoadingReaction(true);
+    try {
+      if (disliked) {
+        setDisliked(false);
+        setDislikesCount((prev) => prev - 1);
+
+        const formdata = new FormData();
+        formdata.append("targetId", question._id);
+        formdata.append("targetType", "Question");
+        formdata.append("isLike", true);
+
+        await axios.post(
+          `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+          formdata,
+          { withCredentials: true }
+        );
+      } else {
+        setDisliked(true);
+        setLiked(false);
+        setDislikesCount((prev) => prev + 1);
+        if (liked) setLikesCount((prev) => prev - 1);
+
+        const formdata = new FormData();
+        formdata.append("targetId", question._id);
+        formdata.append("targetType", "Question");
+        formdata.append("isLike", false);
+
+        await axios.post(
+          `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+          formdata,
+          { withCredentials: true }
+        );
+      }
+    } catch (err) {
+      console.error("Failed to react:", err);
+    } finally {
+      setLoadingReaction(false);
+    }
+  };
+
   if (!question) {
-    console.error('Question prop is undefined');
+    console.error("Question prop is undefined");
     return null;
   }
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
-  const truncatedContent = question.content 
-    ? question.content.split('```')[0].slice(0, 200) + '...'
-    : '';
+  const truncatedContent = question.content
+    ? question.content.split("```")[0].slice(0, 200) + "..."
+    : "";
 
   const cardVariants = {
     initial: {
       scale: 1,
-      opacity: 1
+      opacity: 1,
     },
     exit: {
       scale: 1.05,
       opacity: 0,
-      transition: { duration: 0.3 }
-    }
+      transition: { duration: 0.3 },
+    },
   };
 
   const handleClick = () => {
@@ -46,7 +162,7 @@ export default function QuestionCard({ question }) {
       variants={cardVariants}
       initial="initial"
       exit="exit"
-      whileHover={{ scale: 1.05 }}
+      whileHover={{ scale: 1.02 }}
       onClick={handleClick}
       className="relative bg-transparent rounded-lg p-4 sm:p-6 cursor-pointer 
                 transform transition-all duration-300 ease-in-out hover:scale-101
@@ -59,12 +175,13 @@ export default function QuestionCard({ question }) {
         <div className="flex items-center gap-3">
           <img
             // src={question.author.profilePhoto}
-            src={question.owner?.avatar}
+            src={question.owner?.avatar || avtart}
             alt={question.owner?.owner}
             className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
           />
-          <span className="text-white font-medium">{question.owner?.fullName}</span>
-
+          <span className="text-white font-medium">
+            {question.owner?.fullName}
+          </span>
         </div>
         <div className="flex justify-start gap-4">
           <span className="text-[#C8ACD6] text-sm flex items-center">
@@ -73,7 +190,7 @@ export default function QuestionCard({ question }) {
           </span>
         </div>
         {/* Post Answer Button */}
-        <button 
+        <button
           className="flex items-center gap-2 px-3 py-1.5 bg-[#2E236C]/40 
                     hover:bg-[#2E236C]/60 text-[#C8ACD6] hover:text-white 
                     transition-all duration-300 rounded-lg
@@ -91,11 +208,7 @@ export default function QuestionCard({ question }) {
       </h2>
 
       {/* Truncated Content */}
-      <p className="text-[#C8ACD6] mb-4 line-clamp-2">
-        {truncatedContent}
-      </p>
-
-
+      <p className="text-[#C8ACD6] mb-4 line-clamp-2">{truncatedContent}</p>
 
       {/* Footer Section */}
       <div className="pt-4 border-t border-[#433D8B]/50">
@@ -103,22 +216,56 @@ export default function QuestionCard({ question }) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
             {/* Votes */}
-            <div className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
-                            border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30">
-              <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                <ThumbsUp className="w-5 h-5" />
-              </button>
+
+            <div
+              className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
+    border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.button
+                whileTap={{ scale: 1.2 }}
+                className={`p-1.5 rounded-full transition-colors duration-300 ${
+                  liked
+                    ? "bg-green-500/20 text-green-300"
+                    : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                }`}
+                onClick={handleLike}
+              >
+                <motion.div
+                  animate={
+                    loadingReaction && liked ? { scale: [1, 1.3, 1] } : {}
+                  }
+                  transition={{ duration: 0.3 }}
+                >
+                  <ThumbsUp className="w-5 h-5" />
+                </motion.div>
+              </motion.button>
+
               <span className="text-white text-center font-medium min-w-[2rem]">
-                {question?.likes || 0}
+                {likesCount}
               </span>
-              <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                <ThumbsUp className="w-5 h-5 transform rotate-180" />
-              </button>
-              {/* <span className="text-white text-center font-medium min-w-[2rem]">
-                {question.votes}
-              </span> */}
+
+              <motion.button
+                whileTap={{ scale: 1.2 }}
+                className={`p-1.5 rounded-full transition-colors duration-300 ${
+                  disliked
+                    ? "bg-red-500/20 text-red-300"
+                    : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                }`}
+                onClick={handleDislike}
+              >
+                <motion.div
+                  animate={
+                    loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                  }
+                  transition={{ duration: 0.3 }}
+                >
+                  <ThumbsDown className="w-5 h-5" />
+                </motion.div>
+              </motion.button>
+
               <span className="text-white text-center font-medium min-w-[2rem]">
-                {question?.dislikes || 0}
+                {dislikesCount}
               </span>
             </div>
 
@@ -168,10 +315,7 @@ export default function QuestionCard({ question }) {
           )}
         </div>
       </div>
+      {error && <ErrorPopup message={error} onClose={() => setError("")} />}
     </motion.div>
   );
 }
-
-
-
-
