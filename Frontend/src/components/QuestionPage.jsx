@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import Avtart from "../assets/avtart.jpg";  
 import { Link } from "react-router";
 // Add a loading component
 const LoadingSpinner = () => (
@@ -178,7 +179,7 @@ export default function QuestionPage() {
                 <div className="flex-shrink-0">
                   <img
                     // Replace data.data.question with just question
-                    src={question.question.owner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                    src={question.question.owner?.avatar || Avtart}
                     alt={question.question.owner?.email || 'User'}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
@@ -250,7 +251,7 @@ export default function QuestionPage() {
                         onMouseLeave={() => setShowTooltip(null)}
                       >
                         <img
-                          src={answerer.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+                          src={answerer.avatar || Avtart}
                           alt={answerer.email || 'User'}
                           className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
                         />
@@ -289,7 +290,7 @@ export default function QuestionPage() {
                     state: {
                       questionId: question.question._id,
                       questionTitle: question.question.title,
-                      ownerAvatar: question.question.owner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default',
+                      ownerAvatar: question.question.owner?.avatar || Avtart,
                       ownerName: (question.question.owner?.fullName?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'
                     }
                   })}

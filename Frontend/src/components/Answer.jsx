@@ -10,6 +10,7 @@ import ErrorPopup from "./ErrorPopup";
 import SuccessPopup from "./SuccessPopup";
 import ShimmerLoader from "./ShimmerLoader";
 import { ImagePlus, X, Tag as TagIcon, ArrowLeft } from "lucide-react";
+import { useQuestions } from "../contexts/QuestionContext";
 
 export default function Answer() {
   const location = useLocation();
@@ -17,6 +18,7 @@ export default function Answer() {
   const questionTitle = location.state?.questionTitle;
   const ownerAvatar = location.state?.ownerAvatar;
   const ownerName = location.state?.ownerName;
+  const { setRefresh, clearQuestions } = useQuestions();
   const navigate = useNavigate();
   const { user } = useUser();
   const [content, setContent] = useState("");
@@ -105,6 +107,8 @@ export default function Answer() {
         setSuccess(res.data.message || "Answer posted successfully!");
         setTimeout(() => {
           setSuccess("");
+          clearQuestions();
+          setRefresh((prev) => !prev);
           navigate("/");
         }, 3000);
       } else {
