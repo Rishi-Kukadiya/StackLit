@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteQuestion, editContent, editImages, editTags, editTitle, getAllQuestions, getQuestionDetails, getUnansweredQuestions, postQuestion } from "../controllers/question.controller.js";
+import { addTag, deleteQuestion, deleteTag, editContent, editImages, editTitle, getAllQuestions, getQuestionDetails, getUnansweredQuestions, postQuestion } from "../controllers/question.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 const questionRouter = Router();
@@ -25,7 +25,16 @@ questionRouter.route("/get-questions").get(getAllQuestions);
 questionRouter.route("/get-unansweredQuestions").get(getUnansweredQuestions);
 questionRouter.route("/edit-title/:questionId").patch(verifyJWT, editTitle);
 questionRouter.route("/edit-content/:questionId").patch(verifyJWT, editContent);
-questionRouter.route("/edit-tags/:questionId").patch(verifyJWT, editTags);
-questionRouter.route("/edit-images/:questionId").patch(verifyJWT, editImages);
+questionRouter.route("/add-tag/:questionId").patch(verifyJWT, addTag);
+questionRouter.route("/delete-tag/:questionId").patch(verifyJWT, deleteTag);
+questionRouter.route("/edit-images/:questionId").patch(
+    verifyJWT,
+    upload.fields([
+        {
+            name: "image",
+            maxCount: 5
+        }
+    ])
+    , editImages);
 
 export default questionRouter;

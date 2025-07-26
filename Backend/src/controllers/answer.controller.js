@@ -205,4 +205,152 @@ const deleteAnswer = asyncHandler(async (req, res) => {
 });
 
 
-export { postAnswer, deleteAnswer, getAnswerDetails };
+const editContent = asyncHandler(async (req, res) => {
+    try {
+        const { answerId } = req.params;
+        const { content } = req.body;
+        if (!answerId) {
+            return res.json(new ApiError(400, "Answer ID is required."));
+        }
+        const answer = await Answer.findById(answerId);
+        if (!answer) {
+            return res.json(new ApiError(404, "Answer not found."));
+        }
+        if (answer.owner.toString() != req.user._id.toString()) {
+            return res.json(new ApiError(403, "Unauthorized to edit this answer."));
+        }
+        answer.content = content || answer.content;
+        await answer.save();
+        return res.json(new ApiResponse(200, answer, "Answer content updated successfully."));
+    } catch (error) {
+        console.log(error);
+        return res.json(
+            new ApiError(500, "Error while updating content of Answer.")
+        )
+
+    }
+})
+
+const addTag = asyncHandler(async (req, res) => {
+    try {
+        const { answerId } = req.params;
+        const { tag } = req.body;
+
+        if (!answerId || !tag?.trim()) {
+            return res.json(new ApiError(400, "Answer ID and tag are required."));
+        }
+
+        const answer = await Answer.findById(answerId);
+        if (!answer) {
+            return res.json(new ApiError(404, "Answer not found."));
+        }
+
+        if (answer.owner.toString() !== req.user._id.toString()) {
+            return res.json(new ApiError(403, "Unauthorized to edit this answer."));
+        }
+
+        if (!answer.tags.includes(tag.trim())) {
+            answer.tags.push(tag.trim());
+        }
+        await answer.save();
+
+        return res.json(new ApiResponse(200, answer.tags, "Tag added successfully."));
+    } catch (error) {
+        console.log(error);
+        return res.json(
+            new ApiError(500, "Internal server error")
+        )
+
+
+    }
+});
+
+
+const deleteTag = asyncHandler(async (req, res) => {
+    try {
+        const { answerId } = req.params;
+        const { tag } = req.body;
+
+        if (!answerId || !tag?.trim()) {
+            return res.json(new ApiError(400, "Answer ID and tag are required."));
+        }
+
+        const answer = await Answer.findById(answerId);
+        if (!answer) {
+            return res.json(new ApiError(404, "Answer not found."));
+        }
+
+        if (answer.owner.toString() !== req.user._id.toString()) {
+            return res.json(new ApiError(403, "Unauthorized to edit this answer."));
+        }
+
+        const tagToRemove = tag.trim();
+        const originalLength = answer.tags.length;
+        answer.tags = answer.tags.filter(t => t !== tagToRemove);
+
+        if (answer.tags.length === originalLength) {
+            return res.json(new ApiError(404, "Tag not found in answer."));
+        }
+
+        await answer.save();
+        return res.json(new ApiResponse(200, answer.tags, "Tag removed successfully."));
+    } catch (error) {
+        console.log(error);
+        return res.json(new ApiError(500, "Internal server error"));
+    }
+});
+
+const editImages = asyncHandler(async (req, res) => {
+    const { answerId } = req.params;
+    let { retainImages = [] } = req?.body;
+
+    let retainImagesParsed = [];
+    try {
+        if (typeof retainImages === "string") {
+            retainImagesParsed = JSON.parse(retainImages);
+        } else if (Array.isArray(retainImages)) {
+            retainImagesParsed = retainImages;
+        }
+    } catch (err) {
+        return res.json(new ApiError(400, "Invalid retainImages format."));
+    }
+
+    const answer = await Answer.findById(answerId);
+    if (!answer) {
+        return res.json(new ApiError(404, "Answer not found"));
+    }
+
+    const imagesToDelete = answer.images.filter(
+        (img) => !retainImagesParsed.includes(img)
+    );
+
+    for (const imgUrl of imagesToDelete) {
+        await deleteImageFromCloudinary(imgUrl);
+    }
+
+    let updatedImages = retainImagesParsed;
+    if (req.files?.image?.length > 0) {
+        const newImages = req.files.image.slice(0, 5 - updatedImages.length);
+        for (const file of newImages) {
+            const uploaded = await uploadOnCloudinary(file.path);
+            if (uploaded?.secure_url) {
+                updatedImages.push(uploaded.secure_url);
+            }
+        }
+    }
+
+    updatedImages = updatedImages.filter(
+        (url) => typeof url === "string" && url.startsWith("http")
+    );
+
+    answer.images = updatedImages;
+    await answer.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Question images updated successfully.",
+        data: answer,
+    });
+});
+
+export { postAnswer, deleteAnswer, getAnswerDetails, editContent, addTag, deleteTag, editImages };
