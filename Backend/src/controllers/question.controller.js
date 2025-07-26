@@ -88,6 +88,7 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
 
 
     const answers = await Answer.find({ questionId })
+        .sort({ createdAt: -1 })
         .populate("owner", "fullName avatar")
         .lean();
 
