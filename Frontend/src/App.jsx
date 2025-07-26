@@ -13,6 +13,7 @@ import { UserProvider } from "./Components/UserContext";
 import Answer from "./Components/Answer";
 import QuestionPage from "./Components/QuestionPage";
 import { QuestionProvider } from './contexts/QuestionContext';
+import UnansweredQuestion from "./Components/UnanswerQuestion";
 import Users from "./Components/Users";
 import { Provider } from "react-redux";
 import store from "./redux/store";
@@ -34,6 +35,7 @@ function App() {
             <Route path="/ask" element={<AskQuestion />} />
             <Route path="/answer" element={<Answer />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
           </Routes>
         </QuestionProvider>
       </UserProvider>

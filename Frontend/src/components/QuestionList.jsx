@@ -4,8 +4,8 @@ import QuestionCard from './QuestionCard';
 export default function QuestionList({ questions }) {
   return (
     <div className="space-y-4">
-      {questions.map((question) => (
-        <QuestionCard key={question._id} question={question} />
+      {questions.map((question , index) => (
+        <QuestionCard key={index} question={question} />
       ))}
     </div>
   );

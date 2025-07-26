@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUser } from "./UserContext";
-import { Bell, LogOut , ImageUp } from "lucide-react";
+import { Bell, LogOut, ImageUp } from "lucide-react";
 
 const sidebarOptions = [
   { label: "Home", icon: <Home />, to: "/" },
@@ -62,18 +62,20 @@ export default function Sidebar() {
           </button>
         </div>
         <nav className="overflow-y-auto scrollbar-thin scrollbar-thumb-[#433D8B] scrollbar-track-transparent">
-          {sidebarOptions.map((opt) => (
-            <Link
-              key={opt.label}
-              to={opt.to}
-              className="flex items-center gap-3 py-3 px-3 rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
-            >
-              <span className="w-5 h-5 flex items-center justify-center">
-                {opt.icon}
-              </span>
-              {opt.label}
-            </Link>
-          ))}
+          {sidebarOptions.map((opt) => {
+            return (
+              <Link
+                key={opt.label}
+                to={opt.to}
+                className="flex items-center gap-3 py-3 px-3 rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
+              >
+                <span className="w-5 h-5 flex items-center justify-center">
+                  {opt.icon}
+                </span>
+                {opt.label}
+              </Link>
+            );
+          })}
           {!user ? (
             <>
               <div className="flex flex-col gap-2 mt-2 lg:hidden">
@@ -96,7 +98,7 @@ export default function Sidebar() {
               <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
-                onClick={() => alert('Notifications (coming soon)')}
+                onClick={() => alert("Notifications (coming soon)")}
               >
                 <span className="w-5 h-5 flex items-center justify-center">
                   <Bell />
@@ -106,12 +108,12 @@ export default function Sidebar() {
               <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
-                onClick={ ()  => alert('Profile (coming soon)')}
+                onClick={() => alert("Profile (coming soon)")}
               >
                 <span className="w-5 h-5 flex items-center justify-center">
                   <ImageUp />
                 </span>
-                Update  Profile
+                Update Profile
               </button>
               <button
                 type="button"

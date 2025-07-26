@@ -6,13 +6,13 @@ import Sidebar from "./Sidebar";
 import QuestionList from "./QuestionList";
 import { AnimatePresence } from "framer-motion";
 
-export default function Home() {
-  const { questions, loading, error, hasMore, fetchQuestions } = useQuestions();
+export default function UnansweredQuestion() {
+  const { questions, loading, error, hasMore, unanswerQuestions } = useQuestions();
   const [page, setPage] = useState(1);
   const loadingRef = useRef(null);
   useEffect(() => {
-    fetchQuestions(page);
-  }, [page, fetchQuestions]);
+    unanswerQuestions(page);
+  }, [page, unanswerQuestions]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
