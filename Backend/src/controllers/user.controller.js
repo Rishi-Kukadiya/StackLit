@@ -398,20 +398,22 @@ const removeAvatar = asyncHandler(async (req, res) => {
         user.avatar = "";
         const updatedUser = await user.save();
         return res.json(
-            new ApiResponse(200, updatedUser,"Avatar removed Successfully")
+            new ApiResponse(200, updatedUser, "Avatar removed Successfully")
         )
     } catch (error) {
         console.log(error.message);
         return res.json(
-            new ApiError(500,"Error while removing Avatar of User.")
+            new ApiError(500, "Error while removing Avatar of User.")
         )
-        
+
     }
 })
 
 const updateAvatar = asyncHandler(async (req, res) => {
     try {
         const userId = req.user?._id;
+        console.log(req?.files);
+
         const avatarLocalPath = req.files?.avatar[0]?.path;
 
         if (!avatarLocalPath) {
@@ -423,31 +425,21 @@ const updateAvatar = asyncHandler(async (req, res) => {
             return res.json(new ApiError(500, "Error while uploading on cloudinary"))
         }
 
-        const user = await User.findById(userId).select("-password -refreshToken");
+        const user = await User.findById(userId).select("avatar");
         deleteImageFromCloudinary(user.avatar);
         user.avatar = avatar?.secure_url;
         const updatedUser = await user.save();
         return res.json(
-            new ApiResponse(200, updatedUser,"Avatar updated Successfully")
+            new ApiResponse(200, updatedUser, "Avatar updated Successfully")
         )
     } catch (error) {
         console.log(error.message);
         return res.json(
-            new ApiError(500,"Error while removing Avatar of User.")
+            new ApiError(500, "Error while removing Avatar of User.")
         )
-        
+
     }
 })
-
-
-
-
-
-
-
-
-
-
 
 
 
