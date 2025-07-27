@@ -57,7 +57,7 @@ export default function QuestionPage() {
     }
   }, [questionFromStore]);
 
-  
+
 
   // Function to truncate text to first few lines
   // const truncateContent = (content) => {
@@ -365,14 +365,14 @@ export default function QuestionPage() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
                   {question.title}
                 </h1>
-          
+
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
                   {renderFormattedContent(question.content)}
                 </div>
 
 
-              <ImageCarouselWithModal question={question} />
-                
+                <ImageCarouselWithModal question={question} />
+
               </div>
 
               {/* Row 3: Footer Section */}
@@ -468,7 +468,7 @@ export default function QuestionPage() {
                 </span>
                 <div className="flex items-end">
                   <div className="flex -space-x-2">
-                    {answers.map((answerer , index) => (
+                    {answers.map((answerer, index) => (
                       <div
                         key={index}
                         className="relative"
@@ -500,7 +500,7 @@ export default function QuestionPage() {
               {answers.length} Answers
             </h2>
 
-            {answers.map((answer , index) => (
+            {answers.map((answer, index) => (
               <div
                 key={index} // Make sure to use _id instead of id if that's what your data has
                 className="relative bg-transparent rounded-lg p-4 sm:p-6
@@ -557,21 +557,16 @@ export default function QuestionPage() {
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
                     )}
                   </div>
-                  {/* <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
-                  {renderFormattedContent(answer.content)}
-                </div> */}
-
                   <button
                     onClick={() => setExpandedAnswerId(
-          expandedAnswerId === answer._id ? null : answer._id
-        )}
+                      expandedAnswerId === answer._id ? null : answer._id
+                    )}
                     className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
                   >
                     {expandedAnswerId === answer._id ? "Show less" : "Read more"}
                     <ChevronLeft
-                      className={`w-4 h-4 transform transition-transform ${
-                        expandedAnswerId === answer._id ? "rotate-90" : "-rotate-90"
-                      }`}
+                      className={`w-4 h-4 transform transition-transform ${expandedAnswerId === answer._id ? "rotate-90" : "-rotate-90"
+                        }`}
                     />
                   </button>
                 </div>
