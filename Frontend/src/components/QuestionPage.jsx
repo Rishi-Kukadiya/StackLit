@@ -1,11 +1,21 @@
-import { Tag, Eye, ThumbsUp, Clock, User, ArrowRight, ChevronLeft, MessageSquare } from "lucide-react";
+import {
+  Tag,
+  Eye,
+  ThumbsUp,
+  Clock,
+  User,
+  ArrowRight,
+  ChevronLeft,
+  MessageSquare,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import Avtart from "../assets/avtart.jpg";  
-import { Link } from "react-router";
+import Avtart from "../assets/avtart.jpg";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchQuestionById } from "../redux/questionsSlice";
 // Add a loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-8">
@@ -20,77 +30,96 @@ const LoadingSpinner = () => (
 export default function QuestionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);
   const [showTooltip, setShowTooltip] = useState(null);
   const [expandedAnswers, setExpandedAnswers] = useState({});
 
+  const { items, loading, error } = useSelector((state) => state.questions);
+  const questionFromStore = items.find((q) => q._id === id);
+
   useEffect(() => {
-    const fetchQuestionData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${import.meta.env.VITE_SERVER}/questions/get-question/${id}`, {
-          withCredentials: true
-        });
-
-
-        // console.log('Question Content:', response.data.data);
-
-        if (response.data.success) {
-          setQuestion(response.data.data);
-          // If your API returns answers with the question, set them here
-          if (response.data.data.answers) {
-            setAnswers(response.data.data.answers);
-          }
-        } else {
-          setError(response.data.message || 'Failed to fetch question');
-        }
-      } catch (err) {
-        console.error('Error fetching question:', err);
-        setError(err.message || 'Failed to fetch question');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchQuestionData();
+    if (id && !questionFromStore) {
+       dispatch(fetchQuestionById(id));
     }
-  }, [id]);
+  }, [id, questionFromStore, dispatch]);
 
-  // Add this new useEffect after your existing useEffect
   useEffect(() => {
-    // console.log('Question state updated:', question);
-  }, [question]);
+    if (questionFromStore) {
+      setQuestion(questionFromStore.question);
+      if (questionFromStore.answers) {
+        setAnswers(questionFromStore.answers);
+      }
+    }
+  }, [questionFromStore]);
+
+  // useEffect(() => {
+    // const fetchQuestionData = async () => {
+    //   try {
+    //     setLoading(true);
+    //     const response = await axios.get(`${import.meta.env.VITE_SERVER}/questions/get-question/${id}`, {
+    //       withCredentials: true
+    //     });
+
+    //     // console.log('Question Content:', response.data.data);
+
+    //     if (response.data.success) {
+    //       setQuestion(response.data.data);
+    //       // If your API returns answers with the question, set them here
+    //       if (response.data.data.answers) {
+    //         setAnswers(response.data.data.answers);
+    //       }
+    //     } else {
+    //       setError(response.data.message || 'Failed to fetch question');
+    //     }
+    //   } catch (err) {
+    //     console.error('Error fetching question:', err);
+    //     setError(err.message || 'Failed to fetch question');
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
+    // if (id) {
+    //   fetchQuestionData();
+    // }
+
+  //   if (!questions) {
+  //     dispatch(fetchQuestionById(id));
+  //   }
+  // }, [id, questions, dispatch]);
 
   // Function to truncate text to first few lines
   const truncateContent = (content) => {
-    const lines = content.split('\n').filter(line => line.trim());
+    const lines = content.split("\n").filter((line) => line.trim());
     if (lines.length <= 2) return content;
-    return lines.slice(0, 2).join('\n') + '...';
+    return lines.slice(0, 2).join("\n") + "...";
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
-
 
   if (loading) {
     return (
       <>
         <Navbar />
         <Sidebar />
-        <div className="pt-16 min-h-screen overflow-y-auto relative z-10 
+        <div
+          className="pt-16 min-h-screen overflow-y-auto relative z-10 
                     transition-all duration-300
                     mx-auto w-full
-                    lg:ml-64 lg:w-[calc(100%-16rem)]">
+                    lg:ml-64 lg:w-[calc(100%-16rem)]"
+        >
           <LoadingSpinner />
         </div>
       </>
@@ -102,10 +131,12 @@ export default function QuestionPage() {
       <>
         <Navbar />
         <Sidebar />
-        <div className="pt-16 min-h-screen overflow-y-auto relative z-10 
+        <div
+          className="pt-16 min-h-screen overflow-y-auto relative z-10 
                     transition-all duration-300
                     mx-auto w-full
-                    lg:ml-64 lg:w-[calc(100%-16rem)]">
+                    lg:ml-64 lg:w-[calc(100%-16rem)]"
+        >
           <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
             <div className="text-red-400 text-center p-8">
               <p>{error}</p>
@@ -127,10 +158,12 @@ export default function QuestionPage() {
       <>
         <Navbar />
         <Sidebar />
-        <div className="pt-16 min-h-screen overflow-y-auto relative z-10 
+        <div
+          className="pt-16 min-h-screen overflow-y-auto relative z-10 
                     transition-all duration-300
                     mx-auto w-full
-                    lg:ml-64 lg:w-[calc(100%-16rem)]">
+                    lg:ml-64 lg:w-[calc(100%-16rem)]"
+        >
           <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
             <div className="text-[#C8ACD6] text-center p-8">
               Question not found
@@ -147,14 +180,18 @@ export default function QuestionPage() {
         <Navbar />
       </div>
       <Sidebar />
-      <div className="pt-16 min-h-screen overflow-y-auto relative z-10 
+      <div
+        className="pt-16 min-h-screen overflow-y-auto relative z-10 
               transition-all duration-300
               mx-auto w-full
-              lg:ml-64 lg:w-[calc(100%-16rem)]">
+              lg:ml-64 lg:w-[calc(100%-16rem)]"
+      >
         <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6 lg:p-8">
           <div className="space-y-6">
             {/* Back Button - Positioned independently */}
-            <div className="sticky top-16 sm:top-20 mb-15 z-[60] w-fit px-4 sm:px-0"> {/* Updated positioning and padding */}
+            <div className="sticky top-16 sm:top-20 mb-15 z-[60] w-fit px-4 sm:px-0">
+              {" "}
+              {/* Updated positioning and padding */}
               <button
                 onClick={() => navigate(-1)}
                 className="flex items-center gap-2 text-[#C8ACD6] hover:text-white 
@@ -164,29 +201,36 @@ export default function QuestionPage() {
                         shadow-[0_0_10px_rgba(200,172,214,0.1)]"
               >
                 <ChevronLeft className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" />
-                <span className="inline text-sm font-medium">Back to Questions</span>
+                <span className="inline text-sm font-medium">
+                  Back to Questions
+                </span>
               </button>
             </div>
 
             {/* Question Content */}
-            <div className="relative bg-transparent rounded-lg p-4 sm:p-6
+            <div
+              className="relative bg-transparent rounded-lg p-4 sm:p-6
                 transform transition-all duration-300
                 border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
-                shadow-[0_0_15px_rgba(200,172,214,0.2)]">
-
+                shadow-[0_0_15px_rgba(200,172,214,0.2)]"
+            >
               {/* Row 1: User Info Section */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 border-b border-[#433D8B]/50 pb-4">
                 <div className="flex-shrink-0">
                   <img
                     // Replace data.data.question with just question
                     src={question.question.owner?.avatar || Avtart}
-                    alt={question.question.owner?.email || 'User'}
+                    alt={question.question.owner?.email || "User"}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
                 </div>
                 <div className="flex-grow w-full sm:w-auto">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-white font-medium">{(question.question.owner?.fullName?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'}</h3>
+                    <h3 className="text-white font-medium">
+                      {(question.question.owner?.fullName
+                        ?.split("@")[0]
+                        ?.substring(0, 5) || "Anonymous") + "..."}
+                    </h3>
                   </div>
                   <div className="text-[#C8ACD6] text-xs sm:text-sm flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="flex items-center">
@@ -202,23 +246,27 @@ export default function QuestionPage() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
                   {question.question.title}
                 </h1>
-                <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base prose prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: question.question.content }}>
-                </div>
+                <div
+                  className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base prose prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: question.question.content,
+                  }}
+                ></div>
 
                 {/* Images Section */}
-                {question.question.images && question.question.images.length > 0 && (
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {question.question.images.map((imageUrl, index) => (
-                      <img
-                        key={index}
-                        src={imageUrl}
-                        alt={`Question image ${index + 1}`}
-                        className="w-full rounded-lg border border-[#433D8B]/30 hover:border-[#C8ACD6]/50 transition-all duration-300"
-                      />
-                    ))}
-                  </div>
-                )}
+                {question.question.images &&
+                  question.question.images.length > 0 && (
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {question.question.images.map((imageUrl, index) => (
+                        <img
+                          key={index}
+                          src={imageUrl}
+                          alt={`Question image ${index + 1}`}
+                          className="w-full rounded-lg border border-[#433D8B]/30 hover:border-[#C8ACD6]/50 transition-all duration-300"
+                        />
+                      ))}
+                    </div>
+                  )}
               </div>
 
               {/* Row 3: Footer Section */}
@@ -226,18 +274,21 @@ export default function QuestionPage() {
                 {/* Tags and Answerers Row */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex flex-wrap gap-2">
-                    {question && question.question.tags && question.question.tags.length > 0 && question.question.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
+                    {question &&
+                      question.question.tags &&
+                      question.question.tags.length > 0 &&
+                      question.question.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
                                rounded-lg text-sm border border-[#433D8B]/20 
                                hover:border-[#C8ACD6]/30 hover:text-white 
                                transition-all duration-300"
-                      >
-                        <Tag className="w-4 h-4" />
-                        {tag}
-                      </span>
-                    ))}
+                        >
+                          <Tag className="w-4 h-4" />
+                          {tag}
+                        </span>
+                      ))}
                   </div>
                 </div>
                 {/* Answerers */}
@@ -252,12 +303,12 @@ export default function QuestionPage() {
                       >
                         <img
                           src={answerer.avatar || Avtart}
-                          alt={answerer.email || 'User'}
+                          alt={answerer.email || "User"}
                           className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
                         />
                         {showTooltip === answerer._id && (
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
-                            {answerer.email?.split('@')[0] || 'Anonymous'}
+                            {answerer.email?.split("@")[0] || "Anonymous"}
                           </div>
                         )}
                       </div>
@@ -286,14 +337,19 @@ export default function QuestionPage() {
 
                 {/* Post Answer Button */}
                 <button
-                  onClick={() => navigate("/answer", {
-                    state: {
-                      questionId: question.question._id,
-                      questionTitle: question.question.title,
-                      ownerAvatar: question.question.owner?.avatar || Avtart,
-                      ownerName: (question.question.owner?.fullName?.split('@')[0]?.substring(0, 5) || 'Anonymous') + '...'
-                    }
-                  })}
+                  onClick={() =>
+                    navigate("/answer", {
+                      state: {
+                        questionId: question.question._id,
+                        questionTitle: question.question.title,
+                        ownerAvatar: question.question.owner?.avatar || Avtart,
+                        ownerName:
+                          (question.question.owner?.fullName
+                            ?.split("@")[0]
+                            ?.substring(0, 5) || "Anonymous") + "...",
+                      },
+                    })
+                  }
                   className="flex items-center gap-2 px-4 py-2 bg-[#433D8B]/60 text-white rounded-lg
                   hover:bg-[#17153B]/70 transition-all duration-300 border border-[#C8ACD6]/30
                   w-full sm:w-auto justify-center sm:justify-start"
@@ -301,9 +357,9 @@ export default function QuestionPage() {
                   <span className="text-sm font-medium">Post Your Answer</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                  <span className="ml-3 text-[#C8ACD6] text-sm">
-                    {(question.question.answeredBy || []).length} answers
-                  </span>
+                <span className="ml-3 text-[#C8ACD6] text-sm">
+                  {(question.question.answeredBy || []).length} answers
+                </span>
               </div>
             </div>
           </div>
@@ -331,7 +387,9 @@ export default function QuestionPage() {
                     className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
                   <div>
-                    <h3 className="text-white font-medium">{answer.owner.fullName}</h3>
+                    <h3 className="text-white font-medium">
+                      {answer.owner.fullName}
+                    </h3>
                     <span className="text-[#C8ACD6] text-xs">
                       answered {formatDate(answer.createdAt)}
                     </span>
@@ -340,16 +398,32 @@ export default function QuestionPage() {
 
                 {/* Answer Content */}
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
-                  <div className={`relative ${!expandedAnswers[answer.id] ? 'max-h-32 overflow-hidden' : ''}`}>
-                    {answer.content.split('```').map((block, index) => {
-                      if (index % 2 === 1) { // Code block
+                  <div
+                    className={`relative ${
+                      !expandedAnswers[answer.id]
+                        ? "max-h-32 overflow-hidden"
+                        : ""
+                    }`}
+                  >
+                    {answer.content.split("```").map((block, index) => {
+                      if (index % 2 === 1) {
+                        // Code block
                         return (
-                          <pre key={index} className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30">
-                            <code className="text-white whitespace-pre-wrap">{block}</code>
+                          <pre
+                            key={index}
+                            className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30"
+                          >
+                            <code className="text-white whitespace-pre-wrap">
+                              {block}
+                            </code>
                           </pre>
                         );
                       }
-                      return <p key={index} className="whitespace-pre-wrap">{block}</p>;
+                      return (
+                        <p key={index} className="whitespace-pre-wrap">
+                          {block}
+                        </p>
+                      );
                     })}
 
                     {!expandedAnswers[answer.id] && (
@@ -358,11 +432,20 @@ export default function QuestionPage() {
                   </div>
 
                   <button
-                    onClick={() => setExpandedAnswers(prev => ({ ...prev, [answer.id]: !prev[answer.id] }))}
+                    onClick={() =>
+                      setExpandedAnswers((prev) => ({
+                        ...prev,
+                        [answer.id]: !prev[answer.id],
+                      }))
+                    }
                     className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
                   >
-                    {expandedAnswers[answer.id] ? 'Show less' : 'Read more'}
-                    <ChevronLeft className={`w-4 h-4 transform transition-transform ${expandedAnswers[answer.id] ? 'rotate-90' : '-rotate-90'}`} />
+                    {expandedAnswers[answer.id] ? "Show less" : "Read more"}
+                    <ChevronLeft
+                      className={`w-4 h-4 transform transition-transform ${
+                        expandedAnswers[answer.id] ? "rotate-90" : "-rotate-90"
+                      }`}
+                    />
                   </button>
                 </div>
 
