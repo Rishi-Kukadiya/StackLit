@@ -6,6 +6,7 @@ import { useState } from "react";
 import ErrorPopup from "./ErrorPopup";
 import { useUser } from "./UserContext";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { useEffect } from "react";
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import axios from "axios";
 export default function QuestionCard({ question }) {
@@ -139,6 +140,16 @@ export default function QuestionCard({ question }) {
   const [loadingReaction, setLoadingReaction] = useState(false);
   const { user } = useUser();
   const [error, setError] = useState("");
+
+
+  useEffect(() => {
+    if (question) {
+      setLiked(localStorage.getItem(`${question._id}_liked`) === "like");
+      setDisliked(localStorage.getItem(`${question._id}_liked`) === "dislike");
+      setLikesCount(question.likes || 0);
+      setDislikesCount(question.dislikes || 0);
+    }
+  }, [question])
   const navigate = useNavigate();
 
   const handleAnswer = (e) => {
@@ -209,7 +220,7 @@ export default function QuestionCard({ question }) {
     e.stopPropagation();
 
     if (!user) {
-      setError("You must be logged in to react.");
+      setError("Please Login!!.");
       setTimeout(() => {
         setError("");
         navigate("/signin");
@@ -268,9 +279,9 @@ export default function QuestionCard({ question }) {
     });
   };
 
-  const truncatedContent = question.content
-    ? question.content.split("```")[0].slice(0, 200) + "..."
-    : "";
+  // const truncatedContent = question.content
+  //   ? question.content.split("```")[0].slice(0, 200) + "..."
+  //   : "";
 
   const cardVariants = {
     initial: {
@@ -360,11 +371,10 @@ export default function QuestionCard({ question }) {
               >
                 <motion.button
                   whileTap={{ scale: 1.2 }}
-                  className={`p-1.5 rounded-full transition-colors duration-300 ${
-                    liked
+                  className={`p-1.5 rounded-full transition-colors duration-300 ${liked
                       ? "bg-white text-green-500"
                       : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
-                  }`}
+                    }`}
                   onClick={handleLike}
                 >
                   <motion.div
@@ -386,11 +396,10 @@ export default function QuestionCard({ question }) {
 
                 <motion.button
                   whileTap={{ scale: 1.2 }}
-                  className={`p-1.5 rounded-full transition-colors duration-300 ${
-                    disliked
+                  className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
                       ? "bg-white text-red-500"
                       : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
-                  }`}
+                    }`}
                   onClick={handleDislike}
                 >
                   <motion.div
@@ -413,7 +422,7 @@ export default function QuestionCard({ question }) {
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2">
-                {question.tags.slice(0, 3).map((tag , index) => (
+                {question.tags.slice(0, 3).map((tag, index) => (
                   <span
                     key={index}
                     className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
@@ -438,7 +447,7 @@ export default function QuestionCard({ question }) {
             {question.answerAvatars?.length > 0 && (
               <div className="flex items-center ml-auto">
                 <div className="flex -space-x-2">
-                  {question.answerAvatars.slice(0, 3).map((answerer , index) => (
+                  {question.answerAvatars.slice(0, 3).map((answerer, index) => (
                     <img
                       key={index}
                       src={answerer || avtart}

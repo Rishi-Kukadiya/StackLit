@@ -2,6 +2,7 @@ import {
   Tag,
   Eye,
   ThumbsUp,
+  ThumbsDown,
   Clock,
   User,
   ArrowRight,
@@ -18,6 +19,10 @@ import { fetchQuestionById } from "../redux/questionsSlice";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ImageCarouselWithModal from "./ImageCarouselWithModal";
+import ErrorPopup from "./ErrorPopup";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "./UserContext";
 // Add a loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-8">
@@ -38,6 +43,8 @@ export default function QuestionPage() {
   const [answers, setAnswers] = useState([]);
   const [showTooltip, setShowTooltip] = useState(null);
   const [expandedAnswerId, setExpandedAnswerId] = useState(null);
+  const [Errors, setError] = useState("");
+
 
   const { items, loading, error } = useSelector((state) => state.questions);
   const questionFromStore = items.find((q) => q._id === id);
@@ -56,6 +63,128 @@ export default function QuestionPage() {
       }
     }
   }, [questionFromStore]);
+
+  
+  const [liked, setLiked] = useState(
+    localStorage.getItem(`${question?._id}_liked`) === "like"
+  );
+  const [disliked, setDisliked] = useState(
+    localStorage.getItem(`${question?._id}_liked`) === "dislike"
+  );
+  const [likesCount, setLikesCount] = useState(question?.likes || 0);
+  const [dislikesCount, setDislikesCount] = useState(question?.dislikes || 0);
+  const [loadingReaction, setLoadingReaction] = useState(false);
+
+  useEffect(() => {
+    if (question) {
+      setLiked(localStorage.getItem(`${question._id}_liked`) === "like");
+      setDisliked(localStorage.getItem(`${question._id}_liked`) === "dislike");
+      setLikesCount(question.likes || 0);
+      setDislikesCount(question.dislikes || 0);
+    }
+  }, [question])
+  const { user } = useUser();
+
+
+  const handleLike = async (e) => {
+    e.stopPropagation();
+
+    if (!user) {
+      setError("Please Login for posting  your answer!!");
+      setTimeout(() => {
+        setError("");
+        navigate("/signin");
+      }, 2000);
+      return;
+    }
+
+    if (loadingReaction) return;
+    setLoadingReaction(true);
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikesCount((prev) => prev - 1);
+        localStorage.removeItem(`${question._id}_liked`);
+      } else {
+        // Add like
+        setLiked(true);
+        setDisliked(false);
+        setLikesCount((prev) => prev + 1);
+        if (disliked) setDislikesCount((prev) => prev - 1);
+        localStorage.setItem(`${question._id}_liked`, "like");
+      }
+
+      await axios.post(
+        `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+        {
+          targetId: question?._id,
+          targetType: "Question",
+          isLike: true,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Failed to react:", err);
+      setError("Failed to react");
+    } finally {
+      setLoadingReaction(false);
+    }
+  };
+
+
+  const handleDislike = async (e) => {
+    e.stopPropagation();
+
+    if (!user) {
+      setError("Please Login!!.");
+      setTimeout(() => {
+        setError("");
+        navigate("/signin");
+      }, 2000);
+      return;
+    }
+
+    if (loadingReaction) return;
+    setLoadingReaction(true);
+    try {
+      if (disliked) {
+        setDisliked(false);
+        setDislikesCount((prev) => prev - 1);
+        localStorage.removeItem(`${question._id}_liked`);
+      } else {
+        setDisliked(true);
+        setLiked(false);
+        setDislikesCount((prev) => prev + 1);
+        if (liked) setLikesCount((prev) => prev - 1);
+        localStorage.setItem(`${question._id}_liked`, "dislike");
+      }
+
+      await axios.post(
+        `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+        {
+          targetId: question?._id,
+          targetType: "Question",
+          isLike: false,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Failed to react:", err);
+      setError("Failed to react");
+    } finally {
+      setLoadingReaction(false);
+    }
+  };
 
 
 
@@ -426,7 +555,7 @@ export default function QuestionPage() {
               {/* Interaction Row: likes and dislikes and Post Answer */}
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 {/* Voting */}
-                <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
+                {/* <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
                   <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                     <ThumbsUp className="w-5 h-5" />
                   </button>
@@ -438,6 +567,62 @@ export default function QuestionPage() {
                   </button>
                   <span className="text-white text-center font-medium min-w-[2rem]">
                     {question.dislikes}
+                  </span>
+                </div> */}
+
+                <div
+                  className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
+    border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className={`p-1.5 rounded-full transition-colors duration-300 ${liked
+                      ? "bg-white text-green-500"
+                      : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                      }`}
+                    onClick={handleLike}
+                  >
+                    <motion.div
+                      animate={
+                        loadingReaction && liked ? { scale: [1, 1.3, 1] } : {}
+                      }
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ThumbsUp className="w-5 h-5" />
+                    </motion.div>
+                  </motion.button>
+
+                  <span
+                    className="text-white text-center font-medium min-w-[2rem]"
+                    onClick={handleLike}
+                  >
+                    {likesCount}
+                  </span>
+
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
+                      ? "bg-white text-red-500"
+                      : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                      }`}
+                    onClick={handleDislike}
+                  >
+                    <motion.div
+                      animate={
+                        loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                      }
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ThumbsDown className="w-5 h-5" />
+                    </motion.div>
+                  </motion.button>
+
+                  <span
+                    className="text-white text-center font-medium min-w-[2rem]"
+                    onClick={handleDislike}
+                  >
+                    {dislikesCount}
                   </span>
                 </div>
 
@@ -465,7 +650,7 @@ export default function QuestionPage() {
                 </button>
                 <span className="text-xl font-bold text-white flex items-center gap-2">
                   <MessageSquare className="w-6 h-6" />
-              {answers.length} Answers
+                  {answers.length} Answers
                 </span>
                 <div className="flex items-end">
                   <div className="flex -space-x-2">
@@ -489,14 +674,14 @@ export default function QuestionPage() {
                       </div>
                     ))}
                     {answers.length > 5 && (
-                        <div className="relative -ml-2">
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#2E236C] 
+                      <div className="relative -ml-2">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#2E236C] 
                          border-2 border-[#C8ACD6]/30 flex items-center justify-center
                          text-xs sm:text-sm text-[#C8ACD6]">
-                            +{answers.length - 4}
-                          </div>
+                          +{answers.length - 4}
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -538,12 +723,11 @@ export default function QuestionPage() {
                 {/* Answer Content with Formatting */}
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
                   <div
-                    className={`relative ${
-                      expandedAnswerId !== answer._id ? "max-h-32 overflow-hidden" : ""
-                    }`}
+                    className={`relative ${expandedAnswerId !== answer._id ? "max-h-32 overflow-hidden" : ""
+                      }`}
                   >
-                    {renderFormattedContent(an swer.content)}
-                    
+                    {renderFormattedContent(answer.content)}
+
                     {/* Images Section - Show only when expanded */}
                     {expandedAnswerId === answer._id && answer.images && answer.images.length > 0 && (
                       <div className="mt-4 transition-all duration-300">
@@ -595,7 +779,7 @@ export default function QuestionPage() {
                   )}
 
                   {/* Like/Dislike Section */}
-                  <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 
+                  {/* <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 
                     rounded-lg shadow-md border border-[#433D8B]/30">
                     <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                       <ThumbsUp className="w-4 h-4" />
@@ -609,10 +793,69 @@ export default function QuestionPage() {
                     <span className="text-white text-center font-medium min-w-[2rem]">
                       {answer.dislikes || 0}
                     </span>
+                  </div> */}
+
+
+                  <div
+                    className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
+    border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <motion.button
+                      whileTap={{ scale: 1.2 }}
+                      className={`p-1.5 rounded-full transition-colors duration-300 ${liked
+                        ? "bg-white text-green-500"
+                        : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                        }`}
+                      onClick={handleLike}
+                    >
+                      <motion.div
+                        animate={
+                          loadingReaction && liked ? { scale: [1, 1.3, 1] } : {}
+                        }
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ThumbsUp className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <span
+                      className="text-white text-center font-medium min-w-[2rem]"
+                      onClick={handleLike}
+                    >
+                      {likesCount}
+                    </span>
+
+                    <motion.button
+                      whileTap={{ scale: 1.2 }}
+                      className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
+                        ? "bg-white text-red-500"
+                        : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                        }`}
+                      onClick={handleDislike}
+                    >
+                      <motion.div
+                        animate={
+                          loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                        }
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ThumbsDown className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <span
+                      className="text-white text-center font-medium min-w-[2rem]"
+                      onClick={handleDislike}
+                    >
+                      {dislikesCount}
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
+
+            {Errors && <ErrorPopup message={Errors} onClose={() => setError("")} />}
 
             {/* No answers message */}
             {answers.length === 0 && (
