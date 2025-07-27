@@ -2,13 +2,13 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudinary.js";
-import jwt, { decode } from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 import { User } from "../models/user.model.js";
 import sendEmail from "../utils/sendEmail.js";
 import { Question } from "../models/question.model.js";
 import { Like } from "../models/like.model.js";
 import { Answer } from "../models/answer.model.js";
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {

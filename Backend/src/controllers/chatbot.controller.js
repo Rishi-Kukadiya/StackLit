@@ -1,4 +1,6 @@
 import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const chatWithGemini = async (req, res) => {
     const { text } = req.body;
@@ -9,7 +11,7 @@ export const chatWithGemini = async (req, res) => {
 
     try {
         const geminiRes = await axios.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCINnz-YU3V24BlnJSutJL2kCBN2niylcM",
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.CHATAPIKEY}`,
             {
                 contents: [{ parts: [{ text }] }]
             },
