@@ -29,4 +29,9 @@ app.use("/api/v1/answers", answerRouter);
 import likeRouter from "./src/routes/like.routes.js";
 app.use("/api/v1/likes", likeRouter);
 
+import chatRouter from "./src/routes/chatBot.routes.js";
+app.use("/api/v1/", chatRouter)
+
+
+
 export { app }

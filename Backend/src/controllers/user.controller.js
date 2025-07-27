@@ -8,26 +8,30 @@ import sendEmail from "../utils/sendEmail.js";
 import { Question } from "../models/question.model.js";
 import { Like } from "../models/like.model.js";
 import { Answer } from "../models/answer.model.js";
+import mongoose, { mongo } from "mongoose";
 
-const generateAccessAndRefreshTokens = asyncHandler(async (userId) => {
+const generateAccessAndRefreshTokens = async (userId) => {
     try {
         const user = await User.findById(userId);
         if (!user) {
-            return res.json( new ApiError(404, "User not found while generating tokens"));
+            throw new Error("Error while generating tokens")
         }
 
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        const accessToken = await user.generateAccessToken();
+        const refreshToken = await user.generateRefreshToken();
+
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false })
+        // console.log(accessToken);
+        // console.log(refreshToken);
 
         return { accessToken, refreshToken };
 
     } catch (error) {
         return res.json(new ApiError(500, error?.message || "something went wrong while generating refresh and access tokens"))
     }
-});
+};
 
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, password } = req.body;
@@ -80,7 +84,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 })
 
-const loginUser = asyncHandler(async (req, res) => {
+const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -92,16 +96,20 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!isPasswordValid) {
         return res.json(new ApiError(401, "Password is incorrect"))
     }
-    console.log(user);
-    
+
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user?._id);
 
-    const loggedInUser = await User.findById(user._id).select("-password -refreshTokens -otp -otpExpiry -isOtpVerified");
+
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken -otp -otpExpiry -isOtpVerified");
 
     const options = {
         httpOnly: true,
         secure: true
     }
+    console.log(accessToken);
+    console.log(refreshToken);
+
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
@@ -115,7 +123,7 @@ const loginUser = asyncHandler(async (req, res) => {
                 "User logged in successfully"
             )
         )
-})
+};
 
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
@@ -547,7 +555,7 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
 const deleteUserProfile = asyncHandler(async (req, res) => {
     try {
         const userId = req.user?._id;
-
+    
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ success: false, message: "Invalid user ID" });
         }
@@ -584,7 +592,7 @@ const deleteUserProfile = asyncHandler(async (req, res) => {
 
     } catch (error) {
         console.error("Delete profile error:", error);
-        return res.status(500).json(new ApiError(500,"Internal server Error"));
+        return res.status(500).json(new ApiError(500, "Internal server Error"));
     }
 });
 
