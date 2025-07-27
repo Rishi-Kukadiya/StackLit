@@ -113,10 +113,10 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
         new ApiResponse(200, {
             question: {
                 ...question,
+                answers:finalAnswers,
                 likes: totalLikes,
                 dislikes: totalDislikes
-            },
-            answers: finalAnswers
+            }
         }, "Question details fetched successfully")
     );
 });
