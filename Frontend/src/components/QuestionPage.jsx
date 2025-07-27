@@ -463,12 +463,13 @@ export default function QuestionPage() {
                   <span className="text-sm font-medium">Post Your Answer</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <span className="ml-5 text-[#C8ACD6] text-sm">
-                  {(answers || []).length} answers
+                <span className="text-xl font-bold text-white flex items-center gap-2">
+                  <MessageSquare className="w-6 h-6" />
+              {answers.length} Answers
                 </span>
                 <div className="flex items-end">
                   <div className="flex -space-x-2">
-                    {answers.map((answerer, index) => (
+                    {answers.slice(0, 4).map((answerer, index) => (
                       <div
                         key={index}
                         className="relative"
@@ -487,6 +488,15 @@ export default function QuestionPage() {
                         )}
                       </div>
                     ))}
+                    {answers.length > 5 && (
+                        <div className="relative -ml-2">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#2E236C] 
+                         border-2 border-[#C8ACD6]/30 flex items-center justify-center
+                         text-xs sm:text-sm text-[#C8ACD6]">
+                            +{answers.length - 4}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -532,7 +542,7 @@ export default function QuestionPage() {
                       expandedAnswerId !== answer._id ? "max-h-32 overflow-hidden" : ""
                     }`}
                   >
-                    {renderFormattedContent(answer.content)}
+                    {renderFormattedContent(an swer.content)}
                     
                     {/* Images Section - Show only when expanded */}
                     {expandedAnswerId === answer._id && answer.images && answer.images.length > 0 && (
