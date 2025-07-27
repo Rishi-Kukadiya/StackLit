@@ -14,6 +14,8 @@ export default function SignInModal({ isOpen, onClose }) {
     email: '',
     password: ''
   });
+
+
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
