@@ -16,8 +16,9 @@ export const fetchQuestionById = createAsyncThunk(
       `${import.meta.env.VITE_SERVER}/questions/get-question/${id}`,
       { withCredentials: true }
     );
-    console.log(response);
-    return response.data.data;
+
+    // console.log(response.data.data.question);
+    return response.data.data.question;
   }
 );
 

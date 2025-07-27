@@ -16,6 +16,9 @@ import Sidebar from "./Sidebar";
 import Avtart from "../assets/avtart.jpg";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchQuestionById } from "../redux/questionsSlice";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import ImageCarouselWithModal from "./ImageCarouselWithModal";
 // Add a loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-8">
@@ -34,8 +37,6 @@ export default function QuestionPage() {
 
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState(null);
   const [showTooltip, setShowTooltip] = useState(null);
   const [expandedAnswers, setExpandedAnswers] = useState({});
 
@@ -44,54 +45,18 @@ export default function QuestionPage() {
 
   useEffect(() => {
     if (id && !questionFromStore) {
-       dispatch(fetchQuestionById(id));
+      dispatch(fetchQuestionById(id));
     }
   }, [id, questionFromStore, dispatch]);
 
   useEffect(() => {
     if (questionFromStore) {
-      setQuestion(questionFromStore.question);
+      setQuestion(questionFromStore);
       if (questionFromStore.answers) {
         setAnswers(questionFromStore.answers);
       }
     }
   }, [questionFromStore]);
-
-  // useEffect(() => {
-    // const fetchQuestionData = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const response = await axios.get(`${import.meta.env.VITE_SERVER}/questions/get-question/${id}`, {
-    //       withCredentials: true
-    //     });
-
-    //     // console.log('Question Content:', response.data.data);
-
-    //     if (response.data.success) {
-    //       setQuestion(response.data.data);
-    //       // If your API returns answers with the question, set them here
-    //       if (response.data.data.answers) {
-    //         setAnswers(response.data.data.answers);
-    //       }
-    //     } else {
-    //       setError(response.data.message || 'Failed to fetch question');
-    //     }
-    //   } catch (err) {
-    //     console.error('Error fetching question:', err);
-    //     setError(err.message || 'Failed to fetch question');
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
-    // if (id) {
-    //   fetchQuestionData();
-    // }
-
-  //   if (!questions) {
-  //     dispatch(fetchQuestionById(id));
-  //   }
-  // }, [id, questions, dispatch]);
 
   // Function to truncate text to first few lines
   const truncateContent = (content) => {
@@ -108,6 +73,159 @@ export default function QuestionPage() {
       day: "numeric",
     });
   };
+
+  function decodeHTMLEntities(text) {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  function renderFormattedContent(content) {
+    if (!content) return null;
+
+    // Decode HTML entities first
+    let processedContent = decodeHTMLEntities(content);
+
+    // Split content by code blocks first
+    const codeBlockRegex =
+      /(```[\w\s]*?\n[\s\S]*?```)|(<pre><code>[\s\S]*?<\/code><\/pre>)/g;
+    const parts = processedContent.split(codeBlockRegex);
+
+    return parts
+      .map((part, index) => {
+        if (!part) return null;
+
+        // Handle code blocks (keep existing code block handling)
+        if (part.startsWith("```") || part.startsWith("<pre><code>")) {
+          const match = part.match(/```(\w+)?\n([\s\S]*?)```/);
+          if (match) {
+            const language = match[1] || "cpp";
+            const code = match[2].trim();
+            return (
+              <div key={`code-block-${index}`} className="my-4">
+                <SyntaxHighlighter
+                  language={language}
+                  style={atomDark}
+                  customStyle={{
+                    background: "#2E236C",
+                    padding: "1rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(67, 61, 139, 0.3)",
+                    fontSize: "0.9rem",
+                    margin: "0",
+                  }}
+                  wrapLongLines={true}
+                  showLineNumbers={true}
+                  codeTagProps={{
+                    style: {
+                      fontFamily:
+                        'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                    },
+                  }}
+                >
+                  {code}
+                </SyntaxHighlighter>
+              </div>
+            );
+          }
+        }
+        // HTML-style code block
+        if (part.startsWith("<pre><code>") && part.endsWith("</code></pre>")) {
+          const codeMatch = part.match(/<pre><code>([\s\S]*?)<\/code><\/pre>/);
+          if (codeMatch) {
+            const code = codeMatch[1].trim();
+            return (
+              <div key={`code-block-${index}`} className="my-4">
+                <SyntaxHighlighter
+                  language="cpp"
+                  style={atomDark}
+                  customStyle={{
+                    background: "#2E236C",
+                    padding: "1rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(67, 61, 139, 0.3)",
+                    fontSize: "0.9rem",
+                    margin: "0",
+                  }}
+                  wrapLongLines={true}
+                  showLineNumbers={true}
+                  codeTagProps={{
+                    style: {
+                      fontFamily:
+                        'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                    },
+                  }}
+                >
+                  {code}
+                </SyntaxHighlighter>
+              </div>
+            );
+          }
+        }
+        // For regular text content, enhance HTML processing
+        const processedHtml = part
+          // Fix heading patterns
+          .replace(
+            /# (.*?)(\n|$)/g,
+            '<h1 class="text-2xl font-bold text-white my-4">$1</h1>'
+          )
+          .replace(
+            /## (.*?)(\n|$)/g,
+            '<h2 class="text-xl font-bold text-white my-3">$1</h2>'
+          )
+          // Fix blockquote pattern
+          .replace(
+            /> (.*?)(\n|$)/g,
+            '<blockquote class="border-l-4 border-[#C8ACD6] pl-4 my-4 italic text-[#C8ACD6]">$1</blockquote>'
+          )
+          // Handle HTML headings as fallback
+          .replace(
+            /<h1>(.*?)<\/h1>/g,
+            '<h1 class="text-2xl font-bold text-white my-4">$1</h1>'
+          )
+          .replace(
+            /<h2>(.*?)<\/h2>/g,
+            '<h2 class="text-xl font-bold text-white my-3">$1</h2>'
+          )
+          // Handle HTML blockquotes as fallback
+          .replace(
+            /<blockquote>(.*?)<\/blockquote>/g,
+            '<blockquote class="border-l-4 border-[#C8ACD6] pl-4 my-4 italic text-[#C8ACD6]">$1</blockquote>'
+          )
+          // Rest of your existing replacements
+          .replace(
+            /<strong>(.*?)<\/strong>/g,
+            '<span class="font-bold text-white">$1</span>'
+          )
+          .replace(
+            /<em>(.*?)<\/em>/g,
+            '<span class="italic text-[#C8ACD6]">$1</span>'
+          )
+          .replace(
+            /<u>(.*?)<\/u>/g,
+            '<span class="underline text-[#C8ACD6]">$1</span>'
+          )
+          // Handle lists
+          .replace(
+            /<ol>(.*?)<\/ol>/g,
+            '<ol class="list-decimal list-inside space-y-2 my-4 text-[#C8ACD6]">$1</ol>'
+          )
+          .replace(
+            /<ul>(.*?)<\/ul>/g,
+            '<ul class="list-disc list-inside space-y-2 my-4 text-[#C8ACD6]">$1</ul>'
+          )
+          .replace(/<li>(.*?)<\/li>/g, '<li class="text-[#C8ACD6]">$1</li>');
+
+        return (
+          <div
+            key={`text-block-${index}`}
+            className="prose prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: processedHtml }}
+          />
+        );
+      })
+      .filter(Boolean);
+  }
 
   if (loading) {
     return (
@@ -219,15 +337,15 @@ export default function QuestionPage() {
                 <div className="flex-shrink-0">
                   <img
                     // Replace data.data.question with just question
-                    src={question.question.owner?.avatar || Avtart}
-                    alt={question.question.owner?.email || "User"}
+                    src={question.owner?.avatar || Avtart}
+                    alt={question.owner?.email || "User"}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
                 </div>
                 <div className="flex-grow w-full sm:w-auto">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-white font-medium">
-                      {(question.question.owner?.fullName
+                      {(question.owner?.fullName
                         ?.split("@")[0]
                         ?.substring(0, 5) || "Anonymous") + "..."}
                     </h3>
@@ -235,7 +353,7 @@ export default function QuestionPage() {
                   <div className="text-[#C8ACD6] text-xs sm:text-sm flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="flex items-center">
                       <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      {formatDate(question.question.createdAt)}
+                      {formatDate(question.createdAt)}
                     </span>
                   </div>
                 </div>
@@ -244,29 +362,16 @@ export default function QuestionPage() {
               {/* Row 2: Question Content */}
               <div className="mb-6">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
-                  {question.question.title}
+                  {question.title}
                 </h1>
-                <div
-                  className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base prose prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: question.question.content,
-                  }}
-                ></div>
+          
+                <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
+                  {renderFormattedContent(question.content)}
+                </div>
 
-                {/* Images Section */}
-                {question.question.images &&
-                  question.question.images.length > 0 && (
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {question.question.images.map((imageUrl, index) => (
-                        <img
-                          key={index}
-                          src={imageUrl}
-                          alt={`Question image ${index + 1}`}
-                          className="w-full rounded-lg border border-[#433D8B]/30 hover:border-[#C8ACD6]/50 transition-all duration-300"
-                        />
-                      ))}
-                    </div>
-                  )}
+
+              <ImageCarouselWithModal question={question} />
+                
               </div>
 
               {/* Row 3: Footer Section */}
@@ -275,9 +380,9 @@ export default function QuestionPage() {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex flex-wrap gap-2">
                     {question &&
-                      question.question.tags &&
-                      question.question.tags.length > 0 &&
-                      question.question.tags.map((tag) => (
+                      question.tags &&
+                      question.tags.length > 0 &&
+                      question.tags.map((tag) => (
                         <span
                           key={tag}
                           className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
@@ -294,7 +399,7 @@ export default function QuestionPage() {
                 {/* Answerers */}
                 <div className="flex items-center">
                   <div className="flex -space-x-3">
-                    {(question.question.answeredBy || []).map((answerer) => (
+                    {(question.answeredBy || []).map((answerer) => (
                       <div
                         key={answerer._id}
                         className="relative"
@@ -325,13 +430,13 @@ export default function QuestionPage() {
                     <ThumbsUp className="w-5 h-5" />
                   </button>
                   <span className="text-white text-center font-medium min-w-[2rem]">
-                    {question.question.likes}
+                    {question.likes}
                   </span>
                   <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                     <ThumbsUp className="w-5 h-5 transform rotate-180" />
                   </button>
                   <span className="text-white text-center font-medium min-w-[2rem]">
-                    {question.question.dislikes}
+                    {question.dislikes}
                   </span>
                 </div>
 
@@ -340,11 +445,11 @@ export default function QuestionPage() {
                   onClick={() =>
                     navigate("/answer", {
                       state: {
-                        questionId: question.question._id,
-                        questionTitle: question.question.title,
-                        ownerAvatar: question.question.owner?.avatar || Avtart,
+                        questionId: question._id,
+                        questionTitle: question.title,
+                        ownerAvatar: question.owner?.avatar || Avtart,
                         ownerName:
-                          (question.question.owner?.fullName
+                          (question.owner?.fullName
                             ?.split("@")[0]
                             ?.substring(0, 5) || "Anonymous") + "...",
                       },
@@ -358,7 +463,7 @@ export default function QuestionPage() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <span className="ml-3 text-[#C8ACD6] text-sm">
-                  {(question.question.answeredBy || []).length} answers
+                  {(question.answeredBy || []).length} answers
                 </span>
               </div>
             </div>
