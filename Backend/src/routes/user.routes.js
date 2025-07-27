@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, registerUser, sendOtp, verifyOtp, forgetPassword, getUsers, removeAvatar, updateAvatar } from "../controllers/user.controller.js";
+import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, registerUser, sendOtp, verifyOtp, forgetPassword, getUsers, removeAvatar, updateAvatar, getUserProfileDetails, deleteUserProfile } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import checkOtpVerified from "../middlewares/checkOtpVerified.js";
@@ -32,5 +32,9 @@ userRouter.route("/update-avatar").patch(upload.fields([
     }
 ]), verifyJWT, updateAvatar);
 userRouter.route("/remove-avatar").patch(verifyJWT, removeAvatar);
+
+userRouter.route("/get-userProfile/:userId").get(getUserProfileDetails);
+
+userRouter.route("/delete-userProfile").delete(verifyJWT, deleteUserProfile);
 
 export default userRouter;

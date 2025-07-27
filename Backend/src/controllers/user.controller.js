@@ -9,9 +9,12 @@ import { Question } from "../models/question.model.js";
 import { Like } from "../models/like.model.js";
 import { Answer } from "../models/answer.model.js";
 
-const generateAccessAndRefreshTokens = async (userId) => {
+const generateAccessAndRefreshTokens = asyncHandler(async (userId) => {
     try {
         const user = await User.findById(userId);
+        if (!user) {
+            return res.json( new ApiError(404, "User not found while generating tokens"));
+        }
 
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
@@ -24,7 +27,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
     } catch (error) {
         return res.json(new ApiError(500, error?.message || "something went wrong while generating refresh and access tokens"))
     }
-}
+});
 
 const registerUser = asyncHandler(async (req, res) => {
     const { fullName, email, password } = req.body;
@@ -89,9 +92,11 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!isPasswordValid) {
         return res.json(new ApiError(401, "Password is incorrect"))
     }
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+    console.log(user);
+    
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user?._id);
 
-    const loggedInUser = await User.findById(user._id).select("-password -refreshTokens");
+    const loggedInUser = await User.findById(user._id).select("-password -refreshTokens -otp -otpExpiry -isOtpVerified");
 
     const options = {
         httpOnly: true,
@@ -393,7 +398,7 @@ const editEmail = asyncHandler(async (req, res) => {
 const removeAvatar = asyncHandler(async (req, res) => {
     try {
         const userId = req.user?._id;
-        const user = await User.findById(userId).select("-password -refreshToken");
+        const user = await User.findById(userId).select("-password -refreshTokens -otp -otpExpiry -isOtpVerified");
         deleteImageFromCloudinary(user.avatar);
         user.avatar = "";
         const updatedUser = await user.save();
@@ -443,6 +448,147 @@ const updateAvatar = asyncHandler(async (req, res) => {
 
 
 
+const getUserProfileDetails = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        const qPage = parseInt(req.query.qPage) || 1;
+        const aPage = parseInt(req.query.aPage) || 1;
+        const limit = parseInt(req.query.limit) || 4;
+
+        const user = await User.findById(userId).select("-password -otp -refreshToken -otpExpiry -isOtpVerified");
+        if (!user) return res.json(new ApiError(404, "User not Found"));
+
+        const allQuestions = await Question.find({ owner: userId }).lean();
+        const allAnswers = await Answer.find({ owner: userId }).lean();
+
+        const questionIds = allQuestions.map(q => q._id);
+        const answerIds = allAnswers.map(a => a._id);
+
+        const reactions = await Like.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { target: { $in: questionIds }, targetType: "Question" },
+                        { target: { $in: answerIds }, targetType: "Answer" }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: { target: "$target", isLike: "$isLike", type: "$targetType" },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const reactionMap = {};
+        reactions.forEach(({ _id, count }) => {
+            const key = `${_id.type}_${_id.target.toString()}`;
+            if (!reactionMap[key]) reactionMap[key] = { likeCount: 0, dislikeCount: 0 };
+            if (_id.isLike) {
+                reactionMap[key].likeCount = count;
+            } else {
+                reactionMap[key].dislikeCount = count;
+            }
+        });
+
+        const enrichedQuestions = allQuestions.map(q => {
+            const stats = reactionMap[`Question_${q._id}`] || {};
+            return {
+                ...q,
+                likeCount: stats.likeCount || 0,
+                dislikeCount: stats.dislikeCount || 0
+            };
+        }).sort((a, b) => {
+            if (b.likeCount === a.likeCount) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+            return b.likeCount - a.likeCount;
+        });
+
+        const enrichedAnswers = allAnswers.map(a => {
+            const stats = reactionMap[`Answer_${a._id}`] || {};
+            return {
+                ...a,
+                likeCount: stats.likeCount || 0,
+                dislikeCount: stats.dislikeCount || 0
+            };
+        }).sort((a, b) => {
+            if (b.likeCount === a.likeCount) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+            return b.likeCount - a.likeCount;
+        });
+
+        const paginatedQuestions = enrichedQuestions.slice((qPage - 1) * limit, qPage * limit);
+        const paginatedAnswers = enrichedAnswers.slice((aPage - 1) * limit, aPage * limit);
+
+        return res.status(200).json({
+            user,
+            questions: paginatedQuestions,
+            answers: paginatedAnswers,
+            pagination: {
+                qPage,
+                aPage,
+                qTotal: enrichedQuestions.length,
+                aTotal: enrichedAnswers.length,
+                limit
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        res.status(500).json({ message: "Server Error", error });
+    }
+});
+
+
+const deleteUserProfile = asyncHandler(async (req, res) => {
+    try {
+        const userId = req.user?._id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: "Invalid user ID" });
+        }
+
+        const userQuestions = await Question.find({ owner: userId });
+        const questionIds = userQuestions.map(q => q._id);
+
+        await Question.deleteMany({ owner: userId });
+
+        const userAnswers = await Answer.find({ owner: userId });
+        const answerIds = userAnswers.map(a => a._id);
+
+        await Answer.deleteMany({ owner: userId });
+
+
+        await Like.deleteMany({ likedBy: userId });
+
+        await Like.deleteMany({
+            targetType: "Question",
+            target: { $in: questionIds }
+        });
+
+        await Like.deleteMany({
+            targetType: "Answer",
+            target: { $in: answerIds }
+        });
+
+
+        await User.findByIdAndDelete(userId);
+
+        return res.status(200).json(
+            new ApiResponse(200, {}, "User and all associated data deleted successfully")
+        );
+
+    } catch (error) {
+        console.error("Delete profile error:", error);
+        return res.status(500).json(new ApiError(500,"Internal server Error"));
+    }
+});
+
+
 export {
     registerUser,
     loginUser,
@@ -456,5 +602,7 @@ export {
     removeAvatar,
     editEmail,
     editFullName,
-    updateAvatar
+    updateAvatar,
+    getUserProfileDetails,
+    deleteUserProfile
 };
