@@ -7,7 +7,6 @@ import ErrorPopup from "./ErrorPopup";
 import { useUser } from "./UserContext";
 import axios from "axios";
 export default function QuestionCard({ question }) {
-  console.log(question);
   const [liked, setLiked] = useState(
     localStorage.getItem(`${question._id}_liked`) === "like"
   );

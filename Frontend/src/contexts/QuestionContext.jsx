@@ -29,10 +29,9 @@ export function QuestionProvider({ children }) {
           withCredentials: true,
         }
       );
-      console.log("API Response:", response);
 
       if (response.data.success) {
-        const newQuestions = response.data.data;
+        const newQuestions = response?.data?.data;
         setQuestions((prev) => [...prev, ...newQuestions]);
         setHasMore(newQuestions.length === 10);
       } else {
@@ -46,15 +45,48 @@ export function QuestionProvider({ children }) {
     }
   }, []);
 
+
+  const unanswerQuestions = useCallback(async (pageNum) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_SERVER}/questions/get-unansweredQuestions`,
+        {
+          params: {
+            page: pageNum,
+            limit: 10,
+          },
+          withCredentials: true,
+        }
+      );
+
+      
+      if (response.data.success) {
+        const newQuestions1 = response?.data?.questions;
+        console.log(newQuestions1);
+        setQuestions((prev) => [...prev, ...newQuestions1]);
+        setHasMore(newQuestions1.length === 10);
+      } else {
+        setError(response.data.message || "Failed to fetch questions");
+      }
+    } catch (err) {
+      console.error("Error fetching questions:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchQuestions();
+    unanswerQuestions();
   }, [refersh]);
-
 
   const clearQuestions = useCallback(() => {
     setQuestions([]);
     setHasMore(true);
   }, []);
+
 
   return (
     <QuestionContext.Provider
@@ -66,13 +98,13 @@ export function QuestionProvider({ children }) {
         setRefresh,
         fetchQuestions,
         clearQuestions,
+        unanswerQuestions
       }}
     >
       {children}
     </QuestionContext.Provider>
   );
 }
-
 
 export function useQuestions() {
   const context = useContext(QuestionContext);
