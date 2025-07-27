@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import Avtart from "../assets/avtart.jpg";
@@ -58,12 +57,14 @@ export default function QuestionPage() {
     }
   }, [questionFromStore]);
 
+  
+
   // Function to truncate text to first few lines
-  const truncateContent = (content) => {
-    const lines = content.split("\n").filter((line) => line.trim());
-    if (lines.length <= 2) return content;
-    return lines.slice(0, 2).join("\n") + "...";
-  };
+  // const truncateContent = (content) => {
+  //   const lines = content.split("\n").filter((line) => line.trim());
+  //   if (lines.length <= 2) return content;
+  //   return lines.slice(0, 2).join("\n") + "...";
+  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -398,7 +399,7 @@ export default function QuestionPage() {
                 </div>
                 {/* Answerers */}
                 <div className="flex items-center">
-                  <div className="flex -space-x-3">
+                  {/* <div className="flex -space-x-3">
                     {(question.answeredBy || []).map((answerer) => (
                       <div
                         key={answerer._id}
@@ -418,7 +419,7 @@ export default function QuestionPage() {
                         )}
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -462,9 +463,32 @@ export default function QuestionPage() {
                   <span className="text-sm font-medium">Post Your Answer</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <span className="ml-3 text-[#C8ACD6] text-sm">
-                  {(question.answeredBy || []).length} answers
+                <span className="ml-5 text-[#C8ACD6] text-sm">
+                  {(answers || []).length} answers
                 </span>
+                <div className="flex items-end">
+                  <div className="flex -space-x-2">
+                    {answers.map((answerer , index) => (
+                      <div
+                        key={index}
+                        className="relative"
+                        onMouseEnter={() => setShowTooltip(answerer._id)}
+                        onMouseLeave={() => setShowTooltip(null)}
+                      >
+                        <img
+                          src={answerer.owner.avatar || Avtart}
+                          alt={answerer.owner.fullName || "User"}
+                          className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
+                        />
+                        {showTooltip === answerer._id && (
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
+                            {answerer.owner.fullName?.split("@")[0] || "Anonymous"}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -476,9 +500,9 @@ export default function QuestionPage() {
               {answers.length} Answers
             </h2>
 
-            {answers.map((answer) => (
+            {answers.map((answer , index) => (
               <div
-                key={answer._id} // Make sure to use _id instead of id if that's what your data has
+                key={index} // Make sure to use _id instead of id if that's what your data has
                 className="relative bg-transparent rounded-lg p-4 sm:p-6
                           transform transition-all duration-300
                           border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
@@ -533,6 +557,9 @@ export default function QuestionPage() {
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
                     )}
                   </div>
+                  {/* <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
+                  {renderFormattedContent(answer.content)}
+                </div> */}
 
                   <button
                     onClick={() => setExpandedAnswerId(
