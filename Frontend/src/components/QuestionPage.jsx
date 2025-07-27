@@ -38,7 +38,7 @@ export default function QuestionPage() {
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [showTooltip, setShowTooltip] = useState(null);
-  const [expandedAnswers, setExpandedAnswers] = useState({});
+  const [expandedAnswerId, setExpandedAnswerId] = useState(null);
 
   const { items, loading, error } = useSelector((state) => state.questions);
   const questionFromStore = items.find((q) => q._id === id);
@@ -478,7 +478,7 @@ export default function QuestionPage() {
 
             {answers.map((answer) => (
               <div
-                key={answer.id}
+                key={answer._id} // Make sure to use _id instead of id if that's what your data has
                 className="relative bg-transparent rounded-lg p-4 sm:p-6
                           transform transition-all duration-300
                           border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
@@ -505,9 +505,7 @@ export default function QuestionPage() {
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
                   <div
                     className={`relative ${
-                      !expandedAnswers[answer.id]
-                        ? "max-h-32 overflow-hidden"
-                        : ""
+                      expandedAnswerId !== answer._id ? "max-h-32 overflow-hidden" : ""
                     }`}
                   >
                     {answer.content.split("```").map((block, index) => {
@@ -531,24 +529,21 @@ export default function QuestionPage() {
                       );
                     })}
 
-                    {!expandedAnswers[answer.id] && (
+                    {expandedAnswerId !== answer._id && (
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
                     )}
                   </div>
 
                   <button
-                    onClick={() =>
-                      setExpandedAnswers((prev) => ({
-                        ...prev,
-                        [answer.id]: !prev[answer.id],
-                      }))
-                    }
+                    onClick={() => setExpandedAnswerId(
+          expandedAnswerId === answer._id ? null : answer._id
+        )}
                     className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
                   >
-                    {expandedAnswers[answer.id] ? "Show less" : "Read more"}
+                    {expandedAnswerId === answer._id ? "Show less" : "Read more"}
                     <ChevronLeft
                       className={`w-4 h-4 transform transition-transform ${
-                        expandedAnswers[answer.id] ? "rotate-90" : "-rotate-90"
+                        expandedAnswerId === answer._id ? "rotate-90" : "-rotate-90"
                       }`}
                     />
                   </button>
