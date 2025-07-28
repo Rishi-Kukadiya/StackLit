@@ -6,9 +6,11 @@ import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import ShimmerLoader from "./ShimmerLoader";
 import avtart from "../assets/avtart.jpg";
+import { useNavigate } from "react-router-dom";
 
 export default function Users() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { users, loading, error, hasMore, page } = useSelector(
     (state) => state.users
   );
@@ -59,6 +61,8 @@ export default function Users() {
                   ref={lastUserRef}
                   key={user._id || idx}
                   className={cardClass}
+                  onClick={() => navigate(`/profile/${user._id}`)}
+                  style={{ cursor: "pointer" }}
                 >
                   <div className="absolute top-4 right-4">
                     <HelpCircle className="w-5 h-5 text-[#C8ACD6] opacity-70" />
@@ -95,7 +99,12 @@ export default function Users() {
               );
             }
             return (
-              <div key={user._id || idx} className={cardClass}>
+              <div
+                key={user._id || idx}
+                className={cardClass}
+                onClick={() => navigate(`/profile/${user._id}`)}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="absolute top-4 right-4">
                   <HelpCircle className="w-5 h-5 text-[#C8ACD6] opacity-70" />
                 </div>
@@ -146,4 +155,5 @@ export default function Users() {
       </main>
     </div>
   );
+
 }
