@@ -2,6 +2,7 @@ import {
   Tag,
   Eye,
   ThumbsUp,
+  ThumbsDown,
   Clock,
   User,
   ArrowRight,
@@ -10,7 +11,6 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import Avtart from "../assets/avtart.jpg";
@@ -19,6 +19,10 @@ import { fetchQuestionById } from "../redux/questionsSlice";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ImageCarouselWithModal from "./ImageCarouselWithModal";
+import ErrorPopup from "./ErrorPopup";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "./UserContext";
 // Add a loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-8">
@@ -38,7 +42,9 @@ export default function QuestionPage() {
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [showTooltip, setShowTooltip] = useState(null);
-  const [expandedAnswers, setExpandedAnswers] = useState({});
+  const [expandedAnswerId, setExpandedAnswerId] = useState(null);
+  const [Errors, setError] = useState("");
+
 
   const { items, loading, error } = useSelector((state) => state.questions);
   const questionFromStore = items.find((q) => q._id === id);
@@ -58,12 +64,136 @@ export default function QuestionPage() {
     }
   }, [questionFromStore]);
 
-  // Function to truncate text to first few lines
-  const truncateContent = (content) => {
-    const lines = content.split("\n").filter((line) => line.trim());
-    if (lines.length <= 2) return content;
-    return lines.slice(0, 2).join("\n") + "...";
+  
+  const [liked, setLiked] = useState(
+    localStorage.getItem(`${question?._id}_liked`) === "like"
+  );
+  const [disliked, setDisliked] = useState(
+    localStorage.getItem(`${question?._id}_liked`) === "dislike"
+  );
+  const [likesCount, setLikesCount] = useState(question?.likes || 0);
+  const [dislikesCount, setDislikesCount] = useState(question?.dislikes || 0);
+  const [loadingReaction, setLoadingReaction] = useState(false);
+
+  useEffect(() => {
+    if (question) {
+      setLiked(localStorage.getItem(`${question._id}_liked`) === "like");
+      setDisliked(localStorage.getItem(`${question._id}_liked`) === "dislike");
+      setLikesCount(question.likes || 0);
+      setDislikesCount(question.dislikes || 0);
+    }
+  }, [question])
+  const { user } = useUser();
+
+
+  const handleLike = async (e) => {
+    e.stopPropagation();
+
+    if (!user) {
+      setError("Please Login for posting  your answer!!");
+      setTimeout(() => {
+        setError("");
+        navigate("/signin");
+      }, 2000);
+      return;
+    }
+
+    if (loadingReaction) return;
+    setLoadingReaction(true);
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikesCount((prev) => prev - 1);
+        localStorage.removeItem(`${question._id}_liked`);
+      } else {
+        // Add like
+        setLiked(true);
+        setDisliked(false);
+        setLikesCount((prev) => prev + 1);
+        if (disliked) setDislikesCount((prev) => prev - 1);
+        localStorage.setItem(`${question._id}_liked`, "like");
+      }
+
+      await axios.post(
+        `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+        {
+          targetId: question?._id,
+          targetType: "Question",
+          isLike: true,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Failed to react:", err);
+      setError("Failed to react");
+    } finally {
+      setLoadingReaction(false);
+    }
   };
+
+
+  const handleDislike = async (e) => {
+    e.stopPropagation();
+
+    if (!user) {
+      setError("Please Login!!.");
+      setTimeout(() => {
+        setError("");
+        navigate("/signin");
+      }, 2000);
+      return;
+    }
+
+    if (loadingReaction) return;
+    setLoadingReaction(true);
+    try {
+      if (disliked) {
+        setDisliked(false);
+        setDislikesCount((prev) => prev - 1);
+        localStorage.removeItem(`${question._id}_liked`);
+      } else {
+        setDisliked(true);
+        setLiked(false);
+        setDislikesCount((prev) => prev + 1);
+        if (liked) setLikesCount((prev) => prev - 1);
+        localStorage.setItem(`${question._id}_liked`, "dislike");
+      }
+
+      await axios.post(
+        `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
+        {
+          targetId: question?._id,
+          targetType: "Question",
+          isLike: false,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Failed to react:", err);
+      setError("Failed to react");
+    } finally {
+      setLoadingReaction(false);
+    }
+  };
+
+
+
+  // Function to truncate text to first few lines
+  // const truncateContent = (content) => {
+  //   const lines = content.split("\n").filter((line) => line.trim());
+  //   if (lines.length <= 2) return content;
+  //   return lines.slice(0, 2).join("\n") + "...";
+  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -364,14 +494,14 @@ export default function QuestionPage() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-4">
                   {question.title}
                 </h1>
-          
+
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
                   {renderFormattedContent(question.content)}
                 </div>
 
 
-              <ImageCarouselWithModal question={question} />
-                
+                <ImageCarouselWithModal question={question} />
+
               </div>
 
               {/* Row 3: Footer Section */}
@@ -398,7 +528,7 @@ export default function QuestionPage() {
                 </div>
                 {/* Answerers */}
                 <div className="flex items-center">
-                  <div className="flex -space-x-3">
+                  {/* <div className="flex -space-x-3">
                     {(question.answeredBy || []).map((answerer) => (
                       <div
                         key={answerer._id}
@@ -418,14 +548,14 @@ export default function QuestionPage() {
                         )}
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
               {/* Interaction Row: likes and dislikes and Post Answer */}
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 {/* Voting */}
-                <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
+                {/* <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
                   <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                     <ThumbsUp className="w-5 h-5" />
                   </button>
@@ -437,6 +567,62 @@ export default function QuestionPage() {
                   </button>
                   <span className="text-white text-center font-medium min-w-[2rem]">
                     {question.dislikes}
+                  </span>
+                </div> */}
+
+                <div
+                  className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
+    border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className={`p-1.5 rounded-full transition-colors duration-300 ${liked
+                      ? "bg-white text-green-500"
+                      : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                      }`}
+                    onClick={handleLike}
+                  >
+                    <motion.div
+                      animate={
+                        loadingReaction && liked ? { scale: [1, 1.3, 1] } : {}
+                      }
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ThumbsUp className="w-5 h-5" />
+                    </motion.div>
+                  </motion.button>
+
+                  <span
+                    className="text-white text-center font-medium min-w-[2rem]"
+                    onClick={handleLike}
+                  >
+                    {likesCount}
+                  </span>
+
+                  <motion.button
+                    whileTap={{ scale: 1.2 }}
+                    className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
+                      ? "bg-white text-red-500"
+                      : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                      }`}
+                    onClick={handleDislike}
+                  >
+                    <motion.div
+                      animate={
+                        loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                      }
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ThumbsDown className="w-5 h-5" />
+                    </motion.div>
+                  </motion.button>
+
+                  <span
+                    className="text-white text-center font-medium min-w-[2rem]"
+                    onClick={handleDislike}
+                  >
+                    {dislikesCount}
                   </span>
                 </div>
 
@@ -462,9 +648,42 @@ export default function QuestionPage() {
                   <span className="text-sm font-medium">Post Your Answer</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <span className="ml-3 text-[#C8ACD6] text-sm">
-                  {(question.answeredBy || []).length} answers
+                <span className="text-xl font-bold text-white flex items-center gap-2">
+                  <MessageSquare className="w-6 h-6" />
+                  {answers.length} Answers
                 </span>
+                <div className="flex items-end">
+                  <div className="flex -space-x-2">
+                    {answers.slice(0, 4).map((answerer, index) => (
+                      <div
+                        key={index}
+                        className="relative"
+                        onMouseEnter={() => setShowTooltip(answerer._id)}
+                        onMouseLeave={() => setShowTooltip(null)}
+                      >
+                        <img
+                          src={answerer.owner.avatar || Avtart}
+                          alt={answerer.owner.fullName || "User"}
+                          className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
+                        />
+                        {showTooltip === answerer._id && (
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
+                            {answerer.owner.fullName?.split("@")[0] || "Anonymous"}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {answers.length > 5 && (
+                      <div className="relative -ml-2">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#2E236C] 
+                         border-2 border-[#C8ACD6]/30 flex items-center justify-center
+                         text-xs sm:text-sm text-[#C8ACD6]">
+                          +{answers.length - 4}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -476,9 +695,9 @@ export default function QuestionPage() {
               {answers.length} Answers
             </h2>
 
-            {answers.map((answer) => (
+            {answers.map((answer, index) => (
               <div
-                key={answer.id}
+                key={index}
                 className="relative bg-transparent rounded-lg p-4 sm:p-6
                           transform transition-all duration-300
                           border-2 border-[#C8ACD6]/30 hover:border-[#C8ACD6]/50
@@ -487,7 +706,7 @@ export default function QuestionPage() {
                 {/* Answer Author Info */}
                 <div className="flex items-center gap-3 mb-4">
                   <img
-                    src={answer.owner.avatar}
+                    src={answer.owner.avatar || Avtart}
                     alt={answer.owner.fullName}
                     className="w-8 h-8 rounded-full border-2 border-[#C8ACD6] hover:border-white transition-colors"
                   />
@@ -501,78 +720,142 @@ export default function QuestionPage() {
                   </div>
                 </div>
 
-                {/* Answer Content */}
+                {/* Answer Content with Formatting */}
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
                   <div
-                    className={`relative ${
-                      !expandedAnswers[answer.id]
-                        ? "max-h-32 overflow-hidden"
-                        : ""
-                    }`}
+                    className={`relative ${expandedAnswerId !== answer._id ? "max-h-32 overflow-hidden" : ""
+                      }`}
                   >
-                    {answer.content.split("```").map((block, index) => {
-                      if (index % 2 === 1) {
-                        // Code block
-                        return (
-                          <pre
-                            key={index}
-                            className="bg-[#17153B]/80 backdrop-blur-sm p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm border border-[#433D8B]/30"
-                          >
-                            <code className="text-white whitespace-pre-wrap">
-                              {block}
-                            </code>
-                          </pre>
-                        );
-                      }
-                      return (
-                        <p key={index} className="whitespace-pre-wrap">
-                          {block}
-                        </p>
-                      );
-                    })}
+                    {renderFormattedContent(answer.content)}
 
-                    {!expandedAnswers[answer.id] && (
+                    {/* Images Section - Show only when expanded */}
+                    {expandedAnswerId === answer._id && answer.images && answer.images.length > 0 && (
+                      <div className="mt-4 transition-all duration-300">
+                        <ImageCarouselWithModal question={answer} />
+                      </div>
+                    )}
+
+                    {/* Gradient Overlay when collapsed */}
+                    {expandedAnswerId !== answer._id && (
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#17153B] to-transparent"></div>
                     )}
                   </div>
 
+                  {/* Expand/Collapse Button */}
                   <button
-                    onClick={() =>
-                      setExpandedAnswers((prev) => ({
-                        ...prev,
-                        [answer.id]: !prev[answer.id],
-                      }))
-                    }
-                    className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 flex items-center gap-2"
+                    onClick={() => setExpandedAnswerId(
+                      expandedAnswerId === answer._id ? null : answer._id
+                    )}
+                    className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 
+                   flex items-center gap-2 group"
                   >
-                    {expandedAnswers[answer.id] ? "Show less" : "Read more"}
+                    {expandedAnswerId === answer._id ? "Show less" : "Read more"}
                     <ChevronLeft
-                      className={`w-4 h-4 transform transition-transform ${
-                        expandedAnswers[answer.id] ? "rotate-90" : "-rotate-90"
-                      }`}
+                      className={`w-4 h-4 transform transition-transform 
+                     ${expandedAnswerId === answer._id ? "rotate-90" : "-rotate-90"}
+                     group-hover:translate-x-1`}
                     />
                   </button>
                 </div>
 
                 {/* Answer Footer */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#433D8B]/50">
+                  {/* Tags if answer has them */}
+                  {answer.tags && answer.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {answer.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="flex items-center gap-2 px-3 py-2 bg-[#2E236C]/30 text-[#C8ACD6] 
+                       rounded-lg text-sm border border-[#433D8B]/20 
+                       hover:border-[#C8ACD6]/30 hover:text-white 
+                       transition-all duration-300"
+                        >
+                          <Tag className="w-4 h-4" />
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Like/Dislike Section */}
+                  {/* <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 
+                    rounded-lg shadow-md border border-[#433D8B]/30">
                     <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                       <ThumbsUp className="w-4 h-4" />
                     </button>
                     <span className="text-white text-center font-medium min-w-[2rem]">
-                      {answer.likes}
+                      {answer.likes || 0}
                     </span>
                     <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
                       <ThumbsUp className="w-4 h-4 transform rotate-180" />
                     </button>
                     <span className="text-white text-center font-medium min-w-[2rem]">
-                      {answer.dislikes}
+                      {answer.dislikes || 0}
+                    </span>
+                  </div> */}
+
+
+                  <div
+                    className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
+    border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <motion.button
+                      whileTap={{ scale: 1.2 }}
+                      className={`p-1.5 rounded-full transition-colors duration-300 ${liked
+                        ? "bg-white text-green-500"
+                        : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                        }`}
+                      onClick={handleLike}
+                    >
+                      <motion.div
+                        animate={
+                          loadingReaction && liked ? { scale: [1, 1.3, 1] } : {}
+                        }
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ThumbsUp className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <span
+                      className="text-white text-center font-medium min-w-[2rem]"
+                      onClick={handleLike}
+                    >
+                      {likesCount}
+                    </span>
+
+                    <motion.button
+                      whileTap={{ scale: 1.2 }}
+                      className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
+                        ? "bg-white text-red-500"
+                        : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                        }`}
+                      onClick={handleDislike}
+                    >
+                      <motion.div
+                        animate={
+                          loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                        }
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ThumbsDown className="w-5 h-5" />
+                      </motion.div>
+                    </motion.button>
+
+                    <span
+                      className="text-white text-center font-medium min-w-[2rem]"
+                      onClick={handleDislike}
+                    >
+                      {dislikesCount}
                     </span>
                   </div>
                 </div>
               </div>
             ))}
+
+            {Errors && <ErrorPopup message={Errors} onClose={() => setError("")} />}
 
             {/* No answers message */}
             {answers.length === 0 && (
