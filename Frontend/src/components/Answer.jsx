@@ -347,7 +347,7 @@ export default function Answer() {
                            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     disabled={loading}
                   >
-                    {loading ? "Posting Question..." : "Post Question"}
+                    {loading ? "Posting Answer..." : "Post Answer"}
                   </button>
                 </div>
               </motion.div>

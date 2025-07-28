@@ -5,10 +5,13 @@ import avtart from "../assets/avtart.jpg";
 import { useState } from "react";
 import ErrorPopup from "./ErrorPopup";
 import { useUser } from "./UserContext";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { useDispatch } from "react-redux";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useEffect } from "react";
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import axios from "axios";
+import { useQuestions } from "../contexts/QuestionContext";
+import { updateQuestion } from "../redux/questionsSlice.js";
 export default function QuestionCard({ question }) {
   function decodeHTMLEntities(text) {
     const textarea = document.createElement("textarea");
@@ -130,21 +133,18 @@ export default function QuestionCard({ question }) {
     return <div className="space-y-1">{formattedParts}</div>;
   }
 
-
   const [liked, setLiked] = useState(
     localStorage.getItem(`${question._id}_liked`) === "like"
   );
   const [disliked, setDisliked] = useState(
     localStorage.getItem(`${question._id}_liked`) === "dislike"
   );
-  const [likesCount, setLikesCount] = useState(question.likes || 0);
-  const [dislikesCount, setDislikesCount] = useState(question.dislikes || 0);
+
   const [loadingReaction, setLoadingReaction] = useState(false);
   const { user } = useUser();
   const [error, setError] = useState("");
-
-
- 
+  const { updateQuestionInContext } = useQuestions();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleAnswer = (e) => {
@@ -161,11 +161,20 @@ export default function QuestionCard({ question }) {
     });
   };
 
+  const [likesCount, setLikesCount] = useState(question.likes || 0);
+  const [dislikesCount, setDislikesCount] = useState(question.dislikes || 0);
+
+  // Sync local state with question prop changes
+  useEffect(() => {
+    setLikesCount(question.likes || 0);
+    setDislikesCount(question.dislikes || 0);
+  }, [question.likes, question.dislikes]);
+
   const handleLike = async (e) => {
     e.stopPropagation();
 
     if (!user) {
-      setError("Please Login for posting  your views!!");
+      setError("Please Login for posting your views!!");
       setTimeout(() => {
         setError("");
         navigate("/signin");
@@ -176,18 +185,37 @@ export default function QuestionCard({ question }) {
     if (loadingReaction) return;
     setLoadingReaction(true);
     try {
+      let newLikesCount = likesCount;
+      let newDislikesCount = dislikesCount;
+
       if (liked) {
+        newLikesCount--;
         setLiked(false);
-        setLikesCount((prev) => prev - 1);
         localStorage.removeItem(`${question._id}_liked`);
       } else {
-        // Add like
+        newLikesCount++;
         setLiked(true);
-        setDisliked(false);
-        setLikesCount((prev) => prev + 1);
-        if (disliked) setDislikesCount((prev) => prev - 1);
+        if (disliked) {
+          newDislikesCount--;
+          setDisliked(false);
+        }
         localStorage.setItem(`${question._id}_liked`, "like");
       }
+
+      setLikesCount(newLikesCount);
+      setDislikesCount(newDislikesCount);
+      // Use local state for updates!
+      updateQuestionInContext(question._id, {
+        likes: newLikesCount,
+        dislikes: newDislikesCount,
+      });
+      dispatch(
+        updateQuestion({
+          _id: question._id,
+          likes: newLikesCount,
+          dislikes: newDislikesCount,
+        })
+      );
 
       await axios.post(
         `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
@@ -215,7 +243,7 @@ export default function QuestionCard({ question }) {
     e.stopPropagation();
 
     if (!user) {
-      setError("Please Login for posting  your views!!.");
+      setError("Please Login for posting your views!!.");
       setTimeout(() => {
         setError("");
         navigate("/signin");
@@ -226,17 +254,37 @@ export default function QuestionCard({ question }) {
     if (loadingReaction) return;
     setLoadingReaction(true);
     try {
+      let newLikesCount = likesCount;
+      let newDislikesCount = dislikesCount;
+
       if (disliked) {
+        newDislikesCount--;
         setDisliked(false);
-        setDislikesCount((prev) => prev - 1);
         localStorage.removeItem(`${question._id}_liked`);
       } else {
+        newDislikesCount++;
         setDisliked(true);
-        setLiked(false);
-        setDislikesCount((prev) => prev + 1);
-        if (liked) setLikesCount((prev) => prev - 1);
+        if (liked) {
+          newLikesCount--;
+          setLiked(false);
+        }
         localStorage.setItem(`${question._id}_liked`, "dislike");
       }
+
+      setLikesCount(newLikesCount);
+      setDislikesCount(newDislikesCount);
+      // Use local state for updates!
+      updateQuestionInContext(question._id, {
+        likes: newLikesCount,
+        dislikes: newDislikesCount,
+      });
+      dispatch(
+        updateQuestion({
+          _id: question._id,
+          likes: newLikesCount,
+          dislikes: newDislikesCount,
+        })
+      );
 
       await axios.post(
         `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
@@ -252,6 +300,7 @@ export default function QuestionCard({ question }) {
           },
         }
       );
+
     } catch (err) {
       console.error("Failed to react:", err);
       setError("Failed to react");
@@ -366,10 +415,11 @@ export default function QuestionCard({ question }) {
               >
                 <motion.button
                   whileTap={{ scale: 1.2 }}
-                  className={`p-1.5 rounded-full transition-colors duration-300 ${liked
+                  className={`p-1.5 rounded-full transition-colors duration-300 ${
+                    liked
                       ? "bg-white text-green-500"
                       : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
-                    }`}
+                  }`}
                   onClick={handleLike}
                 >
                   <motion.div
@@ -391,10 +441,11 @@ export default function QuestionCard({ question }) {
 
                 <motion.button
                   whileTap={{ scale: 1.2 }}
-                  className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
+                  className={`p-1.5 rounded-full transition-colors duration-300 ${
+                    disliked
                       ? "bg-white text-red-500"
                       : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
-                    }`}
+                  }`}
                   onClick={handleDislike}
                 >
                   <motion.div
