@@ -206,10 +206,17 @@ function TabButton({ active, onClick, icon, label, count }) {
 }
 
 function QuestionCard({ question, formatDate }) {
+  const navigate = useNavigate();
+
   return (
-    <div className="bg-[#2E236C]/20 rounded-lg p-4 border border-[#433D8B]/30
-                   hover:border-[#C8ACD6]/30 transition-all duration-300">
-      <h3 className="text-lg font-semibold text-white mb-2">{question.title}</h3>
+    <div 
+      onClick={() => navigate(`/question/${question._id}`)}
+      className="bg-[#2E236C]/20 rounded-lg p-4 border border-[#433D8B]/30
+                 hover:border-[#C8ACD6]/30 transition-all duration-300 cursor-pointer"
+    >
+      <h3 className="text-lg font-semibold text-white mb-2 hover:text-[#C8ACD6] transition-colors">
+        {question.title}
+      </h3>
       <div className="flex flex-wrap items-center gap-4 text-sm text-[#C8ACD6]">
         <span className="flex items-center gap-1">
           <Clock className="w-4 h-4" />
@@ -227,8 +234,12 @@ function QuestionCard({ question, formatDate }) {
       {question.tags?.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
           {question.tags.map(tag => (
-            <span key={tag} className="px-2 py-1 text-xs rounded-full bg-[#433D8B]/30
-                                     text-[#C8ACD6] border border-[#433D8B]/30">
+            <span 
+              key={tag} 
+              className="px-2 py-1 text-xs rounded-full bg-[#433D8B]/30
+                       text-[#C8ACD6] border border-[#433D8B]/30"
+              onClick={(e) => e.stopPropagation()}
+            >
               {tag}
             </span>
           ))}
@@ -246,13 +257,35 @@ function AnswerCard({ answer, formatDate }) {
                    hover:border-[#C8ACD6]/30 transition-all duration-300">
       {/* Question Title Section */}
       <div 
-        onClick={() => navigate(`/question/${answer.questionId}`)}
+        onClick={() => navigate(`/question/${answer.questionId._id}`)}
         className="mb-4 cursor-pointer group"
       >
         <h4 className="text-sm text-[#C8ACD6] mb-1">Answered on question:</h4>
         <h3 className="text-white font-medium group-hover:text-[#C8ACD6] transition-colors">
-          {answer?.questionTitle || "Question no longer available"}
+          {answer.questionId?.title || "Question no longer available"}
         </h3>
+        
+        {/* Question Details */}
+        <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-[#C8ACD6]/70">
+          {answer.questionId?.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {answer.questionId.tags.map(tag => (
+                <span 
+                  key={tag}
+                  className="px-2 py-0.5 rounded-full bg-[#433D8B]/20 
+                           border border-[#433D8B]/20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          <span className="flex items-center gap-1">
+            <Eye className="w-3 h-3" />
+            {answer.questionId?.views || 0} views
+          </span>
+        </div>
       </div>
 
       {/* Answer Content Section */}
