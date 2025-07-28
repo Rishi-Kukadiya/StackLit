@@ -32,7 +32,19 @@ export function QuestionProvider({ children }) {
 
       if (response.data.success) {
         const newQuestions = response?.data?.data;
-        setQuestions((prev) => [...prev, ...newQuestions]);
+        
+        // If it's page 1, replace existing questions
+        if (pageNum === 1) {
+          setQuestions(newQuestions);
+        } else {
+          // For subsequent pages, append only unique questions
+          setQuestions((prev) => {
+            const existingIds = new Set(prev.map(q => q._id));
+            const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q._id));
+            return [...prev, ...uniqueNewQuestions];
+          });
+        }
+        
         setHasMore(newQuestions.length === 10);
       } else {
         setError(response.data.message || "Failed to fetch questions");
@@ -46,6 +58,7 @@ export function QuestionProvider({ children }) {
   }, []);
 
 
+  // First, modify the unanswerQuestions function to handle pagination like fetchQuestions
   const unanswerQuestions = useCallback(async (pageNum) => {
     try {
       setLoading(true);
@@ -60,32 +73,46 @@ export function QuestionProvider({ children }) {
         }
       );
 
-      
       if (response.data.success) {
-        const newQuestions1 = response?.data?.questions;
-        console.log(newQuestions1);
-        setQuestions((prev) => [...prev, ...newQuestions1]);
-        setHasMore(newQuestions1.length === 10);
+        const newQuestions = response?.data?.questions;
+        console.log("Unanswered Questions:", newQuestions);
+        // If it's page 1, replace existing questions
+        if (pageNum === 1) {
+          setQuestions(newQuestions);
+        } else {
+          // For subsequent pages, append only unique questions
+          setQuestions((prev) => {
+            const existingIds = new Set(prev.map(q => q._id));
+            const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q._id));
+            return [...prev, ...uniqueNewQuestions];
+          });
+        }
+        
+        setHasMore(newQuestions.length === 10);
       } else {
         setError(response.data.message || "Failed to fetch questions");
       }
     } catch (err) {
-      console.error("Error fetching questions:", err);
+      console.error("Error fetching unanswered questions:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Then, modify the useEffect to only call one function initially
   useEffect(() => {
-    fetchQuestions();
-    unanswerQuestions();
+    // Only fetch questions on initial load or refresh
+    fetchQuestions(1);
+    
+    // Reset hasMore when refreshing
+    setHasMore(true);
   }, [refersh]);
 
   const clearQuestions = useCallback(() => {
     setQuestions([]);
     setHasMore(true);
-  }, []);
+  }, [refersh]);
 
 
   return (

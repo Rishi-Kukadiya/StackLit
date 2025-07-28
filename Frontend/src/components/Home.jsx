@@ -7,12 +7,37 @@ import QuestionList from "./QuestionList";
 import { AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const { questions, loading, error, hasMore, fetchQuestions } = useQuestions();
+  const { questions, loading, error, hasMore, fetchQuestions, unanswerQuestions } = useQuestions();
   const [page, setPage] = useState(1);
+  const [questionType, setQuestionType] = useState('all'); // 'all' or 'unanswered'
   const loadingRef = useRef(null);
+
+  // Clear questions and reset page when component mounts
   useEffect(() => {
-    fetchQuestions(page);
-  }, [page, fetchQuestions]);
+    setPage(1);
+    fetchQuestions(1);
+  }, []); // Empty dependency array to run only on mount
+
+  // Reset questions when changing question type
+  useEffect(() => {
+    setPage(1);
+    if (questionType === 'all') {
+      fetchQuestions(1);
+    } else {
+      unanswerQuestions(1);
+    }
+  }, [questionType]);
+
+  // Handle pagination
+  useEffect(() => {
+    if (page > 1) {
+      if (questionType === 'all') {
+        fetchQuestions(page);
+      } else {
+        unanswerQuestions(page);
+      }
+    }
+  }, [page, questionType]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
