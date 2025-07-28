@@ -468,7 +468,7 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
         if (!user) return res.json(new ApiError(404, "User not Found"));
 
         const allQuestions = await Question.find({ owner: userId }).lean();
-        const allAnswers = await Answer.find({ owner: userId }).lean();
+        const allAnswers = await Answer.find({ owner: userId }).populate("questionId").lean();
 
         const questionIds = allQuestions.map(q => q._id);
         const answerIds = allAnswers.map(a => a._id);

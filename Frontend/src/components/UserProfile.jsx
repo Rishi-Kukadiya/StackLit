@@ -33,6 +33,7 @@ export default function UserProfile() {
           `${import.meta.env.VITE_SERVER}/users/get-userProfile/${userId}`,
           { withCredentials: true }
         );
+        console.log('response', response);
         setUserData(response.data);
         setLoading(false);
       } catch (err) {
@@ -150,11 +151,19 @@ export default function UserProfile() {
             <div className="space-y-4">
               {activeTab === 'questions' ? (
                 userData?.questions?.map(question => (
-                  <QuestionCard key={question._id} question={question} />
+                  <QuestionCard 
+                    key={question._id} 
+                    question={question}
+                    formatDate={formatDate}
+                  />
                 ))
               ) : (
                 userData?.answers?.map(answer => (
-                  <AnswerCard key={answer._id} answer={answer} />
+                  <AnswerCard 
+                    key={answer._id} 
+                    answer={answer}
+                    formatDate={formatDate}
+                  />
                 ))
               )}
             </div>
@@ -196,7 +205,7 @@ function TabButton({ active, onClick, icon, label, count }) {
   );
 }
 
-function QuestionCard({ question }) {
+function QuestionCard({ question, formatDate }) {
   return (
     <div className="bg-[#2E236C]/20 rounded-lg p-4 border border-[#433D8B]/30
                    hover:border-[#C8ACD6]/30 transition-all duration-300">
@@ -204,7 +213,7 @@ function QuestionCard({ question }) {
       <div className="flex flex-wrap items-center gap-4 text-sm text-[#C8ACD6]">
         <span className="flex items-center gap-1">
           <Clock className="w-4 h-4" />
-          {/* {formatDate(userData?.user?.createdAt)} */}
+          {formatDate(question.createdAt)}
         </span>
         <span className="flex items-center gap-1">
           <ThumbsUp className="w-4 h-4" />
@@ -229,25 +238,46 @@ function QuestionCard({ question }) {
   );
 }
 
-function AnswerCard({ answer }) {
+function AnswerCard({ answer, formatDate }) {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-[#2E236C]/20 rounded-lg p-4 border border-[#433D8B]/30
                    hover:border-[#C8ACD6]/30 transition-all duration-300">
-      <div className="text-[#C8ACD6] mb-3" 
-           dangerouslySetInnerHTML={{ __html: answer.content?.substring(0, 150) + '...' }} />
-      <div className="flex items-center gap-4 text-sm text-[#C8ACD6]">
-        <span className="flex items-center gap-1">
-          <Clock className="w-4 h-4" />
-          {/* {formatDate(answer.createdAt)} */}
-        </span>
-        <span className="flex items-center gap-1">
-          <ThumbsUp className="w-4 h-4" />
-          {answer.likeCount || 0}
-        </span>
-        <span className="flex items-center gap-1">
-          <ThumbsDown className="w-4 h-4" />
-          {answer.dislikeCount || 0}
-        </span>
+      {/* Question Title Section */}
+      <div 
+        onClick={() => navigate(`/question/${answer.questionId}`)}
+        className="mb-4 cursor-pointer group"
+      >
+        <h4 className="text-sm text-[#C8ACD6] mb-1">Answered on question:</h4>
+        <h3 className="text-white font-medium group-hover:text-[#C8ACD6] transition-colors">
+          {answer?.questionTitle || "Question no longer available"}
+        </h3>
+      </div>
+
+      {/* Answer Content Section */}
+      <div className="border-t border-[#433D8B]/30 pt-4">
+        <div 
+          className="text-[#C8ACD6] mb-3 prose prose-invert max-w-none" 
+          dangerouslySetInnerHTML={{ 
+            __html: answer.content?.substring(0, 150) + (answer.content?.length > 150 ? '...' : '') 
+          }} 
+        />
+        
+        <div className="flex items-center gap-4 text-sm text-[#C8ACD6]">
+          <span className="flex items-center gap-1">
+            <Clock className="w-4 h-4" />
+            {formatDate(answer.createdAt)}
+          </span>
+          <span className="flex items-center gap-1">
+            <ThumbsUp className="w-4 h-4" />
+            {answer.likeCount || 0}
+          </span>
+          <span className="flex items-center gap-1">
+            <ThumbsDown className="w-4 h-4" />
+            {answer.dislikeCount || 0}
+          </span>
+        </div>
       </div>
     </div>
   );
