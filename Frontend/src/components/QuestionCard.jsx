@@ -129,6 +129,8 @@ export default function QuestionCard({ question }) {
 
     return <div className="space-y-1">{formattedParts}</div>;
   }
+
+
   const [liked, setLiked] = useState(
     localStorage.getItem(`${question._id}_liked`) === "like"
   );
@@ -142,14 +144,7 @@ export default function QuestionCard({ question }) {
   const [error, setError] = useState("");
 
 
-  useEffect(() => {
-    if (question) {
-      setLiked(localStorage.getItem(`${question._id}_liked`) === "like");
-      setDisliked(localStorage.getItem(`${question._id}_liked`) === "dislike");
-      setLikesCount(question.likes || 0);
-      setDislikesCount(question.dislikes || 0);
-    }
-  }, [question])
+ 
   const navigate = useNavigate();
 
   const handleAnswer = (e) => {
@@ -170,7 +165,7 @@ export default function QuestionCard({ question }) {
     e.stopPropagation();
 
     if (!user) {
-      setError("Please Login for posting  your answer!!");
+      setError("Please Login for posting  your views!!");
       setTimeout(() => {
         setError("");
         navigate("/signin");
@@ -220,7 +215,7 @@ export default function QuestionCard({ question }) {
     e.stopPropagation();
 
     if (!user) {
-      setError("Please Login!!.");
+      setError("Please Login for posting  your views!!.");
       setTimeout(() => {
         setError("");
         navigate("/signin");
