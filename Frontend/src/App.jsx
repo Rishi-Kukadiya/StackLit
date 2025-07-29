@@ -18,6 +18,7 @@ import Users from "./Components/Users";
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import UserProfile from './components/UserProfile';
+import UpdateProfile from './components/UpdateProfile';
 
 function App() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ function App() {
             <Route path="/users" element={<Users />} />
             <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
             <Route path="/profile/:userId" element={<UserProfile />} />
+            <Route path="//UpdateProfile" element={<UpdateProfile />} />
           </Routes>
         </QuestionProvider>
       </UserProvider>

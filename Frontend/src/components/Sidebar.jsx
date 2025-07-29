@@ -104,16 +104,25 @@ export default function Sidebar() {
                 </span>
                 Notifications
               </button>
-              <button
+              {/* <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
-                onClick={() => alert("Profile (coming soon)")}
+                onClick={() => alert("Update Profile (coming soon)")}
               >
                 <span className="w-5 h-5 flex items-center justify-center">
                   <ImageUp />
                 </span>
                 Update Profile
-              </button>
+              </button> */}
+              <Link
+                to="/UpdateProfile"
+                className="flex items-center gap-3 py-3 px-3 rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
+              >
+                <span className="w-5 h-5 flex items-center justify-center">
+                  <ImageUp />
+                </span>
+                Update Profile
+              </Link>
               <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
