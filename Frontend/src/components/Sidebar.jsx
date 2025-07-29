@@ -18,7 +18,6 @@ import { Bell, LogOut, ImageUp } from "lucide-react";
 
 const sidebarOptions = [
   { label: "Home", icon: <Home />, to: "/" },
-  { label: "Newest Questions", icon: <MessageSquare />, to: "/newest" },
   { label: "AI Assistance", icon: <Bot />, to: "/ai-assistance" },
   { label: "Tags", icon: <Tag />, to: "/tags" },
   { label: "Users", icon: <Users />, to: "/users" },
