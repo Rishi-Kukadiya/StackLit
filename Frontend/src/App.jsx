@@ -17,6 +17,7 @@ import UnansweredQuestion from "./Components/UnanswerQuestion";
 import Users from "./Components/Users";
 import { Provider } from "react-redux";
 import store from "./redux/store";
+import Chatbot from "./Components/Chatbot";
 import UserProfile from './components/UserProfile';
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
             <Route path="/users" element={<Users />} />
             <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
             <Route path="/profile/:userId" element={<UserProfile />} />
+            <Route path="ai-assistance" element={<Chatbot></Chatbot>}></Route>
           </Routes>
         </QuestionProvider>
       </UserProvider>
