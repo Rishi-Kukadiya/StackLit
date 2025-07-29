@@ -1,5 +1,4 @@
 import mongoose from "mongoose"
-import { User } from "./user.model.js";
 const answerSchema = new mongoose.Schema({
     questionId: {
         type: mongoose.Schema.Types.ObjectId,

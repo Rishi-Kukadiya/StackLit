@@ -32,19 +32,21 @@ export function QuestionProvider({ children }) {
 
       if (response.data.success) {
         const newQuestions = response?.data?.data;
-        
+
         // If it's page 1, replace existing questions
         if (pageNum === 1) {
           setQuestions(newQuestions);
         } else {
           // For subsequent pages, append only unique questions
           setQuestions((prev) => {
-            const existingIds = new Set(prev.map(q => q._id));
-            const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q._id));
+            const existingIds = new Set(prev.map((q) => q._id));
+            const uniqueNewQuestions = newQuestions.filter(
+              (q) => !existingIds.has(q._id)
+            );
             return [...prev, ...uniqueNewQuestions];
           });
         }
-        
+
         setHasMore(newQuestions.length === 10);
       } else {
         setError(response.data.message || "Failed to fetch questions");
@@ -56,7 +58,6 @@ export function QuestionProvider({ children }) {
       setLoading(false);
     }
   }, []);
-
 
   // First, modify the unanswerQuestions function to handle pagination like fetchQuestions
   const unanswerQuestions = useCallback(async (pageNum) => {
@@ -82,12 +83,14 @@ export function QuestionProvider({ children }) {
         } else {
           // For subsequent pages, append only unique questions
           setQuestions((prev) => {
-            const existingIds = new Set(prev.map(q => q._id));
-            const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q._id));
+            const existingIds = new Set(prev.map((q) => q._id));
+            const uniqueNewQuestions = newQuestions.filter(
+              (q) => !existingIds.has(q._id)
+            );
             return [...prev, ...uniqueNewQuestions];
           });
         }
-        
+
         setHasMore(newQuestions.length === 10);
       } else {
         setError(response.data.message || "Failed to fetch questions");
@@ -104,7 +107,7 @@ export function QuestionProvider({ children }) {
   useEffect(() => {
     // Only fetch questions on initial load or refresh
     fetchQuestions(1);
-    
+
     // Reset hasMore when refreshing
     setHasMore(true);
   }, [refersh]);
@@ -114,6 +117,13 @@ export function QuestionProvider({ children }) {
     setHasMore(true);
   }, [refersh]);
 
+  const updateQuestionInContext = useCallback((questionId, updatedFields) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q._id === questionId ? { ...q, ...updatedFields } : q
+      )
+    );
+  }, []);
 
   return (
     <QuestionContext.Provider
@@ -125,7 +135,8 @@ export function QuestionProvider({ children }) {
         setRefresh,
         fetchQuestions,
         clearQuestions,
-        unanswerQuestions
+        unanswerQuestions,
+        updateQuestionInContext
       }}
     >
       {children}

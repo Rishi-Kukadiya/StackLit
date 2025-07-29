@@ -113,7 +113,7 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
         new ApiResponse(200, {
             question: {
                 ...question,
-                answers:finalAnswers,
+                answers: finalAnswers,
                 likes: totalLikes,
                 dislikes: totalDislikes
             }
@@ -504,7 +504,9 @@ const getUnansweredQuestions = async (req, res) => {
         const skip = (page - 1) * limit;
 
 
-        const answeredQuestionIds = await Answer.distinct("question");
+        const answeredQuestionIds = await Answer.distinct("questionId");
+
+
 
 
         const unansweredQuestions = await Question.find({

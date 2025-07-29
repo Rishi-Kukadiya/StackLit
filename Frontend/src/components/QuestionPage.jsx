@@ -9,20 +9,23 @@ import {
   ChevronLeft,
   MessageSquare,
 } from "lucide-react";
+import LikeDislikeBar from "./AnswerReaction.jsx";
 import { useState, useEffect } from "react";
+import { useQuestions } from "../contexts/QuestionContext";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import Avtart from "../assets/avtart.jpg";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchQuestionById } from "../redux/questionsSlice";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import ImageCarouselWithModal from "./ImageCarouselWithModal";
 import ErrorPopup from "./ErrorPopup";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "./UserContext";
+import { updateQuestion, updateAnswer } from "../redux/questionsSlice.js";
 // Add a loading component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-8">
@@ -38,13 +41,12 @@ export default function QuestionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const { updateQuestionInContext } = useQuestions();
   const [question, setQuestion] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [showTooltip, setShowTooltip] = useState(null);
   const [expandedAnswerId, setExpandedAnswerId] = useState(null);
   const [Errors, setError] = useState("");
-
 
   const { items, loading, error } = useSelector((state) => state.questions);
   const questionFromStore = items.find((q) => q._id === id);
@@ -58,39 +60,36 @@ export default function QuestionPage() {
   useEffect(() => {
     if (questionFromStore) {
       setQuestion(questionFromStore);
+      console.log(questionFromStore);
       if (questionFromStore.answers) {
         setAnswers(questionFromStore.answers);
       }
     }
   }, [questionFromStore]);
 
-  
   const [liked, setLiked] = useState(
-    localStorage.getItem(`${question?._id}_liked`) === "like"
+    localStorage.getItem(`${id}_liked`) === "like"
   );
   const [disliked, setDisliked] = useState(
-    localStorage.getItem(`${question?._id}_liked`) === "dislike"
+    localStorage.getItem(`${id}_liked`) === "dislike"
   );
+
   const [likesCount, setLikesCount] = useState(question?.likes || 0);
   const [dislikesCount, setDislikesCount] = useState(question?.dislikes || 0);
   const [loadingReaction, setLoadingReaction] = useState(false);
 
   useEffect(() => {
-    if (question) {
-      setLiked(localStorage.getItem(`${question._id}_liked`) === "like");
-      setDisliked(localStorage.getItem(`${question._id}_liked`) === "dislike");
-      setLikesCount(question.likes || 0);
-      setDislikesCount(question.dislikes || 0);
-    }
-  }, [question])
-  const { user } = useUser();
+    setLikesCount(question?.likes || 0);
+    setDislikesCount(question?.dislikes || 0);
+  }, [question?.likes, question?.dislikes]);
 
+  const { user } = useUser();
 
   const handleLike = async (e) => {
     e.stopPropagation();
 
     if (!user) {
-      setError("Please Login for posting  your answer!!");
+      setError("Please Login for posting your views!!");
       setTimeout(() => {
         setError("");
         navigate("/signin");
@@ -101,18 +100,37 @@ export default function QuestionPage() {
     if (loadingReaction) return;
     setLoadingReaction(true);
     try {
+      let newLikesCount = likesCount;
+      let newDislikesCount = dislikesCount;
+
       if (liked) {
+        newLikesCount--;
         setLiked(false);
-        setLikesCount((prev) => prev - 1);
         localStorage.removeItem(`${question._id}_liked`);
       } else {
-        // Add like
+        newLikesCount++;
         setLiked(true);
-        setDisliked(false);
-        setLikesCount((prev) => prev + 1);
-        if (disliked) setDislikesCount((prev) => prev - 1);
+        if (disliked) {
+          newDislikesCount--;
+          setDisliked(false);
+        }
         localStorage.setItem(`${question._id}_liked`, "like");
       }
+
+      setLikesCount(newLikesCount);
+      setDislikesCount(newDislikesCount);
+      // Use local state for updates!
+      updateQuestionInContext(question._id, {
+        likes: newLikesCount,
+        dislikes: newDislikesCount,
+      });
+      dispatch(
+        updateQuestion({
+          _id: question._id,
+          likes: newLikesCount,
+          dislikes: newDislikesCount,
+        })
+      );
 
       await axios.post(
         `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
@@ -136,12 +154,11 @@ export default function QuestionPage() {
     }
   };
 
-
   const handleDislike = async (e) => {
     e.stopPropagation();
 
     if (!user) {
-      setError("Please Login!!.");
+      setError("Please Login for posting your views!!.");
       setTimeout(() => {
         setError("");
         navigate("/signin");
@@ -152,17 +169,37 @@ export default function QuestionPage() {
     if (loadingReaction) return;
     setLoadingReaction(true);
     try {
+      let newLikesCount = likesCount;
+      let newDislikesCount = dislikesCount;
+
       if (disliked) {
+        newDislikesCount--;
         setDisliked(false);
-        setDislikesCount((prev) => prev - 1);
         localStorage.removeItem(`${question._id}_liked`);
       } else {
+        newDislikesCount++;
         setDisliked(true);
-        setLiked(false);
-        setDislikesCount((prev) => prev + 1);
-        if (liked) setLikesCount((prev) => prev - 1);
+        if (liked) {
+          newLikesCount--;
+          setLiked(false);
+        }
         localStorage.setItem(`${question._id}_liked`, "dislike");
       }
+
+      setLikesCount(newLikesCount);
+      setDislikesCount(newDislikesCount);
+      // Use local state for updates!
+      updateQuestionInContext(question._id, {
+        likes: newLikesCount,
+        dislikes: newDislikesCount,
+      });
+      dispatch(
+        updateQuestion({
+          _id: question._id,
+          likes: newLikesCount,
+          dislikes: newDislikesCount,
+        })
+      );
 
       await axios.post(
         `${import.meta.env.VITE_SERVER}/likes/toggle-like`,
@@ -185,15 +222,6 @@ export default function QuestionPage() {
       setLoadingReaction(false);
     }
   };
-
-
-
-  // Function to truncate text to first few lines
-  // const truncateContent = (content) => {
-  //   const lines = content.split("\n").filter((line) => line.trim());
-  //   if (lines.length <= 2) return content;
-  //   return lines.slice(0, 2).join("\n") + "...";
-  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -499,9 +527,7 @@ export default function QuestionPage() {
                   {renderFormattedContent(question.content)}
                 </div>
 
-
                 <ImageCarouselWithModal question={question} />
-
               </div>
 
               {/* Row 3: Footer Section */}
@@ -527,49 +553,12 @@ export default function QuestionPage() {
                   </div>
                 </div>
                 {/* Answerers */}
-                <div className="flex items-center">
-                  {/* <div className="flex -space-x-3">
-                    {(question.answeredBy || []).map((answerer) => (
-                      <div
-                        key={answerer._id}
-                        className="relative"
-                        onMouseEnter={() => setShowTooltip(answerer._id)}
-                        onMouseLeave={() => setShowTooltip(null)}
-                      >
-                        <img
-                          src={answerer.avatar || Avtart}
-                          alt={answerer.email || "User"}
-                          className="w-8 h-8 rounded-full border-2 border-[#2E236C] hover:border-[#C8ACD6]/50 transition-all duration-300"
-                        />
-                        {showTooltip === answerer._id && (
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
-                            {answerer.email?.split("@")[0] || "Anonymous"}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div> */}
-                </div>
+                <div className="flex items-center"></div>
               </div>
 
               {/* Interaction Row: likes and dislikes and Post Answer */}
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 {/* Voting */}
-                {/* <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 rounded-lg shadow-md border border-[#433D8B]/30">
-                  <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                    <ThumbsUp className="w-5 h-5" />
-                  </button>
-                  <span className="text-white text-center font-medium min-w-[2rem]">
-                    {question.likes}
-                  </span>
-                  <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                    <ThumbsUp className="w-5 h-5 transform rotate-180" />
-                  </button>
-                  <span className="text-white text-center font-medium min-w-[2rem]">
-                    {question.dislikes}
-                  </span>
-                </div> */}
-
                 <div
                   className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
     border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
@@ -577,10 +566,11 @@ export default function QuestionPage() {
                 >
                   <motion.button
                     whileTap={{ scale: 1.2 }}
-                    className={`p-1.5 rounded-full transition-colors duration-300 ${liked
-                      ? "bg-white text-green-500"
-                      : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
-                      }`}
+                    className={`p-1.5 rounded-full transition-colors duration-300 ${
+                      liked
+                        ? "bg-white text-green-500"
+                        : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                    }`}
                     onClick={handleLike}
                   >
                     <motion.div
@@ -602,15 +592,18 @@ export default function QuestionPage() {
 
                   <motion.button
                     whileTap={{ scale: 1.2 }}
-                    className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
-                      ? "bg-white text-red-500"
-                      : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
-                      }`}
+                    className={`p-1.5 rounded-full transition-colors duration-300 ${
+                      disliked
+                        ? "bg-white text-red-500"
+                        : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                    }`}
                     onClick={handleDislike}
                   >
                     <motion.div
                       animate={
-                        loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                        loadingReaction && disliked
+                          ? { scale: [1, 1.3, 1] }
+                          : {}
                       }
                       transition={{ duration: 0.3 }}
                     >
@@ -668,16 +661,19 @@ export default function QuestionPage() {
                         />
                         {showTooltip === answerer._id && (
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#17153B]/90 text-white text-xs rounded whitespace-nowrap">
-                            {answerer.owner.fullName?.split("@")[0] || "Anonymous"}
+                            {answerer.owner.fullName?.split("@")[0] ||
+                              "Anonymous"}
                           </div>
                         )}
                       </div>
                     ))}
                     {answers.length > 5 && (
                       <div className="relative -ml-2">
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#2E236C] 
+                        <div
+                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#2E236C] 
                          border-2 border-[#C8ACD6]/30 flex items-center justify-center
-                         text-xs sm:text-sm text-[#C8ACD6]">
+                         text-xs sm:text-sm text-[#C8ACD6]"
+                        >
                           +{answers.length - 4}
                         </div>
                       </div>
@@ -723,17 +719,22 @@ export default function QuestionPage() {
                 {/* Answer Content with Formatting */}
                 <div className="text-[#C8ACD6] space-y-4 mb-6 text-sm sm:text-base">
                   <div
-                    className={`relative ${expandedAnswerId !== answer._id ? "max-h-32 overflow-hidden" : ""
-                      }`}
+                    className={`relative ${
+                      expandedAnswerId !== answer._id
+                        ? "max-h-32 overflow-hidden"
+                        : ""
+                    }`}
                   >
                     {renderFormattedContent(answer.content)}
 
                     {/* Images Section - Show only when expanded */}
-                    {expandedAnswerId === answer._id && answer.images && answer.images.length > 0 && (
-                      <div className="mt-4 transition-all duration-300">
-                        <ImageCarouselWithModal question={answer} />
-                      </div>
-                    )}
+                    {expandedAnswerId === answer._id &&
+                      answer.images &&
+                      answer.images.length > 0 && (
+                        <div className="mt-4 transition-all duration-300">
+                          <ImageCarouselWithModal question={answer} />
+                        </div>
+                      )}
 
                     {/* Gradient Overlay when collapsed */}
                     {expandedAnswerId !== answer._id && (
@@ -743,16 +744,24 @@ export default function QuestionPage() {
 
                   {/* Expand/Collapse Button */}
                   <button
-                    onClick={() => setExpandedAnswerId(
-                      expandedAnswerId === answer._id ? null : answer._id
-                    )}
+                    onClick={() =>
+                      setExpandedAnswerId(
+                        expandedAnswerId === answer._id ? null : answer._id
+                      )
+                    }
                     className="text-[#C8ACD6] hover:text-white text-sm transition-colors mt-2 
                    flex items-center gap-2 group"
                   >
-                    {expandedAnswerId === answer._id ? "Show less" : "Read more"}
+                    {expandedAnswerId === answer._id
+                      ? "Show less"
+                      : "Read more"}
                     <ChevronLeft
                       className={`w-4 h-4 transform transition-transform 
-                     ${expandedAnswerId === answer._id ? "rotate-90" : "-rotate-90"}
+                     ${
+                       expandedAnswerId === answer._id
+                         ? "rotate-90"
+                         : "-rotate-90"
+                     }
                      group-hover:translate-x-1`}
                     />
                   </button>
@@ -778,35 +787,18 @@ export default function QuestionPage() {
                     </div>
                   )}
 
-                  {/* Like/Dislike Section */}
-                  {/* <div className="flex items-center gap-3 bg-[#2E236C]/60 backdrop-blur-sm p-2 
-                    rounded-lg shadow-md border border-[#433D8B]/30">
-                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                      <ThumbsUp className="w-4 h-4" />
-                    </button>
-                    <span className="text-white text-center font-medium min-w-[2rem]">
-                      {answer.likes || 0}
-                    </span>
-                    <button className="p-1.5 text-[#C8ACD6] hover:text-white transition-colors">
-                      <ThumbsUp className="w-4 h-4 transform rotate-180" />
-                    </button>
-                    <span className="text-white text-center font-medium min-w-[2rem]">
-                      {answer.dislikes || 0}
-                    </span>
-                  </div> */}
-
-
-                  <div
+                  {/* <div
                     className="flex items-center gap-3 bg-[#2E236C]/30 p-2 rounded-lg 
     border border-[#433D8B]/20 group-hover:border-[#C8ACD6]/30"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <motion.button
                       whileTap={{ scale: 1.2 }}
-                      className={`p-1.5 rounded-full transition-colors duration-300 ${liked
-                        ? "bg-white text-green-500"
-                        : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
-                        }`}
+                      className={`p-1.5 rounded-full transition-colors duration-300 ${
+                        liked
+                          ? "bg-white text-green-500"
+                          : "text-[#C8ACD6] hover:text-white hover:bg-green-400/10"
+                      }`}
                       onClick={handleLike}
                     >
                       <motion.div
@@ -828,15 +820,18 @@ export default function QuestionPage() {
 
                     <motion.button
                       whileTap={{ scale: 1.2 }}
-                      className={`p-1.5 rounded-full transition-colors duration-300 ${disliked
-                        ? "bg-white text-red-500"
-                        : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
-                        }`}
+                      className={`p-1.5 rounded-full transition-colors duration-300 ${
+                        disliked
+                          ? "bg-white text-red-500"
+                          : "text-[#C8ACD6] hover:text-white hover:bg-red-400/10"
+                      }`}
                       onClick={handleDislike}
                     >
                       <motion.div
                         animate={
-                          loadingReaction && disliked ? { scale: [1, 1.3, 1] } : {}
+                          loadingReaction && disliked
+                            ? { scale: [1, 1.3, 1] }
+                            : {}
                         }
                         transition={{ duration: 0.3 }}
                       >
@@ -850,12 +845,33 @@ export default function QuestionPage() {
                     >
                       {dislikesCount}
                     </span>
-                  </div>
+                  </div> */}
+                  <LikeDislikeBar
+                    targetId={answer?._id}
+                    likes={answer.likes}
+                    dislikes={answer.dislikes}
+                    user={user}
+                    onUpdate={(newLikes, newDislikes) => {
+                      dispatch(
+                        updateAnswer({
+                          questionId: question?._id,
+                          answerId: answer?._id,
+                          changes: {
+                            likes: newLikes,
+                            dislikes: newDislikes,
+                          },
+                        })
+                      );
+                    }}
+                    targetType="Answer"
+                  ></LikeDislikeBar>
                 </div>
               </div>
             ))}
 
-            {Errors && <ErrorPopup message={Errors} onClose={() => setError("")} />}
+            {Errors && (
+              <ErrorPopup message={Errors} onClose={() => setError("")} />
+            )}
 
             {/* No answers message */}
             {answers.length === 0 && (
