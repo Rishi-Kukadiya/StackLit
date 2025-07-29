@@ -8,6 +8,8 @@ import TiptapEditor from "./QuillEditor";
 import axios from "axios";
 import ErrorPopup from "./ErrorPopup";
 import SuccessPopup from "./SuccessPopup";
+import { useDispatch } from "react-redux";
+import { fetchQuestionById } from "../redux/questionsSlice";
 import ShimmerLoader from "./ShimmerLoader";
 import { ImagePlus, X, Tag as TagIcon, ArrowLeft } from "lucide-react";
 import { useQuestions } from "../contexts/QuestionContext";
@@ -28,6 +30,7 @@ export default function Answer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const dispatch = useDispatch();
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -109,6 +112,7 @@ export default function Answer() {
           setSuccess("");
           clearQuestions();
           setRefresh((prev) => !prev);
+          dispatch(fetchQuestionById(questionId));
           navigate("/");
         }, 3000);
       } else {
