@@ -8,6 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
 const likeOrDislike = asyncHandler(async (req, res) => {
     try {
         const { targetId, targetType, isLike } = req.body;
+        console.log(targetId , targetType , isLike);
         const userId = req?.user?._id;
     
         if (!targetId || !targetType || typeof isLike !== "boolean") {

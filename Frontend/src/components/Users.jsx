@@ -1,19 +1,23 @@
 import React, { useEffect, useRef, useCallback } from "react";
-import { User, MessageSquare, ThumbsUp, Eye, HelpCircle } from "lucide-react";
+import { User, MessageSquare, ThumbsUp, Eye, UserCheck } from "lucide-react";
+import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUsers, resetUsers } from "../redux/userSlice";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import ShimmerLoader from "./ShimmerLoader";
 import avtart from "../assets/avtart.jpg";
+import { useNavigate } from "react-router-dom";
 
 export default function Users() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { users, loading, error, hasMore, page } = useSelector(
     (state) => state.users
   );
   const observer = useRef();
   const isFirstLoad = useRef(true);
+  
   useEffect(() => {
     dispatch(resetUsers());
     dispatch(fetchUsers({ page: 1, limit: 12 }));
@@ -39,6 +43,11 @@ export default function Users() {
     [loading, hasMore, page, dispatch]
   );
 
+  const handleProfileClick = (userId, e) => {
+    e.stopPropagation(); // Prevent any parent event bubbling
+    navigate(`/profile/${userId}`);
+  };
+
   return (
     <div className="min-h-screen bg-transparent flex flex-col">
       <div className="fixed top-0 w-full z-40">
@@ -53,6 +62,7 @@ export default function Users() {
               "relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg rounded-2xl p-4 sm:p-6 border-2 border-[#C8ACD6]/20 shadow-[0_0_15px_rgba(200,172,214,0.18)] flex flex-col items-center transition-transform hover:scale-105 hover:border-[#C8ACD6]/40 mx-auto";
             const statClass =
               "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full font-semibold text-xs sm:text-sm text-[#C8ACD6] hover:text-white border border-[#C8ACD6]/20 shadow hover:shadow-lg transition-all duration-200 cursor-pointer whitespace-nowrap";
+            
             if (idx === users.length - 1) {
               return (
                 <div
@@ -60,9 +70,16 @@ export default function Users() {
                   key={user._id || idx}
                   className={cardClass}
                 >
-                  <div className="absolute top-4 right-4">
-                    <HelpCircle className="w-5 h-5 text-[#C8ACD6] opacity-70" />
-                  </div>
+                  <button 
+                    className="absolute top-2 right-2 sm:top-4 sm:right-4 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-full bg-[#C8ACD6]/10 hover:bg-[#C8ACD6]/20 transition-all duration-200 group border-2 border-[#C8ACD6]/20 shadow-[0_0_15px_rgba(200,172,214,0.18)] hover:border-[#C8ACD6]/40 hover:shadow-[0_0_20px_rgba(200,172,214,0.25)] whitespace-nowrap cursor-pointer"
+                    onClick={(e) => handleProfileClick(user._id, e)}
+                    title="View Profile"
+                  >
+                    <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 text-[#C8ACD6] opacity-70 group-hover:opacity-100 group-hover:text-white transition-all duration-200 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-[#C8ACD6] opacity-70 group-hover:opacity-100 group-hover:text-white transition-all duration-200 font-medium ">
+                      View User
+                    </span>
+                  </button>
                   <img
                     src={user.avatar || avtart}
                     alt={user.fullName}
@@ -95,10 +112,20 @@ export default function Users() {
               );
             }
             return (
-              <div key={user._id || idx} className={cardClass}>
-                <div className="absolute top-4 right-4">
-                  <HelpCircle className="w-5 h-5 text-[#C8ACD6] opacity-70" />
-                </div>
+              <div
+                key={user._id || idx}
+                className={cardClass}
+              >
+                <button 
+                    className="absolute top-2 right-2 sm:top-4 sm:right-4 flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-full bg-[#C8ACD6]/10 hover:bg-[#C8ACD6]/20 transition-all duration-200 group border-2 border-[#C8ACD6]/20 shadow-[0_0_15px_rgba(200,172,214,0.18)] hover:border-[#C8ACD6]/40 hover:shadow-[0_0_20px_rgba(200,172,214,0.25)] whitespace-nowrap cursor-pointer"
+                    onClick={(e) => handleProfileClick(user._id, e)}
+                    title="View Profile"
+                  >
+                    <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 text-[#C8ACD6] opacity-70 group-hover:opacity-100 group-hover:text-white transition-all duration-200 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-[#C8ACD6] opacity-70 group-hover:opacity-100 group-hover:text-white transition-all duration-200 font-medium ">
+                      View User
+                    </span>
+                  </button>
                 <img
                   src={
                     user.avatar ||

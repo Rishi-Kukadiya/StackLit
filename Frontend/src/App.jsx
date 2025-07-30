@@ -17,7 +17,10 @@ import UnansweredQuestion from "./Components/UnanswerQuestion";
 import Users from "./Components/Users";
 import { Provider } from "react-redux";
 import store from "./redux/store";
-import Chatbot from "./components/Chatbot";
+import Chatbot from "./Components/Chatbot";
+import UserProfile from './components/UserProfile';
+import UpdateProfile from './components/UpdateProfile';
+
 function App() {
   const navigate = useNavigate();
   return (
@@ -37,7 +40,9 @@ function App() {
             <Route path="/answer" element={<Answer />} />
             <Route path="/users" element={<Users />} />
             <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
-            <Route path="/ai-assistance" element={<Chatbot/>} />
+            <Route path="/profile/:userId" element={<UserProfile />} />
+            <Route path="//UpdateProfile" element={<UpdateProfile />} />
+            <Route path="ai-assistance" element={<Chatbot></Chatbot>}></Route>
           </Routes>
         </QuestionProvider>
       </UserProvider>
