@@ -6,7 +6,10 @@ import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudina
 import { Answer } from "../models/answer.model.js";
 import { User } from "../models/user.model.js";
 import { Like } from "../models/like.model.js";
-
+import { Tag } from "../models/tag.model.js";
+import axios from "axios"
+import dotenv from "dotenv";
+dotenv.config();
 
 const postQuestion = asyncHandler(async (req, res) => {
     try {
@@ -38,6 +41,8 @@ const postQuestion = asyncHandler(async (req, res) => {
 
         const parsedTags = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
+
+
         const question = await Question.create({
             title,
             content,
@@ -50,6 +55,45 @@ const postQuestion = asyncHandler(async (req, res) => {
             return res.json(new ApiError(500, "Error while posting question"));
         }
 
+        for (const t of parsedTags) {
+            const tagName = t.toLowerCase().trim();
+            const existingTag = await Tag.findOne({ tag: tagName });
+            if (existingTag) {
+                if (!existingTag.questions.includes(question._id)) {
+                    existingTag.questions.push(question._id);
+                    await existingTag.save();
+                }
+            } else {
+                const prompt = `You are writing documentation for a programming tag used on a developer Q&A website like Stack Overflow.
+
+                Write a high-quality description for the programming tag "${tagName}" and it should be simple in one paragraph and contains below information : 
+
+                summary of what this tag refers to.
+                 describing what it is, where it's used, and why it's important.
+
+               
+                > Describe common use cases, implementation patterns, challenges, or variations related to this topic.
+
+                Make sure it's concise, developer-friendly, and informative. Avoid giving irrelevant or vague descriptions.`;
+
+                let response;
+                try {
+                    response = await axios.post(`${process.env.BACKEND_SERVER}/chat`, {
+                        text: prompt,
+                    });
+                    console.log(response);
+
+                } catch (err) {
+                    console.error(`Error generating description for tag "${tagName}":`, err.message);
+                }
+
+                await Tag.create({
+                    tag: tagName,
+                    description: response?.data.text || "",
+                    questions: [question._id]
+                })
+            }
+        }
         return res.json(
             new ApiResponse(201, question, "Question posted successfully")
         );
@@ -158,6 +202,8 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
 
 
 // })
+
+
 
 
 

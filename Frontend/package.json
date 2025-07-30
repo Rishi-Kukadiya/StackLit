@@ -25,11 +25,13 @@
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
     "react-router": "^7.7.0",
     "react-router-dom": "^7.7.0",
     "react-syntax-highlighter": "^15.6.1",
     "react-tsparticles": "^2.12.2",
+    "remark-gfm": "^4.0.1",
     "three": "^0.178.0",
     "tsparticles": "^3.8.1",
     "tsparticles-engine": "^2.12.0"
