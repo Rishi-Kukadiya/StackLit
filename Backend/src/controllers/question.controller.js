@@ -292,6 +292,54 @@ const editContent = asyncHandler(async (req, res) => {
 })
 
 
+// const addTag = asyncHandler(async (req, res) => {
+//     try {
+//         const { questionId } = req.params;
+//         const { tag } = req.body;
+
+//         if (!questionId || !tag?.trim()) {
+//             return res.json(new ApiError(400, "Question ID and tag are required."));
+//         }
+
+//         const question = await Question.findById(questionId);
+//         if (!question) {
+//             return res.json(new ApiError(404, "Question not found."));
+//         }
+
+//         if (question.owner.toString() !== req.user._id.toString()) {
+//             return res.json(new ApiError(403, "Unauthorized to edit this question."));
+//         }
+
+
+//         const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
+//         if (t) {
+//             t.questions.push(question._id);
+//             await t.save();
+//         } else {
+
+//         }
+
+
+
+
+//         if (!question.tags.includes(tag)) {
+//             question.tags.push(tag.trim());
+//             await question.save();
+//         }
+
+//         return res.json(new ApiResponse(200, question.tags, "Tag added successfully."));
+
+//     } catch (error) {
+//         console.log(error);
+//         return res.json(
+//             new ApiError(500, "Internal server Error")
+//         )
+
+
+//     }
+// });
+
+
 const addTag = asyncHandler(async (req, res) => {
     try {
         const { questionId } = req.params;
@@ -300,6 +348,8 @@ const addTag = asyncHandler(async (req, res) => {
         if (!questionId || !tag?.trim()) {
             return res.json(new ApiError(400, "Question ID and tag are required."));
         }
+
+        const formattedTag = tag.toLowerCase().trim();
 
         const question = await Question.findById(questionId);
         if (!question) {
@@ -310,34 +360,63 @@ const addTag = asyncHandler(async (req, res) => {
             return res.json(new ApiError(403, "Unauthorized to edit this question."));
         }
 
+        let existingTag = await Tag.findOne({ tag: formattedTag });
 
-        const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
-        if (t) {
-            t.questions.push(question._id);
-            await t.save();
+        if (existingTag) {
+            if (!existingTag.questions.includes(question._id)) {
+                existingTag.questions.push(question._id);
+                await existingTag.save();
+            }
         } else {
-            
+            createTag(question._id, formattedTag);
         }
 
-
-
-
-        if (!question.tags.includes(tag)) {
-            question.tags.push(tag.trim());
+        if (!question.tags.includes(formattedTag)) {
+            question.tags.push(formattedTag);
             await question.save();
         }
 
         return res.json(new ApiResponse(200, question.tags, "Tag added successfully."));
-
     } catch (error) {
         console.log(error);
-        return res.json(
-            new ApiError(500, "Internal server Error")
-        )
-
-
+        return res.json(new ApiError(500, "Internal server error"));
     }
 });
+
+// const deleteTag = asyncHandler(async (req, res) => {
+//     try {
+//         const { questionId } = req.params;
+//         const { tag } = req.body;
+
+//         if (!questionId || !tag?.trim()) {
+//             return res.json(new ApiError(400, "Question ID and tag are required."));
+//         }
+
+//         const question = await Question.findById(questionId);
+//         if (!question) {
+//             return res.json(new ApiError(404, "Question not found."));
+//         }
+
+//         if (question.owner.toString() !== req.user._id.toString()) {
+//             return res.json(new ApiError(403, "Unauthorized to edit this question."));
+//         }
+
+//         const originalLength = question.tags.length;
+//         question.tags = question.tags.filter(t => t !== tag.trim());
+
+//         if (question.tags.length === originalLength) {
+//             return res.json(new ApiError(404, "Tag not found in question."));
+//         }
+
+//         await question.save();
+//         return res.json(new ApiResponse(200, question.tags, "Tag removed successfully."));
+//     } catch (error) {
+//         console.log(error);
+//         return res.json(
+//             new ApiError(500, "Internal server Error")
+//         )
+//     }
+// });
 
 const deleteTag = asyncHandler(async (req, res) => {
     try {
@@ -357,23 +436,35 @@ const deleteTag = asyncHandler(async (req, res) => {
             return res.json(new ApiError(403, "Unauthorized to edit this question."));
         }
 
+        const cleanedTag = tag.toLowerCase().trim();
         const originalLength = question.tags.length;
-        question.tags = question.tags.filter(t => t !== tag.trim());
+
+
+        question.tags = question.tags.filter(t => t.toLowerCase().trim() !== cleanedTag);
 
         if (question.tags.length === originalLength) {
             return res.json(new ApiError(404, "Tag not found in question."));
         }
 
         await question.save();
+
+
+        const tagDoc = await Tag.findOne({ tag: cleanedTag });
+        if (tagDoc) {
+            tagDoc.questions = tagDoc.questions.filter(qId => qId.toString() !== question._id.toString());
+            if (tagDoc.questions.length === 0) {
+                await tagDoc.deleteOne();
+            } else {
+                await tagDoc.save();
+            }
+        }
+
         return res.json(new ApiResponse(200, question.tags, "Tag removed successfully."));
     } catch (error) {
         console.log(error);
-        return res.json(
-            new ApiError(500, "Internal server Error")
-        )
+        return res.json(new ApiError(500, "Internal server Error"));
     }
 });
-
 
 
 const editImages = asyncHandler(async (req, res) => {
