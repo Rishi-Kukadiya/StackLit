@@ -4,6 +4,7 @@ import { FaTags } from "react-icons/fa";
 import ShimmerLoader from "./ShimmerLoader";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import ErrorPopup from "./ErrorPopup";
 
 // LoadingDots animated component
 const LoadingDots = () => {
@@ -18,7 +19,8 @@ const LoadingDots = () => {
       ))}
       <style jsx>{`
         @keyframes pingDelay {
-          0%, 100% {
+          0%,
+          100% {
             transform: scale(0.7);
             opacity: 0.6;
           }
@@ -158,7 +160,6 @@ export default function Tags() {
           </div>
         )}
 
-
         {/* Tags grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {tags.map((tag) => (
@@ -176,7 +177,9 @@ export default function Tags() {
                 <span className="flex items-center gap-1 text-sm text-[#C8ACD6]">
                   <MessageSquare className="w-4 h-4" />
                   <span className="font-medium">Questions:</span>
-                  <span className="ml-1 font-bold text-white">{tag.totalQuestionsAsked}</span>
+                  <span className="ml-1 font-bold text-white">
+                    {tag.totalQuestionsAsked}
+                  </span>
                 </span>
               </div>
               <p className="mt-4 text-[#C8ACD6] text-sm line-clamp-4">
@@ -192,18 +195,21 @@ export default function Tags() {
               </button>
             </div>
           ))}
-          {/* Loading shimmer: show only on initial load (page 1 and tags are empty) */}
-          {loading && page === 1 && tags.length === 0 && ([...Array(6)].map((_, i) => <ShimmerLoader key={i} />))}
+        
+          {loading &&
+            page === 1 &&
+            tags.length === 0 &&
+            [...Array(6)].map((_, i) => <ShimmerLoader key={i} />)}
         </div>
 
-        {/* Loading dots: show only when loading AND not on page 1 (infinite scroll) */}
         {loading && page > 1 && <LoadingDots />}
 
-        {/* Error message */}
+
         {error && (
-          <div className="text-center text-red-400 py-8">
-            {error}
-          </div>
+          <ErrorPopup
+            message={error}
+            onClose={() => setError("")}
+          />
         )}
       </div>
     </div>
