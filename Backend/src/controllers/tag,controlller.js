@@ -4,6 +4,7 @@ import { Question } from "../models/question.model.js";
 import { Tag } from "../models/tag.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
+import axios from "axios"
 
 
 const getTags = asyncHandler(async (req, res) => {
@@ -59,7 +60,7 @@ const getQuestionsByTagId = asyncHandler(async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(tagId)) {
         return res.json(new ApiError(400, "Invalid tag ID"));
     }
-    
+
     const tag = await Tag.findById(tagId);
     if (!tag) {
         return res.json(new ApiError(404, "Tag not found"));
@@ -68,10 +69,10 @@ const getQuestionsByTagId = asyncHandler(async (req, res) => {
     const totalQuestions = tag.questions.length;
 
     const questions = await Question.find({ _id: { $in: tag.questions } })
-        .sort({ createdAt: -1 }) 
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
-        .populate("owner", "fullName avatar") 
+        .populate("owner", "fullName avatar")
         .lean();
 
     const formattedQuestions = questions.map(q => ({
@@ -96,9 +97,43 @@ const getQuestionsByTagId = asyncHandler(async (req, res) => {
             questions: formattedQuestions,
             currentPage: parseInt(page),
             totalPages: Math.ceil(totalQuestions / limit)
-        },"Questins fetched for the Tag")
+        }, "Questins fetched for the Tag")
     )
 });
 
+const createTag = async (questioId, tag) => {
+    const prompt = `
+        You are writing documentation for a programming tag used on            a developer Q&A website like Stack Overflow.
 
-export { getTags, getQuestionsByTagId };
+                Write a high-quality description for the programming tag "${tag}" and it should be simple in one paragraph and contains below information : 
+
+                summary of what this tag refers to.
+                 describing what it is, where it's used, and why it's important.
+
+               
+                > Describe common use cases, implementation patterns, challenges, or variations related to this topic.
+
+                Make sure it's concise, developer-friendly, and informative. Avoid giving irrelevant or vague descriptions.`;
+
+    let response;
+    try {
+        response = await axios.post(`${process.env.BACKEND_SERVER}/chat`, {
+            text: prompt,
+        });
+        console.log(response);
+
+    } catch (err) {
+        console.error(`Error generating description for tag "${tag}":`, err.message);
+    }
+
+    await Tag.create({
+        tag: tag,
+        description: response?.data.text || "",
+        questions: [questioId]
+    })
+}
+
+
+
+
+export { getTags, getQuestionsByTagId,createTag };

@@ -14,7 +14,7 @@ export const fetchTags = createAsyncThunk(
         }
       );
       return res.data;
-      console.log("Tags fetched successfully:", res.data);
+      // console.log("Tags fetched successfully:", res.data);
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch tags");
     }

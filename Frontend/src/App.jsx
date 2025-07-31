@@ -19,7 +19,8 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import Chatbot from "./Components/Chatbot";
 import UserProfile from './components/UserProfile';
-import Tags from "./components/Tags";
+import UpdateProfile from "./components/UpdateProfile";
+// import Tags from "./components/Tags";
 
 function App() {
   const navigate = useNavigate();
@@ -42,7 +43,8 @@ function App() {
             <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
             <Route path="/profile/:userId" element={<UserProfile />} />
             <Route path="ai-assistance" element={<Chatbot></Chatbot>}></Route>
-            <Route path="/tags" element={<Tags></Tags>}></Route>
+            <Route path="/UpdateProfile" element={<UpdateProfile />} />
+            {/* <Route path="/tags" element={<Tags></Tags>}></Route> */}
           </Routes>
         </QuestionProvider>
       </UserProvider>

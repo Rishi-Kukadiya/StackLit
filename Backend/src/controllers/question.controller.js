@@ -7,9 +7,12 @@ import { Answer } from "../models/answer.model.js";
 import { User } from "../models/user.model.js";
 import { Like } from "../models/like.model.js";
 import { Tag } from "../models/tag.model.js";
-import axios from "axios"
+
 import dotenv from "dotenv";
+import { createTag } from "./tag,controlller.js";
 dotenv.config();
+
+
 
 const postQuestion = asyncHandler(async (req, res) => {
     try {
@@ -64,34 +67,7 @@ const postQuestion = asyncHandler(async (req, res) => {
                     await existingTag.save();
                 }
             } else {
-                const prompt = `You are writing documentation for a programming tag used on a developer Q&A website like Stack Overflow.
-
-                Write a high-quality description for the programming tag "${tagName}" and it should be simple in one paragraph and contains below information : 
-
-                summary of what this tag refers to.
-                 describing what it is, where it's used, and why it's important.
-
-               
-                > Describe common use cases, implementation patterns, challenges, or variations related to this topic.
-
-                Make sure it's concise, developer-friendly, and informative. Avoid giving irrelevant or vague descriptions.`;
-
-                let response;
-                try {
-                    response = await axios.post(`${process.env.BACKEND_SERVER}/chat`, {
-                        text: prompt,
-                    });
-                    console.log(response);
-
-                } catch (err) {
-                    console.error(`Error generating description for tag "${tagName}":`, err.message);
-                }
-
-                await Tag.create({
-                    tag: tagName,
-                    description: response?.data.text || "",
-                    questions: [question._id]
-                })
+                createTag(question._id, tagName);
             }
         }
         return res.json(
@@ -215,6 +191,7 @@ const deleteQuestion = asyncHandler(async (req, res) => {
     }
 
     const question = await Question.findById(questionId);
+
     if (!question) {
         return res.json(new ApiError(404, "Question not found"));
     }
@@ -248,6 +225,22 @@ const deleteQuestion = asyncHandler(async (req, res) => {
 
     await Like.deleteMany({ target: questionId, targetType: "Question" });
 
+    const tags = question.tags;
+
+    for (const tag of tags) {
+        const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
+
+        if (!t) continue;
+
+        if (t.questions.length === 1) {
+            await Tag.deleteOne({ _id: t._id });
+        } else {
+            t.questions = t.questions.filter(
+                (qId) => qId.toString() !== question._id.toString()
+            );
+            await t.save();
+        }
+    }
 
     if (answerIds.length > 0) {
         await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } });
@@ -316,6 +309,18 @@ const addTag = asyncHandler(async (req, res) => {
         if (question.owner.toString() !== req.user._id.toString()) {
             return res.json(new ApiError(403, "Unauthorized to edit this question."));
         }
+
+
+        const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
+        if (t) {
+            t.questions.push(question._id);
+            await t.save();
+        } else {
+            
+        }
+
+
+
 
         if (!question.tags.includes(tag)) {
             question.tags.push(tag.trim());
