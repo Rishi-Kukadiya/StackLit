@@ -18,70 +18,35 @@ import Users from "./Components/Users";
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import Chatbot from "./Components/Chatbot";
-import UserProfile from "./components/UserProfile";
-import UpdateProfile from "./components/UpdateProfile";
+import UserProfile from './components/UserProfile';
+import UpdateProfile from "./Components/UpdateProfile";
+import Tags from "./Components/Tags";
 
 function App() {
   const navigate = useNavigate();
   return (
     <Provider store={store}>
       <UserProvider>
-          <QuestionProvider>
-            <CanvasBackground />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route
-                path="/signin"
-                element={
-                  <SignInModal isOpen={true} onClose={() => navigate("/")} />
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <SignUpModal isOpen={true} onClose={() => navigate("/")} />
-                }
-              />
-              <Route path="/question/:id" element={<QuestionPage />} />
-              <Route
-                path="/forgot-password"
-                element={
-                  <ForgotPasswordModal
-                    isOpen={true}
-                    onClose={() => navigate("/")}
-                  />
-                }
-              />
-              <Route
-                path="/otp-verification"
-                element={
-                  <OtpVerificationPage
-                    isOpen={true}
-                    onClose={() => navigate("/")}
-                  />
-                }
-              />
-              <Route
-                path="/reset-password"
-                element={
-                  <ResetPasswordPage
-                    isOpen={true}
-                    onClose={() => navigate("/")}
-                  />
-                }
-              />
-              <Route path="/ask" element={<AskQuestion />} />
-              <Route path="/answer" element={<Answer />} />
-              <Route path="/users" element={<Users />} />
-              <Route
-                path="/unanswered"
-                element={<UnansweredQuestion></UnansweredQuestion>}
-              ></Route>
-              <Route path="/profile/:userId" element={<UserProfile />} />
-              <Route path="/UpdateProfile" element={<UpdateProfile />} />
-              <Route path="ai-assistance" element={<Chatbot></Chatbot>}></Route>
-            </Routes>
-          </QuestionProvider>
+        <QuestionProvider>
+          <CanvasBackground />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/signin" element={<SignInModal isOpen={true} onClose={() => navigate("/")} />} />
+            <Route path="/signup" element={<SignUpModal isOpen={true} onClose={() => navigate("/")} />} />
+            <Route path="/question/:id" element={<QuestionPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordModal isOpen={true} onClose={() => navigate("/")} />} />
+            <Route path="/otp-verification" element={<OtpVerificationPage  isOpen={true} onClose={() => navigate("/")} />} />
+            <Route path="/reset-password" element={<ResetPasswordPage isOpen={true} onClose={() => navigate("/")} />} />
+            <Route path="/ask" element={<AskQuestion />} />
+            <Route path="/answer" element={<Answer />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
+            <Route path="/profile/:userId" element={<UserProfile />} />
+            <Route path="//UpdateProfile" element={<UpdateProfile />} />
+            <Route path="ai-assistance" element={<Chatbot></Chatbot>}></Route>
+            <Route path="/tags" element={<Tags></Tags>}></Route>
+          </Routes>
+        </QuestionProvider>
       </UserProvider>
     </Provider>
   );
