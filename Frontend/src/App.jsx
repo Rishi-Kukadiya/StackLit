@@ -43,7 +43,7 @@ function App() {
             <Route path="/unanswered" element={<UnansweredQuestion></UnansweredQuestion>}></Route>
             <Route path="/profile/:userId" element={<UserProfile />} />
             <Route path="ai-assistance" element={<Chatbot></Chatbot>}></Route>
-            <Route path="/UpdateProfile" element={<UpdateProfile />} />
+            <Route path="/update-profile" element={<UpdateProfile />} />
             {/* <Route path="/tags" element={<Tags></Tags>}></Route> */}
           </Routes>
         </QuestionProvider>

@@ -1,490 +1,18 @@
-
-
-
-
-
-
-
-
-// import React, { useState, useEffect, useRef } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { Edit2, Save, X, Upload, Trash2 } from "lucide-react";
-
-// import axios from "axios";
-// import Navbar from "./Navbar";
-// import Sidebar from "./Sidebar";
-// import TiptapEditor from "./QuillEditor";
-// import ModifyQuestion from "./ModifyQuestion";
-// import { useUser } from "./UserContext";
-
-// // --- Stubs for pieces not shown ---
-// function ProfileSection() {
-//   return null;
-// }
-// function DeleteModal({ type, onConfirm, onCancel }) {
-//   return (
-//     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70">
-//       <div className="bg-[#2E236C] rounded-xl p-6 max-w-md w-full border border-[#433D8B]/50">
-//         <h3 className="text-white text-xl font-semibold mb-4">
-//           Confirm Delete
-//         </h3>
-//         <p className="text-[#C8ACD6] mb-6">
-//           Are you sure you want to delete this {type}? This action cannot be undone.
-//         </p>
-//         <div className="flex justify-end gap-4">
-//           <button
-//             onClick={onCancel}
-//             className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-//           >
-//             Cancel
-//           </button>
-//           <button
-//             onClick={onConfirm}
-//             className="px-4 py-2 rounded-lg bg-[#433D8B] text-white hover:bg-[#2E236C] transition-colors"
-//           >
-//             Delete
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default function UpdateProfile() {
-//   const { user } = useUser();
-//   const userId = user?.user?._id;
-//   const navigate = useNavigate();
-
-//   // State
-//   const [userData, setUserData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [editMode, setEditMode] = useState({
-//     profile: false,
-//     answerId: null,
-//   });
-//   const [formData, setFormData] = useState({
-//     fullName: "",
-//     email: "",
-//     avatar: null,
-//     previewAvatar: "",
-//   });
-//   const [editAnswer, setEditAnswer] = useState({
-//     content: "",
-//     images: [],
-//   });
-//   const [showDeleteModal, setShowDeleteModal] = useState({
-//     show: false,
-//     type: null, // 'profile', 'question', 'answer'
-//     id: null,
-//   });
-//   const [questionToModify, setQuestionToModify] = useState(null);
-//   const fileInputRef = useRef(null);
-
-//   // Fetch user profile data
-//   useEffect(() => {
-//     const fetchUserProfile = async () => {
-//       try {
-//         const response = await axios.get(
-//           `${import.meta.env.VITE_SERVER}/users/get-userProfile/${userId}`,
-//           { withCredentials: true }
-//         );
-//         setUserData(response.data);
-//         setFormData({
-//           fullName: response.data.user.fullName,
-//           email: response.data.user.email,
-//           previewAvatar: response.data.user.avatar,
-//         });
-//         setLoading(false);
-//       } catch (err) {
-//         console.error(err);
-//         setLoading(false);
-//       }
-//     };
-//     if (userId) fetchUserProfile();
-//   }, [userId]);
-
-//   // Profile update handler (placeholder)
-//   const handleProfileUpdate = async (e) => {
-//     e.preventDefault();
-//     console.log("Profile update requested with data:", {
-//       fullName: formData.fullName,
-//       email: formData.email,
-//       avatar: formData.avatar,
-//     });
-//     // Close edit mode
-//     setEditMode((m) => ({ ...m, profile: false }));
-//   };
-
-//   // Answer edit handlers
-//   const handleAnswerEdit = (answer) => {
-//     setEditAnswer({
-//       content: answer.content,
-//       images: answer.images || [],
-//     });
-//     setEditMode((m) => ({ ...m, answerId: answer._id }));
-//   };
-//   const handleAnswerUpdate = async (answerId) => {
-//     console.log("Answer update requested:", { id: answerId, data: editAnswer });
-//     setEditMode((m) => ({ ...m, answerId: null }));
-//   };
-
-//   // Delete handler (placeholder)
-//   const handleDelete = () => {
-//     console.log(`Delete requested for ${showDeleteModal.type} with id:`, showDeleteModal.id);
-//     if (showDeleteModal.type === "profile") {
-//       // Clear user data and redirect (placeholder)
-//       setUserData(null);
-//       navigate("/");
-//     } else if (showDeleteModal.type === "question") {
-//       setUserData((prev) => ({
-//         ...prev,
-//         questions: prev.questions.filter((q) => q._id !== showDeleteModal.id),
-//       }));
-//     } else if (showDeleteModal.type === "answer") {
-//       setUserData((prev) => ({
-//         ...prev,
-//         answers: prev.answers.filter((a) => a._id !== showDeleteModal.id),
-//       }));
-//     }
-//     setShowDeleteModal({ show: false, type: null, id: null });
-//   };
-
-//   // Redirect if no user is logged in
-//   useEffect(() => {
-//     if (!userId) navigate("/signin");
-//   }, [userId, navigate]);
-
-//   if (loading || !userData) {
-//     return <div>Loading...</div>;
-//   }
-
-//   return (
-//     <>
-//       <div className="fixed top-0 w-full z-50">
-//         <Navbar />
-//       </div>
-//       <Sidebar />
-//       <div
-//         className="pt-16 min-h-screen overflow-y-auto relative z-10
-//                   transition-all duration-300 mx-auto w-full
-//                   lg:ml-64 lg:w-[calc(100%-16rem)]"
-//       >
-//         <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-
-//           {/* Profile Section */}
-//           <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
-//             {editMode.profile ? (
-//               <form onSubmit={handleProfileUpdate} className="space-y-4">
-//                 <div className="flex items-center gap-4">
-//                   <img
-//                     src={formData.previewAvatar}
-//                     alt="Profile"
-//                     className="w-24 h-24 rounded-full object-cover border-4 border-[#C8ACD6]"
-//                   />
-//                   <div>
-//                     <input
-//                       type="file"
-//                       ref={fileInputRef}
-//                       onChange={(e) => {
-//                         const file = e.target.files[0];
-//                         if (file) {
-//                           setFormData({
-//                             ...formData,
-//                             avatar: file,
-//                             previewAvatar: URL.createObjectURL(file),
-//                           });
-//                         }
-//                       }}
-//                       className="hidden"
-//                       accept="image/*"
-//                     />
-//                     <button
-//                       type="button"
-//                       onClick={() => fileInputRef.current && fileInputRef.current.click()}
-//                       className="text-[#C8ACD6] hover:text-white transition-colors flex items-center gap-2"
-//                     >
-//                       <Upload className="w-4 h-4" />
-//                       Change Avatar
-//                     </button>
-//                   </div>
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <label className="text-[#C8ACD6]">Full Name</label>
-//                   <input
-//                     type="text"
-//                     value={formData.fullName}
-//                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-//                     className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
-//                   />
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <label className="text-[#C8ACD6]">Email</label>
-//                   <input
-//                     type="email"
-//                     value={formData.email}
-//                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-//                     className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
-//                   />
-//                 </div>
-
-//                 <div className="flex gap-4 justify-end">
-//                   <button
-//                     type="submit"
-//                     className="bg-[#433D8B] text-white px-4 py-2 rounded-lg hover:bg-[#2E236C] transition-colors"
-//                   >
-//                     Save Changes
-//                   </button>
-//                   <button
-//                     type="button"
-//                     className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-//                     onClick={() => setEditMode((m) => ({ ...m, profile: false }))}
-//                   >
-//                     Cancel
-//                   </button>
-//                 </div>
-//               </form>
-//             ) : (
-//               <div className="space-y-4">
-//                 <div className="flex items-center gap-4">
-//                   <img
-//                     src={userData.user.avatar}
-//                     alt={userData.user.fullName}
-//                     className="w-24 h-24 rounded-full object-cover border-4 border-[#C8ACD6]"
-//                   />
-//                   <div>
-//                     <h3 className="text-xl text-white font-medium">{userData.user.fullName}</h3>
-//                     <p className="text-[#C8ACD6]">{userData.user.email}</p>
-//                   </div>
-//                 </div>
-//                 <div className="flex gap-4 mt-3">
-//                   <button
-//                     className="bg-[#433D8B] text-white px-4 py-2 rounded-lg hover:bg-[#2E236C] transition-colors"
-//                     onClick={() => setEditMode((m) => ({ ...m, profile: true }))}
-//                   >
-//                     Edit Profile
-//                   </button>
-//                   <button
-//                     className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-//                     onClick={() =>
-//                       setShowDeleteModal({ show: true, type: "profile", id: userId })
-//                     }
-//                   >
-//                     Delete Profile
-//                   </button>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-
-//           {/* Questions Section */}
-//           <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
-//             <h2 className="text-2xl font-bold text-white mb-6">Your Questions</h2>
-//             <div className="space-y-4">
-//               {userData.questions &&
-//                 userData.questions.map((question) => (
-//                   <div key={question._id}>
-//                     <QuestionCard
-//                       question={question}
-//                       onDelete={(id) =>
-//                         setShowDeleteModal({ show: true, type: "question", id })
-//                       }
-//                       onModify={() => setQuestionToModify(question)}
-//                     />
-//                   </div>
-//                 ))}
-//             </div>
-//           </div>
-
-//           {/* Answers Section */}
-//           <div className="bg-[#2E236C]/20 rounded-xl p-6 border-2 border-[#C8ACD6]/30">
-//             <h2 className="text-2xl font-bold text-white mb-6">Your Answers</h2>
-//             <div className="space-y-4">
-//               {userData.answers &&
-//                 userData.answers.map((answer) => (
-//                   <AnswerCard
-//                     key={answer._id}
-//                     answer={answer}
-//                     onDelete={(id) => setShowDeleteModal({ show: true, type: "answer", id })}
-//                     onEdit={() => handleAnswerEdit(answer)}
-//                     editMode={editMode}
-//                     setEditMode={setEditMode}
-//                     editAnswer={editAnswer}
-//                     setEditAnswer={setEditAnswer}
-//                     handleAnswerUpdate={handleAnswerUpdate}
-//                   />
-//                 ))}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Delete Confirmation Modal */}
-//       {showDeleteModal.show && (
-//         <DeleteModal
-//           type={showDeleteModal.type}
-//           onConfirm={handleDelete}
-//           onCancel={() => setShowDeleteModal({ show: false, type: null, id: null })}
-//         />
-//       )}
-
-//       {/* Modify Question Modal */}
-//       {questionToModify && (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-//           <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
-//             <button
-//               onClick={() => setQuestionToModify(null)}
-//               className="absolute top-4 right-4 z-10 text-white bg-[#433D8B] rounded-full p-2 hover:bg-[#2E236C] transition-colors"
-//               aria-label="Close modify question"
-//             >
-//               <X className="w-6 h-6" />
-//             </button>
-//             <ModifyQuestion question={questionToModify} onClose={() => setQuestionToModify(null)} />
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// }
-
-// // QuestionCard Component
-// function QuestionCard({ question, onDelete, onModify }) {
-//   return (
-//     <div
-//       className="bg-[#2E236C]/40 border border-[#433D8B]/30 rounded-xl p-4 flex flex-col gap-3 shadow-md transition-all duration-300 hover:shadow-lg w-full cursor-pointer hover:bg-[#433D8B]/10"
-//       onClick={onModify}
-//     >
-//       <div className="flex items-center justify-between gap-2">
-//         <div className="flex flex-col gap-1">
-//           <h3 className="text-lg text-white font-semibold line-clamp-2">{question.title}</h3>
-//           <div className="flex flex-wrap gap-2 mt-1">
-//             {question.tags &&
-//               question.tags.map((tag, idx) => (
-//                 <span
-//                   key={idx}
-//                   className="bg-[#C8ACD6]/10 text-[#C8ACD6] px-3 py-1 rounded-full text-xs font-medium border border-[#C8ACD6]/20"
-//                 >
-//                   {tag}
-//                 </span>
-//               ))}
-//           </div>
-//         </div>
-//         <button
-//           onClick={(e) => {
-//             e.stopPropagation();
-//             onDelete(question._id);
-//           }}
-//           className="ml-auto text-red-400 hover:text-red-500 transition-colors"
-//           aria-label="Delete question"
-//         >
-//           <Trash2 className="w-5 h-5" />
-//         </button>
-//       </div>
-//       <div className="mt-2 text-[#C8ACD6] text-sm line-clamp-3">
-//         {/* Strip HTML tags and show a snippet */}
-//         {question.content.replace(/<[^>]+>/g, "").slice(0, 120)}
-//       </div>
-//       {question.images && question.images.length > 0 && (
-//         <div className="flex flex-wrap gap-2 mt-2">
-//           {question.images.map((img, idx) => (
-//             <img
-//               key={idx}
-//               src={typeof img === "string" ? img : URL.createObjectURL(img)}
-//               alt={`img-${idx}`}
-//               className="w-14 h-14 object-cover rounded-lg border border-[#C8ACD6]/30"
-//             />
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// // AnswerCard Component
-// function AnswerCard({
-//   answer,
-//   onDelete,
-//   onEdit,
-//   editMode,
-//   setEditMode,
-//   editAnswer,
-//   setEditAnswer,
-//   handleAnswerUpdate,
-// }) {
-//   return (
-//     <div className="border-b border-[#433D8B]/30 pb-4">
-//       {editMode.answerId === answer._id ? (
-//         <div className="space-y-4">
-//           <TiptapEditor
-//             value={editAnswer.content}
-//             setValue={(val) => setEditAnswer((prev) => ({ ...prev, content: val }))}
-//           />
-//           <div className="flex gap-2">
-//             <button
-//               onClick={() => handleAnswerUpdate(answer._id)}
-//               className="flex items-center gap-2 px-3 py-1 bg-[#433D8B] text-white rounded-lg hover:bg-[#2E236C] transition-colors"
-//               aria-label="Save answer"
-//             >
-//               <Save className="w-4 h-4" />
-//               Save
-//             </button>
-//             <button
-//               onClick={() => setEditMode((m) => ({ ...m, answerId: null }))}
-//               className="flex items-center gap-2 px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-//               aria-label="Cancel edit answer"
-//             >
-//               <X className="w-4 h-4" />
-//               Cancel
-//             </button>
-//           </div>
-//         </div>
-//       ) : (
-//         <div className="flex justify-between items-start w-full">
-//           <div>
-//             <p className="text-sm text-[#C8ACD6] mb-2">
-//               {answer.questionId ? `On: ${answer.questionId.title}` : "Question not available"}
-//             </p>
-//             <div
-//               className="text-white prose prose-invert max-w-none"
-//               dangerouslySetInnerHTML={{ __html: answer.content }}
-//             />
-//           </div>
-//           <div className="flex items-center gap-3">
-//             <button
-//               onClick={() => onEdit(answer)}
-//               className="text-[#C8ACD6] hover:text-white transition-colors"
-//               aria-label="Edit answer"
-//             >
-//               <Edit2 className="w-4 h-4" />
-//             </button>
-//             <button
-//               onClick={() => onDelete(answer._id)}
-//               className="text-red-400 hover:text-red-500 transition-colors"
-//               aria-label="Delete answer"
-//             >
-//               <Trash2 className="w-4 h-4" />
-//             </button>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit2, Save, X, Upload, Trash2 } from "lucide-react";
+import { Edit2, Save, X, Upload, Trash2, Camera, Check } from "lucide-react";
 import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import TiptapEditor from "./QuillEditor";
 import ModifyQuestion from "./ModifyQuestion";
-import ModifyAnswer from "./ModifyAnswer";
+import ModifyAnswer from "./ModifyAnswer"; // Assuming this new component exists
 import { useUser } from "./UserContext";
+// import { SyntaxHighlighter } from 'react-syntax-highlighter';
+import ShimmerLoader from "./ShimmerLoader";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+// --- Stubs for pieces not shown ---
 function DeleteModal({ type, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70">
@@ -493,18 +21,19 @@ function DeleteModal({ type, onConfirm, onCancel }) {
           Confirm Delete
         </h3>
         <p className="text-[#C8ACD6] mb-6">
-          Are you sure you want to delete this {type}? This action cannot be undone.
+          Are you sure you want to delete this {type}? This action cannot be
+          undone.
         </p>
         <div className="flex justify-end gap-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+            className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-[#433D8B] text-white hover:bg-[#2E236C]"
+            className="px-4 py-2 rounded-lg bg-[#433D8B] text-white hover:bg-[#2E236C] transition-colors"
           >
             Delete
           </button>
@@ -519,10 +48,12 @@ export default function UpdateProfile() {
   const userId = user?.user?._id;
   const navigate = useNavigate();
 
+  // State
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState({
-    profile: false,
+    fullName: false,
+    email: false,
   });
   const [formData, setFormData] = useState({
     fullName: "",
@@ -532,19 +63,33 @@ export default function UpdateProfile() {
   });
   const [showDeleteModal, setShowDeleteModal] = useState({
     show: false,
-    type: null,
+    type: null, // 'profile', 'question', 'answer'
     id: null,
   });
   const [questionToModify, setQuestionToModify] = useState(null);
-  const [answerToModify, setAnswerToModify] = useState(null);
-
+  const [answerToModify, setAnswerToModify] = useState(null); // State for ModifyAnswer modal
   const fileInputRef = useRef(null);
 
-  // Fetch user data
+  // Effect to disable body scroll when a modal is open
+  useEffect(() => {
+    const body = document.body;
+    if (questionToModify || answerToModify) {
+      body.style.overflow = "hidden";
+    } else {
+      body.style.overflow = "auto";
+    }
+
+    // Cleanup function to restore scroll on component unmount
+    return () => {
+      body.style.overflow = "auto";
+    };
+  }, [questionToModify, answerToModify]);
+
+
+  // Fetch user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // comment this if you want, this is a frontend placeholder anyway
         const response = await axios.get(
           `${import.meta.env.VITE_SERVER}/users/get-userProfile/${userId}`,
           { withCredentials: true }
@@ -553,6 +98,7 @@ export default function UpdateProfile() {
         setFormData({
           fullName: response.data.user.fullName,
           email: response.data.user.email,
+          avatar: null, // Reset on fetch
           previewAvatar: response.data.user.avatar,
         });
         setLoading(false);
@@ -564,19 +110,56 @@ export default function UpdateProfile() {
     if (userId) fetchUserProfile();
   }, [userId]);
 
-  // Profile update handler (placeholder)
-  const handleProfileUpdate = (e) => {
+  // --- Individual Update Handlers ---
+
+  const handleFullNameUpdate = (e) => {
     e.preventDefault();
-    // TODO: call backend PATCH route
-    console.log("Profile updated!", {
-      fullName: formData.fullName,
-      email: formData.email,
-      avatar: formData.avatar,
-    });
-    setEditMode((m) => ({ ...m, profile: false }));
+    console.log("Updating full name to:", formData.fullName);
+    // TODO: Call backend PATCH route here -> userRouter.route('/update-fullName').patch(verifyJWT, editFullName);
+    // On success, update the main state to reflect change without reload
+    setUserData((prev) => ({
+      ...prev,
+      user: { ...prev.user, fullName: formData.fullName },
+    }));
+    setEditMode((prev) => ({ ...prev, fullName: false }));
   };
 
-  // Delete handler (placeholder)
+  const handleEmailUpdate = (e) => {
+    e.preventDefault();
+    console.log("Updating email to:", formData.email);
+    // TODO: Call backend PATCH route here -> userRouter.route('/update-email').patch(verifyJWT, editEmail);
+    // On success, update the main state
+    setUserData((prev) => ({
+      ...prev,
+      user: { ...prev.user, email: formData.email },
+    }));
+    setEditMode((prev) => ({ ...prev, email: false }));
+  };
+
+  const handleAvatarUpdate = () => {
+    if (!formData.avatar) return;
+    console.log("Updating avatar with file:", formData.avatar);
+    // TODO: Call backend PATCH route here -> userRouter.route("/update-avatar").patch(upload.fields([{ name: "image", maxCount: 1 }]), verifyJWT, updateAvatar);
+    // On success, update the main state
+    setUserData((prev) => ({
+      ...prev,
+      user: { ...prev.user, avatar: formData.previewAvatar },
+    }));
+    setFormData((prev) => ({ ...prev, avatar: null })); // Clear the file state
+  };
+
+  const handleRemoveAvatar = () => {
+    console.log("Request to remove avatar.");
+    // TODO: Call backend PATCH route here -> userRouter.route("/remove-avatar").patch(verifyJWT, removeAvatar);
+    const defaultAvatar = "https://via.placeholder.com/150"; // Replace with your actual default avatar URL
+    setUserData((prev) => ({
+      ...prev,
+      user: { ...prev.user, avatar: defaultAvatar },
+    }));
+    setFormData((prev) => ({ ...prev, previewAvatar: defaultAvatar }));
+  };
+
+  // --- Delete Handler ---
   const handleDelete = () => {
     console.log(`DELETE ${showDeleteModal.type} id=`, showDeleteModal.id);
     if (showDeleteModal.type === "profile") {
@@ -600,250 +183,398 @@ export default function UpdateProfile() {
     if (!userId) navigate("/signin");
   }, [userId, navigate]);
 
-  if (loading || !userData) return <div>Loading...</div>;
+  if (loading || !userData) {
+    return(
+      <>
+        <ShimmerLoader></ShimmerLoader>
+      </>
+    )
+  }
+
+  const handleCancelAvatarChange = () => {
+    // Revert the form data to its original state from userData
+    setFormData((prev) => ({
+      ...prev,
+      avatar: null, // Clear the staged file to hide the save/cancel buttons
+      previewAvatar: userData.user.avatar, // Revert to the original avatar URL
+    }));
+  };
+
+  function decodeHTMLEntities(text) {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  function renderFormattedContent(content, maxLines = 2) {
+    if (!content) return null;
+
+    let processedContent = decodeHTMLEntities(content);
+
+    // If content contains <pre><code>...</code></pre> or ``` blocks, handle code blocks
+    const codeBlockRegex =
+      /(```[\w\s]*?\n[\s\S]*?```)|(<pre><code>[\s\S]*?<\/code><\/pre>)/g;
+    const parts = processedContent.split(codeBlockRegex);
+
+    let lineCount = 0;
+    const formattedParts = parts
+      .map((part, index) => {
+        if (!part) return null;
+
+        // Markdown-style code block
+        if (part.startsWith("```") && part.endsWith("```")) {
+          const match = part.match(/```(\w+)?\n([\s\S]*?)```/);
+          if (match) {
+            const language = match[1] || "cpp";
+            const code = match[2].trim();
+            return (
+              <div key={`code-block-${index}`} className="my-2">
+                <SyntaxHighlighter
+                  language={language}
+                  style={atomDark}
+                  customStyle={{
+                    background: "#2E236C",
+                    padding: "0.5rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(67, 61, 139, 0.3)",
+                    fontSize: "0.8rem",
+                    margin: "0",
+                    maxHeight: "120px",
+                    overflow: "hidden",
+                  }}
+                  wrapLongLines={true}
+                  showLineNumbers={false}
+                  codeTagProps={{
+                    style: {
+                      fontFamily:
+                        'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                    },
+                  }}
+                >
+                  {code}
+                </SyntaxHighlighter>
+              </div>
+            );
+          }
+        }
+        // HTML-style code block
+        if (part.startsWith("<pre><code>") && part.endsWith("</code></pre>")) {
+          const codeMatch = part.match(/<pre><code>([\s\S]*?)<\/code><\/pre>/);
+          if (codeMatch) {
+            const code = codeMatch[1].trim();
+            return (
+              <div key={`code-block-${index}`} className="my-2">
+                <SyntaxHighlighter
+                  language="cpp"
+                  style={atomDark}
+                  customStyle={{
+                    background: "#2E236C",
+                    padding: "0.5rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(67, 61, 139, 0.3)",
+                    fontSize: "0.8rem",
+                    margin: "0",
+                    maxHeight: "120px",
+                    overflow: "hidden",
+                  }}
+                  wrapLongLines={true}
+                  showLineNumbers={false}
+                  codeTagProps={{
+                    style: {
+                      fontFamily:
+                        'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                    },
+                  }}
+                >
+                  {code}
+                </SyntaxHighlighter>
+              </div>
+            );
+          }
+        }
+        // For all other HTML, render as HTML (supports bold, italic, underline, headings, lists, quotes, etc.)
+        // Limit to maxLines for preview
+        const lines = part.split("\n");
+        if (lineCount >= maxLines) return null;
+        const linesToShow = lines.slice(0, maxLines - lineCount);
+        lineCount += linesToShow.length;
+        return (
+          <div
+            key={`text-block-${index}`}
+            className="prose prose-invert max-w-none
+            prose-p:text-[#C8ACD6] prose-p:my-2
+            prose-strong:text-white prose-strong:font-semibold
+            prose-em:text-[#C8ACD6] prose-em:italic
+            prose-u:underline prose-u:text-[#C8ACD6]
+            prose-blockquote:border-l-4 prose-blockquote:border-[#C8ACD6] prose-blockquote:pl-4 prose-blockquote:text-[#C8ACD6]
+            prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h1:text-white prose-h2:text-white prose-h3:text-white
+            prose-li:marker:text-[#C8ACD6] prose-code:text-[#C8ACD6] prose-code:bg-[#2E236C]/50
+            prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+            prose-pre:bg-transparent prose-pre:p-0"
+            dangerouslySetInnerHTML={{ __html: linesToShow.join("<br/>") }}
+          />
+        );
+      })
+      .filter(Boolean);
+
+    return <div className="space-y-1">{formattedParts}</div>;
+  }
 
   return (
-    <>
-      <div className="fixed top-0 w-full z-50"><Navbar /></div>
+    <div className="bg-transparent h-screen flex">
       <Sidebar />
-
-      <div className="pt-16 min-h-screen overflow-y-auto relative z-10 transition-all duration-300 mx-auto w-full lg:ml-64 lg:w-[calc(100%-16rem)]">
-        <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-
-          {/* Profile Section */}
-          <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
-            {editMode.profile ? (
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div className="flex items-center gap-4">
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
+        <header className="flex-shrink-0 z-40">
+          <Navbar />
+        </header>
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+            {/* --- Profile Section --- */}
+            <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                {/* Avatar Section */}
+                <div className="flex flex-col items-center flex-shrink-0">
                   <img
                     src={formData.previewAvatar}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-[#C8ACD6]"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-[#C8ACD6]"
                   />
-                  <div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          setFormData({
-                            ...formData,
-                            avatar: file,
-                            previewAvatar: URL.createObjectURL(file),
-                          });
-                        }
-                      }}
-                      className="hidden"
-                      accept="image/*"
-                    />
+                  <div className="flex gap-2 mt-3">
                     <button
-                      type="button"
-                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                      className="text-[#C8ACD6] hover:text-white transition-colors flex items-center gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-[#433D8B]/80 text-white rounded-lg hover:bg-[#433D8B] transition-colors"
+                      aria-label="Change Avatar"
                     >
-                      <Upload className="w-4 h-4" />
-                      Change Avatar
+                      <Camera className="w-4 h-4" />
+                      Change
+                    </button>
+                    <button
+                      onClick={handleRemoveAvatar}
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-red-600/80 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      aria-label="Remove Avatar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
                     </button>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[#C8ACD6]">Full Name</label>
                   <input
-                    type="text"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setFormData({
+                          ...formData,
+                          avatar: file,
+                          previewAvatar: URL.createObjectURL(file),
+                        });
+                      }
+                    }}
+                    className="hidden"
+                    accept="image/*"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[#C8ACD6]">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
-                  />
-                </div>
-                <div className="flex gap-4 justify-end">
-                  <button
-                    type="submit"
-                    className="bg-[#433D8B] text-white px-4 py-2 rounded-lg hover:bg-[#2E236C] transition-colors"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-                    onClick={() => setEditMode((m) => ({ ...m, profile: false }))}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={userData.user.avatar}
-                    alt={userData.user.fullName}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-[#C8ACD6]"
-                  />
-                  <div>
-                    <h3 className="text-xl text-white font-medium">{userData.user.fullName}</h3>
-                    <p className="text-[#C8ACD6]">{userData.user.email}</p>
-                  </div>
-                </div>
-                <div className="flex gap-4 mt-3">
-                  <button
-                    className="bg-[#433D8B] text-white px-4 py-2 rounded-lg hover:bg-[#2E236C] transition-colors"
-                    onClick={() => setEditMode((m) => ({ ...m, profile: true }))}
-                  >
-                    Edit Profile
-                  </button>
-                  <button
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                    onClick={() =>
-                      setShowDeleteModal({ show: true, type: "profile", id: userId })
-                    }
-                  >
-                    Delete Profile
-                  </button>
+
+                {/* Details Section */}
+                <div className="w-full space-y-4">
+                  {/* Full Name */}
+                  {editMode.fullName ? (
+                    <form onSubmit={handleFullNameUpdate} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
+                        autoFocus
+                      />
+                      <button type="submit" className="p-2 text-green-400 hover:text-white"><Save className="w-5 h-5" /></button>
+                      <button type="button" onClick={() => setEditMode(m => ({ ...m, fullName: false }))} className="p-2 text-red-400 hover:text-white"><X className="w-5 h-5" /></button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl text-white font-medium">{userData.user.fullName}</h3>
+                      <button onClick={() => setEditMode(m => ({ ...m, fullName: true, email: false }))} className="text-[#C8ACD6] hover:text-white"><Edit2 className="w-4 h-4" /></button>
+                    </div>
+                  )}
+
+                  {/* Email */}
+                  {editMode.email ? (
+                    <form onSubmit={handleEmailUpdate} className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
+                        autoFocus
+                      />
+                      <button type="submit" className="p-2 text-green-400 hover:text-white"><Save className="w-5 h-5" /></button>
+                      <button type="button" onClick={() => setEditMode(m => ({ ...m, email: false }))} className="p-2 text-red-400 hover:text-white"><X className="w-5 h-5" /></button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <p className="text-[#C8ACD6]">{userData.user.email}</p>
+                      <button onClick={() => setEditMode(m => ({ ...m, email: true, fullName: false }))} className="text-[#C8ACD6] hover:text-white"><Edit2 className="w-4 h-4" /></button>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Questions Section */}
-          <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
-            <h2 className="text-2xl font-bold text-white mb-6">Your Questions</h2>
-            <div className="space-y-4">
-              {userData.questions?.map((question) => (
-                <div key={question._id}>
-                  <div
-                    className="bg-[#2E236C]/40 border border-[#433D8B]/30 rounded-xl p-4 flex flex-col gap-3 shadow-md transition-all duration-300 hover:shadow-lg w-full cursor-pointer hover:bg-[#433D8B]/10"
-                    onClick={() => setQuestionToModify(question)}
+              {/* Save Avatar Button - shown only when a new avatar is staged
+              {formData.avatar && (
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={handleAvatarUpdate}
+                    className="bg-[#433D8B] text-white px-4 py-2 rounded-lg hover:bg-[#2E236C] transition-colors flex items-center gap-2"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex flex-col gap-1">
-                        <h3 className="text-lg text-white font-semibold line-clamp-2">{question.title}</h3>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {question.tags?.map((tag, idx) => (
-                            <span key={idx} className="bg-[#C8ACD6]/10 text-[#C8ACD6] px-3 py-1 rounded-full text-xs font-medium border border-[#C8ACD6]/20">{tag}</span>
-                          ))}
-                        </div>
-                      </div>
+                    <Check className="w-5 h-5" />
+                    Save Avatar
+                  </button>
+                </div>
+              )} */}
+              {/* Save/Cancel Avatar Buttons - shown only when a new avatar is staged */}
+              {formData.avatar && (
+                <div className="flex justify-end items-center gap-4 mt-4">
+                  {/* Cancel Button */}
+                  <button
+                    onClick={handleCancelAvatarChange}
+                    className="bg-gray-600/80 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                  >
+                    <X className="w-5 h-5" />
+                    Cancel
+                  </button>
+                  {/* Save Button */}
+                  <button
+                    onClick={handleAvatarUpdate}
+                    className="bg-[#433D8B] text-white px-4 py-2 rounded-lg hover:bg-[#2E236C] transition-colors flex items-center gap-2"
+                  >
+                    <Check className="w-5 h-5" />
+                    Save Avatar
+                  </button>
+                </div>
+              )}
+              {/* Delete Profile Button */}
+              <div className="border-t border-[#433D8B]/30 mt-6 pt-4 flex justify-end">
+                <button
+                  onClick={() => setShowDeleteModal({ show: true, type: "profile", id: userId })}
+                  className="bg-red-600/80 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+
+            {/* Questions Section */}
+            <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
+              <h2 className="text-2xl font-bold text-white mb-6">Your Questions</h2>
+              <div className="space-y-4">
+                {userData.questions?.map((question) => (
+                  <div
+                    key={question._id}
+                    className="bg-[#2E236C]/40 border border-[#433D8B]/30 rounded-xl p-4 flex justify-between items-center shadow-md transition-all duration-300 hover:shadow-lg w-full hover:bg-[#433D8B]/10"
+                  >
+                    <div className="flex-grow">
+                      <h3 className="text-lg text-white font-semibold line-clamp-2">{question.title}</h3>
+                      <p className="mt-2 text-[#C8ACD6] text-sm line-clamp-3">{renderFormattedContent(question.content, 2)}</p>
+                    </div>
+                    <div className="flex items-center gap-4 ml-4 flex-shrink-0">
                       <button
-                        onClick={e => {
+                        onClick={() => setQuestionToModify(question)}
+                        className="text-[#C8ACD6] hover:text-white transition-colors"
+                        aria-label="Edit question"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
                           e.stopPropagation();
                           setShowDeleteModal({ show: true, type: "question", id: question._id });
                         }}
-                        className="ml-auto text-red-400 hover:text-red-500 transition-colors"
+                        className="text-red-400 hover:text-red-500 transition-colors"
+                        aria-label="Delete question"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="mt-2 text-[#C8ACD6] text-sm line-clamp-3">
-                      {question.content.replace(/<[^>]+>/g, '').slice(0, 120)}
-                    </div>
-                    {question.images && question.images.length > 0 &&
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {question.images.map((img, idx) => (
-                          <img
-                            key={idx}
-                            src={typeof img === "string" ? img : URL.createObjectURL(img)}
-                            alt={`img-${idx}`}
-                            className="w-14 h-14 object-cover rounded-lg border border-[#C8ACD6]/30"
-                          />
-                        ))}
-                      </div>
-                    }
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Answers Section */}
-          <div className="bg-[#2E236C]/20 rounded-xl p-6 border-2 border-[#C8ACD6]/30">
-            <h2 className="text-2xl font-bold text-white mb-6">Your Answers</h2>
-            <div className="space-y-4">
-              {userData.answers?.map((answer) => (
-                <div key={answer._id}>
-                  <div className="flex justify-between border-b border-[#433D8B]/30 pb-4">
-                    <div>
-                      <p className="text-sm text-[#C8ACD6] mb-2">
-                        {answer.questionId ? `On: ${answer.questionId.title}` : "Question not available"}
-                      </p>
+            {/* Answers Section */}
+            <div className="bg-[#2E236C]/20 rounded-xl p-6 border-2 border-[#C8ACD6]/30">
+              <h2 className="text-2xl font-bold text-white mb-6">Your Answers</h2>
+              <div className="space-y-4">
+                {userData.answers?.map((answer) => (
+                  <div
+                    key={answer._id}
+                    className="bg-[#2E236C]/40 border border-[#433D8B]/30 rounded-xl p-4 flex justify-between items-center shadow-md transition-all duration-300 hover:shadow-lg w-full hover:bg-[#433D8B]/10"
+                  >
+                    <div className="flex-grow">
+                      <h3 className="text-lg text-white font-semibold line-clamp-2">
+                        {answer.questionId
+                          ? `On: ${answer.questionId.title}`
+                          : "On: Question not available"}
+                      </h3>
                       <div
-                        className="text-white prose prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: answer.content }}
+                        className="mt-2 text-[#C8ACD6] text-sm line-clamp-3 prose prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{
+                          __html: answer.content.slice(0, 120),
+                        }}
                       />
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4 ml-4 flex-shrink-0">
                       <button
                         onClick={() => setAnswerToModify(answer)}
                         className="text-[#C8ACD6] hover:text-white transition-colors"
                         aria-label="Edit answer"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => setShowDeleteModal({ show: true, type: "answer", id: answer._id })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteModal({
+                            show: true,
+                            type: "answer",
+                            id: answer._id,
+                          });
+                        }}
                         className="text-red-400 hover:text-red-500 transition-colors"
                         aria-label="Delete answer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </main>
+        {/* --- Modals --- */}
+        {showDeleteModal.show && (
+          <DeleteModal
+            type={showDeleteModal.type}
+            onConfirm={handleDelete}
+            onCancel={() => setShowDeleteModal({ show: false, type: null, id: null })}
+          />
+        )}
+
+        {questionToModify && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
+              <ModifyQuestion question={questionToModify} onClose={() => setQuestionToModify(null)} />
+            </div>
+          </div>
+        )}
+
+        {answerToModify && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
+              <ModifyAnswer answer={answerToModify} onClose={() => setAnswerToModify(null)} />
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal.show && (
-        <DeleteModal
-          type={showDeleteModal.type}
-          onConfirm={handleDelete}
-          onCancel={() => setShowDeleteModal({ show: false, type: null, id: null })}
-        />
-      )}
-
-      {/* Modify Question Modal */}
-      {questionToModify && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
-            <button
-              onClick={() => setQuestionToModify(null)}
-              className="absolute top-4 right-4 z-10 text-white bg-[#433D8B] rounded-full p-2 hover:bg-[#2E236C] transition-colors"
-              aria-label="Close modify question"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <ModifyQuestion question={questionToModify} onClose={() => setQuestionToModify(null)} />
-          </div>
-        </div>
-      )}
-
-      {/* Modify Answer Modal */}
-      {answerToModify && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="w-full max-w-2xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] max-h-[90vh] flex flex-col overflow-hidden">
-            <button
-              onClick={() => setAnswerToModify(null)}
-              className="absolute top-4 right-4 z-10 text-white bg-[#433D8B] rounded-full p-2 hover:bg-[#2E236C] transition-colors"
-              aria-label="Close modify answer"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <ModifyAnswer answer={answerToModify} onClose={() => setAnswerToModify(null)} />
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }
