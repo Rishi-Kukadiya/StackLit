@@ -1,5 +1,4 @@
 import mongoose from "mongoose"
-import { User } from "./user.model.js";
 const questionSchema = new mongoose.Schema({
     title: {
         type: String,
@@ -16,7 +15,7 @@ const questionSchema = new mongoose.Schema({
     },
     images: [
         {
-        type: String
+            type: String
         }
     ],
     answeredBy: [
@@ -31,7 +30,7 @@ const questionSchema = new mongoose.Schema({
     ],
     views: {
         type: Number,
-        default : 0
+        default: 0
     }
 }, { timestamps: true });
 

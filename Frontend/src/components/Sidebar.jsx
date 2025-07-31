@@ -15,6 +15,7 @@ import {
 import { Link } from "react-router-dom";
 import { useUser } from "./UserContext";
 import { Bell, LogOut, ImageUp } from "lucide-react";
+import Chatbot from "./Chatbot.jsx";
 
 const sidebarOptions = [
   { label: "Home", icon: <Home />, to: "/" },

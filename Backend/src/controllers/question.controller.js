@@ -6,6 +6,12 @@ import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudina
 import { Answer } from "../models/answer.model.js";
 import { User } from "../models/user.model.js";
 import { Like } from "../models/like.model.js";
+import { Tag } from "../models/tag.model.js";
+
+import dotenv from "dotenv";
+import { createTag } from "./tag,controlller.js";
+dotenv.config();
+
 
 
 const postQuestion = asyncHandler(async (req, res) => {
@@ -38,6 +44,8 @@ const postQuestion = asyncHandler(async (req, res) => {
 
         const parsedTags = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
+
+
         const question = await Question.create({
             title,
             content,
@@ -50,6 +58,18 @@ const postQuestion = asyncHandler(async (req, res) => {
             return res.json(new ApiError(500, "Error while posting question"));
         }
 
+        for (const t of parsedTags) {
+            const tagName = t.toLowerCase().trim();
+            const existingTag = await Tag.findOne({ tag: tagName });
+            if (existingTag) {
+                if (!existingTag.questions.includes(question._id)) {
+                    existingTag.questions.push(question._id);
+                    await existingTag.save();
+                }
+            } else {
+                createTag(question._id, tagName);
+            }
+        }
         return res.json(
             new ApiResponse(201, question, "Question posted successfully")
         );
@@ -161,6 +181,8 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
 
 
 
+
+
 const deleteQuestion = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
 
@@ -169,6 +191,7 @@ const deleteQuestion = asyncHandler(async (req, res) => {
     }
 
     const question = await Question.findById(questionId);
+
     if (!question) {
         return res.json(new ApiError(404, "Question not found"));
     }
@@ -202,6 +225,22 @@ const deleteQuestion = asyncHandler(async (req, res) => {
 
     await Like.deleteMany({ target: questionId, targetType: "Question" });
 
+    const tags = question.tags;
+
+    for (const tag of tags) {
+        const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
+
+        if (!t) continue;
+
+        if (t.questions.length === 1) {
+            await Tag.deleteOne({ _id: t._id });
+        } else {
+            t.questions = t.questions.filter(
+                (qId) => qId.toString() !== question._id.toString()
+            );
+            await t.save();
+        }
+    }
 
     if (answerIds.length > 0) {
         await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } });
@@ -270,6 +309,18 @@ const addTag = asyncHandler(async (req, res) => {
         if (question.owner.toString() !== req.user._id.toString()) {
             return res.json(new ApiError(403, "Unauthorized to edit this question."));
         }
+
+
+        const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
+        if (t) {
+            t.questions.push(question._id);
+            await t.save();
+        } else {
+            
+        }
+
+
+
 
         if (!question.tags.includes(tag)) {
             question.tags.push(tag.trim());
