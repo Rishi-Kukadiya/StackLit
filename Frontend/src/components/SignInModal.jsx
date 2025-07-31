@@ -1,5 +1,5 @@
-import { X, Mail, Lock ,Eye,
-  EyeOff,} from "lucide-react";
+import { X, Mail, Lock, Eye, EyeOff } from "lucide-react";
+
 import Navbar from "./Navbar";
 import ErrorPopup from "./ErrorPopup";
 import { Link } from "react-router-dom";
@@ -11,10 +11,9 @@ import SuccessPopup from "./SuccessPopup";
 import ShimmerLoader from "./ShimmerLoader";
 export default function SignInModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
-
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -24,24 +23,23 @@ export default function SignInModal({ isOpen, onClose }) {
   const [successMessage, setSuccessMessage] = useState("");
   const { login } = useUser();
 
-
   if (!isOpen) return null;
 
   const validateField = (name, value) => {
-    let error = '';
+    let error = "";
     switch (name) {
-      case 'email':
+      case "email":
         if (!value) {
-          error = 'Email is required';
+          error = "Email is required";
         } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
-          error = 'Invalid email address';
+          error = "Invalid email address";
         }
         break;
-      case 'password':
+      case "password":
         if (!value) {
-          error = 'Password is required';
+          error = "Password is required";
         } else if (value.length < 6) {
-          error = 'Password must be at least 6 characters';
+          error = "Password must be at least 6 characters";
         }
         break;
       default:
@@ -52,29 +50,31 @@ export default function SignInModal({ isOpen, onClose }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-    setFormData(prev => ({ ...prev, [name]: newValue }));
+    const newValue = type === "checkbox" ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
     const error = validateField(name, newValue);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
     const error = validateField(name, formData[name]);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
-    Object.keys(formData).forEach(key => {
-      if (key === 'remember') return;
+    Object.keys(formData).forEach((key) => {
+      if (key === "remember") return;
       const error = validateField(key, formData[key]);
       if (error) newErrors[key] = error;
     });
     setErrors(newErrors);
-    setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+    setTouched(
+      Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
+    );
 
     if (Object.keys(newErrors).length === 0) {
       setLoading(true);
@@ -90,7 +90,7 @@ export default function SignInModal({ isOpen, onClose }) {
           data,
           {
             headers: { "Content-Type": "application/json" },
-            withCredentials: true
+            withCredentials: true,
           }
         );
 
@@ -105,9 +105,9 @@ export default function SignInModal({ isOpen, onClose }) {
         if (res.data.data) {
           login(res.data.data);
         }
-          setFormData({
+        setFormData({
           email: "",
-          password: ""
+          password: "",
         });
         setSuccessMessage(res.data.message || "SignIn successful!");
         setTimeout(() => {
@@ -143,10 +143,15 @@ export default function SignInModal({ isOpen, onClose }) {
             <X size={20} className="sm:w-6 sm:h-6" />
           </button>
 
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white text-center">Sign In</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white text-center">
+            Sign In
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
-              <label htmlFor="email" className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base">
+              <label
+                htmlFor="email"
+                className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base"
+              >
                 Email
               </label>
               <div className="relative">
@@ -157,7 +162,9 @@ export default function SignInModal({ isOpen, onClose }) {
                   value={formData.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={"w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border focus:outline-none focus:border-[#C8ACD6]"}
+                  className={
+                    "w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border focus:outline-none focus:border-[#C8ACD6]"
+                  }
                   placeholder="Enter your email"
                 />
                 <Mail className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
@@ -165,7 +172,10 @@ export default function SignInModal({ isOpen, onClose }) {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base">
+              <label
+                htmlFor="password"
+                className="block text-[#C8ACD6] mb-1.5 sm:mb-2 text-sm sm:text-base"
+              >
                 Password
               </label>
               <div className="relative">
@@ -176,25 +186,32 @@ export default function SignInModal({ isOpen, onClose }) {
                   value={formData.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={"w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"}
+                  className={
+                    "w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg bg-[#17153B] text-white border  focus:outline-none focus:border-[#C8ACD6]"
+                  }
                   placeholder="Enter your password"
                 />
                 <Lock className="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-[#C8ACD6]" />
                 <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 sm:right-3 top-2 sm:top-2.5 text-[#C8ACD6] hover:text-white transition-colors">
-                    {showPassword ? 
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5" /> : 
-                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
-                    }
-                  </button>
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 sm:right-3 top-2 sm:top-2.5 text-[#C8ACD6] hover:text-white transition-colors"
+                >
+                  {showPassword ? (
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
               <Link to="/forgot-password">
-                <button type="button" className="text-[#C8ACD6] hover:text-white text-sm sm:text-base">
+                <button
+                  type="button"
+                  className="text-[#C8ACD6] hover:text-white text-sm sm:text-base"
+                >
                   Forgot password?
                 </button>
               </Link>
