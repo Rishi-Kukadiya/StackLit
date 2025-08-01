@@ -29,6 +29,7 @@ export function QuestionProvider({ children }) {
           withCredentials: true,
         }
       );
+      console.log(response);
 
       if (response.data.success) {
         const newQuestions = response?.data?.data;

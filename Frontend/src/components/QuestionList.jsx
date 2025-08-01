@@ -5,7 +5,7 @@ export default function QuestionList({ questions }) {
   return (
     <div className="space-y-4">
       {questions.map((question , index) => (
-        <QuestionCard key={index} question={question} />
+        <QuestionCard key={question._id} question={question} />
       ))}
     </div>
   );
