@@ -23,7 +23,7 @@ const getTags = asyncHandler(async (req, res) => {
         const tags = await Tag.find({})
             .skip(skip)
             .limit(limit)
-            .select('tag description questions')
+            .select('tag description questions _id')
             .lean();
 
         if (!tags) {
@@ -32,6 +32,7 @@ const getTags = asyncHandler(async (req, res) => {
             )
         }
         const formattedTags = tags.map(tag => ({
+            _id:tag._id,
             tagName: tag.tag,
             description: tag.description,
             totalQuestionsAsked: tag.questions.length
