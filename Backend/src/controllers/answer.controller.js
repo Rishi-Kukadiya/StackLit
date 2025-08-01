@@ -1,4 +1,3 @@
-
 // import { asyncHandler } from "../utils/asyncHandler.js";
 // import { ApiError } from "../utils/ApiError.js";
 // import { ApiResponse } from "../utils/ApiResponse.js";
@@ -205,6 +204,7 @@ const postAnswer = asyncHandler(async (req, res) => {
                             ...notification.toObject(),
                             sender: { _id: req.user._id, fullName: req.user.fullName }
                         });
+                        console.log("Emitted notification to previous answerer:", userId.toString(), receiverSocketId);
                     }
                 }
             }

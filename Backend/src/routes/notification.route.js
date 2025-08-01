@@ -3,9 +3,9 @@ import express from "express";
 import { getNotifications, markAsRead } from "../controllers/notification.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router = express.Router();
+const notificationRouter = express.Router();
 
-router.get("/", verifyJWT, getNotifications);
-router.post("/mark-as-read", verifyJWT, markAsRead);
+notificationRouter.get("/", verifyJWT, getNotifications);
+notificationRouter.post("/mark-as-read", verifyJWT, markAsRead);
 
-export default router;
+export default notificationRouter;

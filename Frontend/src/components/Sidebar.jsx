@@ -12,10 +12,10 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useUser } from "./UserContext";
 import { Bell, LogOut, ImageUp } from "lucide-react";
-import Chatbot from "./Chatbot.jsx";
+import NotificationBell from "./Notification.jsx";
 
 const sidebarOptions = [
   { label: "Home", icon: <Home />, to: "/" },
@@ -28,6 +28,7 @@ const sidebarOptions = [
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const { user, logout } = useUser();
   return (
@@ -95,16 +96,20 @@ export default function Sidebar() {
             </>
           ) : (
             <>
-              <button
+              {/* <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
-                onClick={() => alert("Notifications (coming soon)")}
+                onClick={() => navigate("/notification")}
               >
                 <span className="w-5 h-5 flex items-center justify-center">
                   <Bell />
                 </span>
                 Notifications
-              </button>
+              </button> */}
+              <div className="flex items-center gap-3 py-3 px-3 w-full">
+                <NotificationBell /> {/* <-- Use your dropdown bell here */}
+              </div>
+
               {/* <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"

@@ -1,27 +1,24 @@
-
-export const setupSocket = (io, app) => {
+// [CHANGED BY GITHUB COPILOT]
+// Basic socket setup with logging and user tracking
+// filepath: e:\MERN-projects\stacklt\StackLit\Backend\src\socket.js
+export function setupSocket(io, app) {
+    // Store connected users: userId -> socketId
     const connectedUsers = new Map();
     app.set("connectedUsers", connectedUsers);
 
     io.on("connection", (socket) => {
-        console.log("🔌 User connected:", socket.id);
-
-        // Join room based on userId
-        socket.on("join", (userId) => {
-            socket.join(userId);
+        // You must send userId from frontend when connecting!
+        const userId = socket.handshake.auth?.userId;
+        if (userId) {
             connectedUsers.set(userId, socket.id);
-            console.log(`User ${userId} joined room ${userId}`);
-        });
+            console.log("User connected:", userId, socket.id);
+        }
 
-        // Remove user from map on disconnect
         socket.on("disconnect", () => {
-            for (const [userId, sId] of connectedUsers.entries()) {
-                if (sId === socket.id) {
-                    connectedUsers.delete(userId);
-                    break;
-                }
+            if (userId) {
+                connectedUsers.delete(userId);
+                console.log("User disconnected:", userId);
             }
-            console.log("User disconnected", socket.id);
         });
     });
-};
+}

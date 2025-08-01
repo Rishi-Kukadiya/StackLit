@@ -11,10 +11,11 @@ import { setupSocket } from "./socket.js"
 const server = createServer(app)
 const io = new Server(server, {
     cors: {
-        origin: "*", 
-        methods: ["GET", "POST"]
+        origin: process.env.CORS_ORIGIN,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true 
     }
-})
+});
 setupSocket(io, app)
 app.set("io", io)
 

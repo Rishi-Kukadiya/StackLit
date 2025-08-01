@@ -7,7 +7,7 @@ dotenv.config();
 
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN ,
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -36,7 +36,8 @@ app.use("/api/v1/tags",tagRouter)
 import chatRouter from "./src/routes/chatBot.routes.js";
 app.use("/api/v1", chatRouter);
 
-app.use()
+import notificationRouter from "./src/routes/notification.route.js";
+app.use("/api/v1/notifications",notificationRouter)
 
 
 

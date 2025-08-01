@@ -34,6 +34,7 @@
     "react-syntax-highlighter": "^15.6.1",
     "react-tsparticles": "^2.12.2",
     "remark-gfm": "^4.0.1",
+    "socket.io-client": "^4.8.1",
     "three": "^0.178.0",
     "tsparticles": "^3.8.1",
     "tsparticles-engine": "^2.12.0"

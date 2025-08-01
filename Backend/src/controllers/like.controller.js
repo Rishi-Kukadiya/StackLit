@@ -69,16 +69,20 @@ const likeOrDislike = asyncHandler(async (req, res) => {
                 question: targetId
             });
 
+            // Populate notification for real-time payload
+            const populatedNotification = await Notification.findById(notification._id)
+                .populate("sender", "fullName avatar")
+                .populate("question", "title")
+                .lean();
+
             // Emit real-time notification via socket.io
             const io = req.app.get("io");
             const connectedUsers = req.app.get("connectedUsers");
             if (io && connectedUsers) {
                 const receiverSocketId = connectedUsers.get(target.owner.toString());
                 if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("new_notification", {
-                        ...notification.toObject(),
-                        sender: { _id: req.user._id, fullName: req.user.fullName }
-                    });
+                    io.to(receiverSocketId).emit("new_notification", populatedNotification);
+                    console.log("Emitting notification to", receiverSocketId);
                 }
             }
         }
