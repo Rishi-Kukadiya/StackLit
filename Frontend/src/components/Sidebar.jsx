@@ -116,7 +116,7 @@ export default function Sidebar() {
                 Update Profile
               </button> */}
               <Link
-                to="/UpdateProfile"
+                to="/update-profile"
                 className="flex items-center gap-3 py-3 px-3 rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
               >
                 <span className="w-5 h-5 flex items-center justify-center">
