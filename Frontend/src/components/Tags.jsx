@@ -70,7 +70,9 @@ export default function Tags() {
           )}`,
           { credentials: "include" }
         );
+        // console.log(repon)
         const data = await response.json();
+        console.log(data);
         const { tags: fetchedTags = [], totalTags: total = 0 } = data.data;
 
         if (pageNumber === 1) {
