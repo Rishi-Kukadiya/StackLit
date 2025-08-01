@@ -27,7 +27,7 @@ userRouter.route("forget-password").post(checkOtpVerified, forgetPassword);
 userRouter.route("/get-users").get(getUsers);
 userRouter.route("/update-avatar").patch(upload.fields([
     {
-        name: "image",
+        name: "avatar",
         maxCount: 1
     }
 ]), verifyJWT, updateAvatar);

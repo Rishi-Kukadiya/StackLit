@@ -7,10 +7,13 @@ import Sidebar from "./Sidebar";
 import ModifyQuestion from "./ModifyQuestion";
 import ModifyAnswer from "./ModifyAnswer"; // Assuming this new component exists
 import { useUser } from "./UserContext";
-// import { SyntaxHighlighter } from 'react-syntax-highlighter';
+import Avtart from "../assets/avtart.jpg";
 import ShimmerLoader from "./ShimmerLoader";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import ErrorPopup from "./ErrorPopup";
+import SuccessPopup from "./SuccessPopup";
+import { useQuestions } from "../contexts/QuestionContext";
 
 // --- Stubs for pieces not shown ---
 function DeleteModal({ type, onConfirm, onCancel }) {
@@ -44,13 +47,16 @@ function DeleteModal({ type, onConfirm, onCancel }) {
 }
 
 export default function UpdateProfile() {
-  const { user } = useUser();
+  const { user, updateUser , setUser } = useUser();
   const userId = user?.user?._id;
+  const { clearQuestions, setRefresh } = useQuestions();
   const navigate = useNavigate();
 
   // State
   const [userData, setUserData] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState(null);
   const [editMode, setEditMode] = useState({
     fullName: false,
     email: false,
@@ -85,7 +91,6 @@ export default function UpdateProfile() {
     };
   }, [questionToModify, answerToModify]);
 
-
   // Fetch user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -99,11 +104,11 @@ export default function UpdateProfile() {
           fullName: response.data.user.fullName,
           email: response.data.user.email,
           avatar: null, // Reset on fetch
-          previewAvatar: response.data.user.avatar,
+          previewAvatar: response.data.user.avatar || Avtart,
         });
         setLoading(false);
       } catch (err) {
-        console.error(err);
+        setError(err);
         setLoading(false);
       }
     };
@@ -112,11 +117,34 @@ export default function UpdateProfile() {
 
   // --- Individual Update Handlers ---
 
-  const handleFullNameUpdate = (e) => {
+  const handleFullNameUpdate = async (e) => {
     e.preventDefault();
-    console.log("Updating full name to:", formData.fullName);
-    // TODO: Call backend PATCH route here -> userRouter.route('/update-fullName').patch(verifyJWT, editFullName);
-    // On success, update the main state to reflect change without reload
+    if (formData.fullName == "" || formData.fullName.length == 0) {
+      setError("Valid FullName is Required!!");
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await axios.patch(
+        `${import.meta.env.VITE_SERVER}/users/update-fullName`,
+        { fullName: formData.fullName },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Something Went Wrong!!");
+      } else {
+        setSuccess(response.data.message || "FullName Updated Succesfully !!");
+      }
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+
     setUserData((prev) => ({
       ...prev,
       user: { ...prev.user, fullName: formData.fullName },
@@ -124,11 +152,36 @@ export default function UpdateProfile() {
     setEditMode((prev) => ({ ...prev, fullName: false }));
   };
 
-  const handleEmailUpdate = (e) => {
+  const handleEmailUpdate = async (e) => {
     e.preventDefault();
-    console.log("Updating email to:", formData.email);
-    // TODO: Call backend PATCH route here -> userRouter.route('/update-email').patch(verifyJWT, editEmail);
-    // On success, update the main state
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("Valid Email is Required!!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.patch(
+        `${import.meta.env.VITE_SERVER}/users/update-email`,
+        { email: formData.email },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Something Went Wrong!!");
+      } else {
+        setSuccess(response.data.message || "Email Updated Succesfully !!");
+      }
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+
     setUserData((prev) => ({
       ...prev,
       user: { ...prev.user, email: formData.email },
@@ -136,11 +189,40 @@ export default function UpdateProfile() {
     setEditMode((prev) => ({ ...prev, email: false }));
   };
 
-  const handleAvatarUpdate = () => {
+  const handleAvatarUpdate = async () => {
     if (!formData.avatar) return;
-    console.log("Updating avatar with file:", formData.avatar);
-    // TODO: Call backend PATCH route here -> userRouter.route("/update-avatar").patch(upload.fields([{ name: "image", maxCount: 1 }]), verifyJWT, updateAvatar);
-    // On success, update the main state
+    const data = new FormData();
+    data.append("avatar", formData.avatar);
+    try {
+      setLoading(true);
+      const response = await axios.patch(
+        `${import.meta.env.VITE_SERVER}/users/update-avatar`,
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Something Went Wrong!!");
+      } else {
+        setSuccess(response.data.message || "Profile Updated Succesfully !!");
+        const updateUsers = {
+          ...user,
+          user: {
+            ...user.user,
+            avatar: response.data.data.avatar || Avtart,
+          },
+        };
+        updateUser(updateUsers);
+      }
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+
     setUserData((prev) => ({
       ...prev,
       user: { ...prev.user, avatar: formData.previewAvatar },
@@ -148,10 +230,42 @@ export default function UpdateProfile() {
     setFormData((prev) => ({ ...prev, avatar: null })); // Clear the file state
   };
 
-  const handleRemoveAvatar = () => {
-    console.log("Request to remove avatar.");
-    // TODO: Call backend PATCH route here -> userRouter.route("/remove-avatar").patch(verifyJWT, removeAvatar);
-    const defaultAvatar = "https://via.placeholder.com/150"; // Replace with your actual default avatar URL
+  const handleRemoveAvatar = async () => {
+    if (user.user.avatar == Avtart) {
+      setError("No profile is there!!");
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await axios.patch(
+        `${import.meta.env.VITE_SERVER}/users/remove-avatar`,
+        {},
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Something Went Wrong!!");
+      } else {
+        setSuccess(response.data.message || "Profile Removed Succesfully !!");
+        const updateUsers = {
+          ...user,
+          user: {
+            ...user.user,
+            avatar: Avtart,
+          },
+        };
+        updateUser(updateUsers);
+      }
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+
+    const defaultAvatar = Avtart; // Replace with your actual default avatar URL
     setUserData((prev) => ({
       ...prev,
       user: { ...prev.user, avatar: defaultAvatar },
@@ -160,35 +274,60 @@ export default function UpdateProfile() {
   };
 
   // --- Delete Handler ---
-  const handleDelete = () => {
+  const handleDelete = async () => {
     console.log(`DELETE ${showDeleteModal.type} id=`, showDeleteModal.id);
     if (showDeleteModal.type === "profile") {
-      setUserData(null);
-      navigate("/");
-    } else if (showDeleteModal.type === "question") {
-      setUserData((prev) => ({
-        ...prev,
-        questions: prev.questions.filter((q) => q._id !== showDeleteModal.id),
-      }));
-    } else if (showDeleteModal.type === "answer") {
-      setUserData((prev) => ({
-        ...prev,
-        answers: prev.answers.filter((a) => a._id !== showDeleteModal.id),
-      }));
-    }
-    setShowDeleteModal({ show: false, type: null, id: null });
-  };
+      setLoading(true);
+      try {
+        const response = await axios.delete(
+          `${import.meta.env.VITE_SERVER}/users/delete-userProfile`,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
 
+        if (response.data.statusCode != 200) {
+          setError(response.data.message || "Something Went Wrong!!");
+        } else {
+          setSuccess(response.data.message || "Account Deleted Succesfully !!");
+          setUserData(null);
+          navigate("/");
+          clearQuestions();
+          setRefresh((prev) => !prev);
+          sessionStorage.removeItem("user");
+          setUser(null);
+        }
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+      // } else if (showDeleteModal.type === "question") {
+      //   setUserData((prev) => ({
+      //     ...prev,
+      //     questions: prev.questions.filter((q) => q._id !== showDeleteModal.id),
+      //   }));
+      // } else if (showDeleteModal.type === "answer") {
+      //   setUserData((prev) => ({
+      //     ...prev,
+      //     answers: prev.answers.filter((a) => a._id !== showDeleteModal.id),
+      //   }));
+      // }
+
+      setShowDeleteModal({ show: false, type: null, id: null });
+    }
+  };
   useEffect(() => {
     if (!userId) navigate("/signin");
   }, [userId, navigate]);
 
   if (loading || !userData) {
-    return(
+    return (
       <>
         <ShimmerLoader></ShimmerLoader>
       </>
-    )
+    );
   }
 
   const handleCancelAvatarChange = () => {
@@ -379,41 +518,104 @@ export default function UpdateProfile() {
                 <div className="w-full space-y-4">
                   {/* Full Name */}
                   {editMode.fullName ? (
-                    <form onSubmit={handleFullNameUpdate} className="flex items-center gap-2">
+                    <form
+                      onSubmit={handleFullNameUpdate}
+                      className="flex items-center gap-2"
+                    >
                       <input
                         type="text"
                         value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            fullName: e.target.value,
+                          })
+                        }
                         className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
                         autoFocus
                       />
-                      <button type="submit" className="p-2 text-green-400 hover:text-white"><Save className="w-5 h-5" /></button>
-                      <button type="button" onClick={() => setEditMode(m => ({ ...m, fullName: false }))} className="p-2 text-red-400 hover:text-white"><X className="w-5 h-5" /></button>
+                      <button
+                        type="submit"
+                        className="p-2 text-green-400 hover:text-white"
+                      >
+                        <Save className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditMode((m) => ({ ...m, fullName: false }))
+                        }
+                        className="p-2 text-red-400 hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
                     </form>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl text-white font-medium">{userData.user.fullName}</h3>
-                      <button onClick={() => setEditMode(m => ({ ...m, fullName: true, email: false }))} className="text-[#C8ACD6] hover:text-white"><Edit2 className="w-4 h-4" /></button>
+                      <h3 className="text-xl text-white font-medium">
+                        {userData.user.fullName}
+                      </h3>
+                      <button
+                        onClick={() =>
+                          setEditMode((m) => ({
+                            ...m,
+                            fullName: true,
+                            email: false,
+                          }))
+                        }
+                        className="text-[#C8ACD6] hover:text-white"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
 
                   {/* Email */}
                   {editMode.email ? (
-                    <form onSubmit={handleEmailUpdate} className="flex items-center gap-2">
+                    <form
+                      onSubmit={handleEmailUpdate}
+                      className="flex items-center gap-2"
+                    >
                       <input
-                        type="email"
+                        type="text"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                         className="w-full bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg p-2 text-white"
                         autoFocus
                       />
-                      <button type="submit" className="p-2 text-green-400 hover:text-white"><Save className="w-5 h-5" /></button>
-                      <button type="button" onClick={() => setEditMode(m => ({ ...m, email: false }))} className="p-2 text-red-400 hover:text-white"><X className="w-5 h-5" /></button>
+                      <button
+                        type="submit"
+                        className="p-2 text-green-400 hover:text-white"
+                      >
+                        <Save className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditMode((m) => ({ ...m, email: false }))
+                        }
+                        className="p-2 text-red-400 hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
                     </form>
                   ) : (
                     <div className="flex items-center justify-between">
                       <p className="text-[#C8ACD6]">{userData.user.email}</p>
-                      <button onClick={() => setEditMode(m => ({ ...m, email: true, fullName: false }))} className="text-[#C8ACD6] hover:text-white"><Edit2 className="w-4 h-4" /></button>
+                      <button
+                        onClick={() =>
+                          setEditMode((m) => ({
+                            ...m,
+                            email: true,
+                            fullName: false,
+                          }))
+                        }
+                        className="text-[#C8ACD6] hover:text-white"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -454,7 +656,13 @@ export default function UpdateProfile() {
               {/* Delete Profile Button */}
               <div className="border-t border-[#433D8B]/30 mt-6 pt-4 flex justify-end">
                 <button
-                  onClick={() => setShowDeleteModal({ show: true, type: "profile", id: userId })}
+                  onClick={() =>
+                    setShowDeleteModal({
+                      show: true,
+                      type: "profile",
+                      id: userId,
+                    })
+                  }
                   className="bg-red-600/80 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
                 >
                   Delete Account
@@ -464,7 +672,9 @@ export default function UpdateProfile() {
 
             {/* Questions Section */}
             <div className="bg-[#2E236C]/20 rounded-xl p-6 mb-8 border-2 border-[#C8ACD6]/30">
-              <h2 className="text-2xl font-bold text-white mb-6">Your Questions</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Your Questions
+              </h2>
               <div className="space-y-4">
                 {userData.questions?.map((question) => (
                   <div
@@ -472,8 +682,12 @@ export default function UpdateProfile() {
                     className="bg-[#2E236C]/40 border border-[#433D8B]/30 rounded-xl p-4 flex justify-between items-center shadow-md transition-all duration-300 hover:shadow-lg w-full hover:bg-[#433D8B]/10"
                   >
                     <div className="flex-grow">
-                      <h3 className="text-lg text-white font-semibold line-clamp-2">{question.title}</h3>
-                      <p className="mt-2 text-[#C8ACD6] text-sm line-clamp-3">{renderFormattedContent(question.content, 2)}</p>
+                      <h3 className="text-lg text-white font-semibold line-clamp-2">
+                        {question.title}
+                      </h3>
+                      <p className="mt-2 text-[#C8ACD6] text-sm line-clamp-3">
+                        {renderFormattedContent(question.content, 2)}
+                      </p>
                     </div>
                     <div className="flex items-center gap-4 ml-4 flex-shrink-0">
                       <button
@@ -486,7 +700,11 @@ export default function UpdateProfile() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setShowDeleteModal({ show: true, type: "question", id: question._id });
+                          setShowDeleteModal({
+                            show: true,
+                            type: "question",
+                            id: question._id,
+                          });
                         }}
                         className="text-red-400 hover:text-red-500 transition-colors"
                         aria-label="Delete question"
@@ -501,7 +719,9 @@ export default function UpdateProfile() {
 
             {/* Answers Section */}
             <div className="bg-[#2E236C]/20 rounded-xl p-6 border-2 border-[#C8ACD6]/30">
-              <h2 className="text-2xl font-bold text-white mb-6">Your Answers</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">
+                Your Answers
+              </h2>
               <div className="space-y-4">
                 {userData.answers?.map((answer) => (
                   <div
@@ -555,14 +775,19 @@ export default function UpdateProfile() {
           <DeleteModal
             type={showDeleteModal.type}
             onConfirm={handleDelete}
-            onCancel={() => setShowDeleteModal({ show: false, type: null, id: null })}
+            onCancel={() =>
+              setShowDeleteModal({ show: false, type: null, id: null })
+            }
           />
         )}
 
         {questionToModify && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
             <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
-              <ModifyQuestion question={questionToModify} onClose={() => setQuestionToModify(null)} />
+              <ModifyQuestion
+                question={questionToModify}
+                onClose={() => setQuestionToModify(null)}
+              />
             </div>
           </div>
         )}
@@ -570,11 +795,19 @@ export default function UpdateProfile() {
         {answerToModify && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
             <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
-              <ModifyAnswer answer={answerToModify} onClose={() => setAnswerToModify(null)} />
+              <ModifyAnswer
+                answer={answerToModify}
+                onClose={() => setAnswerToModify(null)}
+              />
             </div>
           </div>
         )}
       </div>
+
+      {error && <ErrorPopup message={error} onClose={() => setError("")} />}
+      {success && (
+        <SuccessPopup message={success} onClose={() => setSuccess("")} />
+      )}
     </div>
   );
 }

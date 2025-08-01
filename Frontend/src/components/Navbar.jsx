@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { Bell, LogOut } from "lucide-react";
+import Avtart from "../assets/avtart.jpg";
 
 export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
@@ -77,8 +78,7 @@ export default function Navbar({ className = "" }) {
                 >
                   <img
                     src={
-                      user.user.avatar ||
-                      "https://ui-avatars.com/api/?name=" + (user.user.fullName[0] || "U")
+                      user.user.avatar || Avtart
                     }
                     alt="Profile"
                     className="w-full h-full object-cover"
