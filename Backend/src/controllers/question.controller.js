@@ -9,7 +9,7 @@ import { Like } from "../models/like.model.js";
 import { Tag } from "../models/tag.model.js";
 
 import dotenv from "dotenv";
-import { createTag } from "./tag,controlller.js";
+import { createTag } from "./tag.controlller.js";
 dotenv.config();
 
 

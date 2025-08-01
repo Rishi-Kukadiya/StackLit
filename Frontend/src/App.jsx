@@ -12,7 +12,7 @@ import AskQuestion from "./Components/AskQuestion";
 import { UserProvider } from "./Components/UserContext";
 import Answer from "./Components/Answer";
 import QuestionPage from "./Components/QuestionPage";
-import { QuestionProvider } from './contexts/QuestionContext';
+import { QuestionProvider } from "./contexts/QuestionContext";
 import UnansweredQuestion from "./Components/UnanswerQuestion";
 import Users from "./Components/Users";
 import { Provider } from "react-redux";
