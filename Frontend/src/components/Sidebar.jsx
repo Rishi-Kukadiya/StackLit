@@ -106,9 +106,20 @@ export default function Sidebar() {
                 </span>
                 Notifications
               </button> */}
-              <div className="flex items-center gap-3 py-3 px-3 w-full">
-                <NotificationBell /> {/* <-- Use your dropdown bell here */}
-              </div>
+              {/* <div className="flex items-center gap-3 py-3 px-3 w-full">
+                Notifications
+                <NotificationBell />
+              </div> */}
+              {/* Updated Notification Button */}
+              {/* <div className="flex items-center justify-between w-full gap-3 py-3 px-3 rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <span className="w-5 h-5 flex items-center justify-center">
+                    <Bell />
+                  </span>
+                  <span>Notifications</span>
+                </div>
+                <NotificationBell />
+              </div> */}
 
               {/* <button
                 type="button"

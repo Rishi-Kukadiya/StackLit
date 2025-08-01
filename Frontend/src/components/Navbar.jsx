@@ -1,28 +1,36 @@
-import { Layers, Search, LogIn, UserPlus } from "lucide-react";
+import { Layers, Search, LogIn, UserPlus, LogOut, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
-import { Bell, LogOut } from "lucide-react";
+import { useNotifications } from "../contexts/NotificationContext";
 
 export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
+  const { notifications, markAllAsRead } = useNotifications();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const profileRef = useRef(null);
+  const notifRef = useRef(null);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
-    if (!profileOpen) return;
-    function handleClickOutside(e) {
+    const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [profileOpen]);  
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   return (
-    <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md ">
+    <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md z-50">
       <div className="container mx-auto flex items-center justify-between flex-wrap">
-        {/* Left: Logo */}
+        {/* Logo */}
         <Link to="/">
           <div className="flex items-center space-x-2 cursor-pointer hover:opacity-90 transition">
             <Layers className="text-[#C8ACD6] w-6 h-6" />
@@ -30,55 +38,113 @@ export default function Navbar({ className = "" }) {
           </div>
         </Link>
 
-        {/* Middle: Search box (desktop only) */}
+        {/* Search Bar (Desktop) */}
         <div className="hidden md:flex flex-1 justify-center mx-4">
           <div className="relative w-full max-w-md">
             <input
               type="text"
               placeholder="Search..."
-              className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] 
-                border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] 
-                focus:border-[#C8ACD6] transition duration-200"
+              className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] focus:border-[#C8ACD6] transition duration-200"
             />
             <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] pointer-events-none" />
           </div>
         </div>
 
-        {/* Right: Auth buttons (only visible on large screens) */}
-        <div className="hidden lg:flex items-center space-x-2 mt-2 lg:mt-0">
+        {/* Right Controls */}
+        <div className="hidden lg:flex items-center space-x-4 mt-2 lg:mt-0">
           {!user ? (
             <>
               <Link to="/signup">
-                <button className="flex items-center gap-2 bg-[#433D8B] text-white 
-          hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-          transition-all duration-300 cursor-pointer">
-                  <LogIn className="w-4 h-4 cursor-pointer" />
+                <button className="flex items-center gap-2 bg-[#433D8B] text-white hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md transition-all duration-300">
+                  <LogIn className="w-4 h-4" />
                   Sign Up
                 </button>
               </Link>
               <Link to="/signin">
-                <button className="flex items-center gap-2 bg-[#433D8B] text-white 
-          hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-          transition-all duration-300 cursor-pointer">
-                  <UserPlus className="w-4 h-4 cursor-pointer" />
+                <button className="flex items-center gap-2 bg-[#433D8B] text-white hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md transition-all duration-300">
+                  <UserPlus className="w-4 h-4" />
                   Log In
                 </button>
               </Link>
             </>
           ) : (
             <>
-              <button className="relative p-2 rounded-full hover:bg-[#433D8B]/40 transition">
-                <Bell className="w-5 h-5 text-[#C8ACD6]" />
-              </button>
+              {/* Notification Bell */}
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setNotifOpen((v) => !v)}
+                  className="relative p-2 rounded-full hover:bg-[#433D8B]/40 transition"
+                >
+                  <Bell className="w-5 h-5 text-[#C8ACD6]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 max-h-96 bg-white text-black border border-gray-300 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2 border-b">
+                      <h3 className="font-semibold text-[#17153B]">
+                        Notifications
+                      </h3>
+                      <button
+                        onClick={markAllAsRead}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Mark all as read
+                      </button>
+                    </div>
+
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        No notifications
+                      </div>
+                    ) : (
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.map((n) => (
+                          <div
+                            key={n._id}
+                            className={`px-4 py-3 text-sm transition hover:bg-gray-50 ${
+                              n.isRead ? "bg-white" : "bg-blue-50"
+                            } border-b`}
+                          >
+                            <p className="text-gray-800">
+                              <b>{n.sender.fullName}</b>{" "}
+                              {n.type === "like"
+                                ? "liked your question"
+                                : n.type === "answer"
+                                ? "answered your question"
+                                : n.type}
+                            </p>
+                            {n.question?.title && (
+                              <p className="text-gray-600 italic truncate">
+                                {n.question.title}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(n.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Profile Dropdown */}
               <div className="relative" ref={profileRef}>
                 <button
-                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#C8ACD6] focus:outline-none focus:ring"
+                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#C8ACD6] focus:outline-none"
                   onClick={() => setProfileOpen((v) => !v)}
                 >
                   <img
                     src={
                       user.user.avatar ||
-                      "https://ui-avatars.com/api/?name=" + (user.user.fullName[0] || "U")
+                      "https://ui-avatars.com/api/?name=" +
+                        (user.user.fullName[0] || "U")
                     }
                     alt="Profile"
                     className="w-full h-full object-cover"
@@ -106,19 +172,18 @@ export default function Navbar({ className = "" }) {
           )}
         </div>
 
-        {/* Mobile: Search bar below */}
+        {/* Search bar on mobile */}
         <div className="w-full mt-4 md:hidden">
           <div className="relative w-full">
             <input
               type="text"
               placeholder="Search..."
-              className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] 
-                border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] 
-                focus:border-[#C8ACD6] transition duration-200"
+              className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] focus:border-[#C8ACD6] transition duration-200"
             />
             <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] pointer-events-none" />
           </div>
         </div>
       </div>
     </nav>
-  )};
+  );
+}
