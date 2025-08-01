@@ -5,6 +5,8 @@ import { Tag } from "../models/tag.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 import axios from "axios"
+import { Like } from "../models/like.model.js";
+import { Answer } from "../models/answer.model.js";
 
 
 const getTags = asyncHandler(async (req, res) => {
@@ -32,7 +34,7 @@ const getTags = asyncHandler(async (req, res) => {
             )
         }
         const formattedTags = tags.map(tag => ({
-            _id:tag._id,
+            _id: tag._id,
             tagName: tag.tag,
             description: tag.description,
             totalQuestionsAsked: tag.questions.length
@@ -56,7 +58,10 @@ const getTags = asyncHandler(async (req, res) => {
 
 const getQuestionsByTagId = asyncHandler(async (req, res) => {
     const { tagId } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    const skip = (page - 1) * limit;
 
     if (!mongoose.Types.ObjectId.isValid(tagId)) {
         return res.json(new ApiError(400, "Invalid tag ID"));
@@ -71,23 +76,46 @@ const getQuestionsByTagId = asyncHandler(async (req, res) => {
 
     const questions = await Question.find({ _id: { $in: tag.questions } })
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit))
+        .skip(skip)
+        .limit(limit)
         .populate("owner", "fullName avatar")
+        .select("-answeredBy -images")
         .lean();
 
-    const formattedQuestions = questions.map(q => ({
-        _id: q._id,
-        title: q.title,
-        views: q.views,
-        answers: q.answeredBy.length,
-        owner: {
-            name: q.owner.fullName,
-            avatar: q.owner.avatar
-        },
-        createdAt: q.createdAt
-    }));
+    const questionIds = questions.map(q => q._id);
 
+    const [likes, answers] = await Promise.all([
+        Like.find({ target: { $in: questionIds }, targetType: "Question" }).lean(),
+        Answer.find({ questionId: { $in: questionIds } })
+            .populate("owner", "avatar")
+            .lean()
+    ]);
+
+    const likeMap = {};
+    for (const like of likes) {
+        const qId = String(like.target);
+        if (!likeMap[qId]) likeMap[qId] = { likes: 0, dislikes: 0 };
+        if (like.isLike) likeMap[qId].likes++;
+        else likeMap[qId].dislikes++;
+    }
+
+    const answerMap = {};
+    for (const ans of answers) {
+        const qId = String(ans.questionId);
+        if (!answerMap[qId]) answerMap[qId] = [];
+        answerMap[qId].push(ans.owner?.avatar);
+    }
+
+    const enriched = questions.map(q => {
+        const qId = String(q._id);
+        return {
+            ...q,
+            likes: likeMap[qId]?.likes || 0,
+            dislikes: likeMap[qId]?.dislikes || 0,
+            answerCount: (answerMap[qId]?.length || 0),
+            answerAvatars: answerMap[qId] || []
+        };
+    });
 
     return res.json(
         new ApiResponse(200, {
@@ -95,12 +123,14 @@ const getQuestionsByTagId = asyncHandler(async (req, res) => {
             tagName: tag.name,
             tagDescription: tag.description,
             totalQuestions,
-            questions: formattedQuestions,
-            currentPage: parseInt(page),
+            questions: enriched,
+            currentPage: page,
             totalPages: Math.ceil(totalQuestions / limit)
-        }, "Questins fetched for the Tag")
-    )
+        }, "Questions fetched for the Tag")
+    );
 });
+
+
 
 const createTag = async (questioId, tag) => {
     const prompt = `
@@ -137,4 +167,4 @@ const createTag = async (questioId, tag) => {
 
 
 
-export { getTags, getQuestionsByTagId,createTag };
+export { getTags, getQuestionsByTagId, createTag };
