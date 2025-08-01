@@ -424,10 +424,6 @@ export default function Tags() {
               <ArrowLeft className="w-4 h-4" />
               Back to All Tags
             </button>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-              Questions tagged with "{selectedTag.tagName}"
-            </h1>
-            <p className="text-[#C8ACD6] mt-1 mb-8">{selectedTag.description}</p>
             
             {questionsLoading ? (
               <div className="space-y-4">
