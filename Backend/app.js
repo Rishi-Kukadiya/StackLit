@@ -5,6 +5,7 @@ const app = express();
 import dotenv from "dotenv";
 dotenv.config();
 
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN ,
     credentials: true,
@@ -34,6 +35,8 @@ app.use("/api/v1/tags",tagRouter)
 
 import chatRouter from "./src/routes/chatBot.routes.js";
 app.use("/api/v1", chatRouter);
+
+app.use()
 
 
 
