@@ -6,6 +6,6 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const notificationRouter = express.Router();
 
 notificationRouter.get("/", verifyJWT, getNotifications);
-notificationRouter.post("/mark-as-read", verifyJWT, markAsRead);
+notificationRouter.delete("/mark-as-read", verifyJWT, markAsRead);
 
 export default notificationRouter;

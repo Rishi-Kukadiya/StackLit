@@ -97,19 +97,142 @@ import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudina
 import { Answer } from "../models/answer.model.js";
 import { Question } from "../models/question.model.js";
 import { Like } from "../models/like.model.js";
-import Notification from "../models/notification.model.js"; // Added for notification
+import {Notification} from "../models/notification.model.js"; // Added for notification
+
+// const postAnswer = asyncHandler(async (req, res) => {
+//     try {
+//         const { questionId, content, tags } = req.body;
+
+//         if (!questionId) {
+//             return res.json(new ApiError(400, " Question is required for posting answer!"));
+//         }
+
+//         const question = await Question.findById(questionId);
+//         if (!question) {
+//             return res.json(new ApiError(400, " Question with this Id doesn't exists"));
+//         }
+
+//         const avatar = req.user?.avatar;
+//         if (!question.answeredBy.includes(avatar)) {
+//             question.answeredBy.push(avatar);
+//             await question.save();
+//         }
+
+//         if (!content) {
+//             return res.json(new ApiError(400, "Content of answer is required!"));
+//         }
+//         if (!req.user) {
+//             return res.json(new ApiError(403, "Unauthorized request"));
+//         }
+
+//         let imageUrls = [];
+
+//         if (req.files && req.files.image && req.files.image.length > 0) {
+//             const files = req.files.image.slice(0, 5);
+
+//             for (const file of files) {
+//                 const uploadedImage = await uploadOnCloudinary(file.path);
+//                 if (uploadedImage?.secure_url) {
+//                     imageUrls.push(uploadedImage.secure_url);
+//                 }
+//             }
+
+//             if (imageUrls.length === 0) {
+//                 return res.json(new ApiError(500, "Error while uploading images on Cloudinary"));
+//             }
+//         }
+
+//         let parsedTags = [];
+//         if (tags) {
+//             parsedTags = tags.split(',').map(t => t.trim());
+//         }
+
+//         const answer = await Answer.create({
+//             questionId,
+//             content,
+//             owner: req.user?._id,
+//             images: imageUrls,
+//             tags: parsedTags
+//         });
+
+//         if (!answer) {
+//             return res.json(new ApiError(500, "Error while posting Answer"));
+//         }
+
+//         // --- Copilot: Notification logic for answer posting ---
+//         const io = req.app.get("io");
+//         const connectedUsers = req.app.get("connectedUsers");
+
+//         // Notify question owner if not the same as answer owner
+//         if (question.owner.toString() !== req.user._id.toString()) {
+//             const notification = await Notification.create({
+//                 sender: req.user._id,
+//                 receiver: question.owner,
+//                 type: "answer",
+//                 question: question._id,
+//                 answer: answer._id
+//             });
+//             if (io && connectedUsers) {
+//                 const receiverSocketId = connectedUsers.get(question.owner.toString());
+//                 if (receiverSocketId) {
+//                     io.to(receiverSocketId).emit("new_notification", {
+//                         ...notification.toObject(),
+//                         sender: { _id: req.user._id, fullName: req.user.fullName }
+//                     });
+//                 }
+//             }
+//         }
+
+//         // Notify previous answerers (excluding current user and question owner)
+//         const previousAnswers = await Answer.find({ questionId: question._id }).distinct("owner");
+//         for (const userId of previousAnswers) {
+//             if (
+//                 userId.toString() !== req.user._id.toString() &&
+//                 userId.toString() !== question.owner.toString()
+//             ) {
+//                 const notification = await Notification.create({
+//                     sender: req.user._id,
+//                     receiver: userId,
+//                     type: "answer_on_answer",
+//                     question: question._id,
+//                     answer: answer._id
+//                 });
+//                 if (io && connectedUsers) {
+//                     const receiverSocketId = connectedUsers.get(userId.toString());
+//                     if (receiverSocketId) {
+//                         io.to(receiverSocketId).emit("new_notification", {
+//                             ...notification.toObject(),
+//                             sender: { _id: req.user._id, fullName: req.user.fullName }
+//                         });
+//                         console.log("Emitted notification to previous answerer:", userId.toString(), receiverSocketId);
+//                     }
+//                 }
+//             }
+//         }
+//         // --- Copilot: End notification logic ---
+
+//         return res.json(
+//             new ApiResponse(201, answer, "Answer posted successfully")
+//         );
+//     } catch (error) {
+//         console.log(error.message);
+//         return res.json(
+//             new ApiError(500, "Error while posting answer")
+//         );
+//     }
+// });
 
 const postAnswer = asyncHandler(async (req, res) => {
     try {
         const { questionId, content, tags } = req.body;
 
-        if (!questionId) {
-            return res.json(new ApiError(400, " Question is required for posting answer!"));
+        if (!questionId || !content || !req.user) {
+            return res.json(new ApiError(400, "Question ID, content, and authentication required."));
         }
 
         const question = await Question.findById(questionId);
         if (!question) {
-            return res.json(new ApiError(400, " Question with this Id doesn't exists"));
+            return res.json(new ApiError(400, "Question not found."));
         }
 
         const avatar = req.user?.avatar;
@@ -118,110 +241,104 @@ const postAnswer = asyncHandler(async (req, res) => {
             await question.save();
         }
 
-        if (!content) {
-            return res.json(new ApiError(400, "Content of answer is required!"));
-        }
-        if (!req.user) {
-            return res.json(new ApiError(403, "Unauthorized request"));
-        }
-
         let imageUrls = [];
-
-        if (req.files && req.files.image && req.files.image.length > 0) {
+        if (req.files?.image?.length > 0) {
             const files = req.files.image.slice(0, 5);
-
             for (const file of files) {
-                const uploadedImage = await uploadOnCloudinary(file.path);
-                if (uploadedImage?.secure_url) {
-                    imageUrls.push(uploadedImage.secure_url);
-                }
+                const uploaded = await uploadOnCloudinary(file.path);
+                if (uploaded?.secure_url) imageUrls.push(uploaded.secure_url);
             }
-
             if (imageUrls.length === 0) {
-                return res.json(new ApiError(500, "Error while uploading images on Cloudinary"));
+                return res.json(new ApiError(500, "Image upload failed."));
             }
         }
 
-        let parsedTags = [];
-        if (tags) {
-            parsedTags = tags.split(',').map(t => t.trim());
-        }
+        const parsedTags = tags ? tags.split(',').map(tag => tag.trim()) : [];
 
         const answer = await Answer.create({
             questionId,
             content,
-            owner: req.user?._id,
+            owner: req.user._id,
             images: imageUrls,
             tags: parsedTags
         });
 
-        if (!answer) {
-            return res.json(new ApiError(500, "Error while posting Answer"));
-        }
+        if (!answer) return res.json(new ApiError(500, "Failed to post answer."));
 
-        // --- Copilot: Notification logic for answer posting ---
+        // --- Notification Logic Starts Here ---
         const io = req.app.get("io");
         const connectedUsers = req.app.get("connectedUsers");
 
-        // Notify question owner if not the same as answer owner
+        // 1. Notify the question owner if not the one answering
         if (question.owner.toString() !== req.user._id.toString()) {
-            const notification = await Notification.create({
+            const notifyQuestionOwner = await Notification.create({
                 sender: req.user._id,
                 receiver: question.owner,
                 type: "answer",
                 question: question._id,
                 answer: answer._id
             });
-            if (io && connectedUsers) {
-                const receiverSocketId = connectedUsers.get(question.owner.toString());
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("new_notification", {
-                        ...notification.toObject(),
-                        sender: { _id: req.user._id, fullName: req.user.fullName }
+
+            const socketId = connectedUsers.get(question.owner.toString());
+            if (socketId) {
+                io.to(socketId).emit("new_notification", {
+                    ...notifyQuestionOwner.toObject(),
+                    sender: {
+                        _id: req.user._id,
+                        fullName: req.user.fullName,
+                        avatar: req.user.avatar
+                    }
+                });
+            }
+        }
+
+        // 2. Notify previous answerers (excluding current user and question owner)
+        const previousAnswererIds = await Answer.find({ questionId })
+            .distinct("owner");
+
+        const notifiedSet = new Set();
+        for (const userId of previousAnswererIds) {
+            const idStr = userId.toString();
+            if (
+                idStr !== req.user._id.toString() &&
+                idStr !== question.owner.toString() &&
+                !notifiedSet.has(idStr)
+            ) {
+                notifiedSet.add(idStr);
+
+                const notifyPrevAnswerer = await Notification.create({
+                    sender: req.user._id,
+                    receiver: userId,
+                    type: "relatedAnswer",
+                    question: question._id,
+                    answer: answer._id
+                });
+
+                const socketId = connectedUsers.get(idStr);
+                if (socketId) {
+                    io.to(socketId).emit("new_notification", {
+                        ...notifyPrevAnswerer.toObject(),
+                        sender: {
+                            _id: req.user._id,
+                            fullName: req.user.fullName,
+                            avatar: req.user.avatar
+                        }
                     });
                 }
             }
         }
 
-        // Notify previous answerers (excluding current user and question owner)
-        const previousAnswers = await Answer.find({ questionId: question._id }).distinct("owner");
-        for (const userId of previousAnswers) {
-            if (
-                userId.toString() !== req.user._id.toString() &&
-                userId.toString() !== question.owner.toString()
-            ) {
-                const notification = await Notification.create({
-                    sender: req.user._id,
-                    receiver: userId,
-                    type: "answer_on_answer",
-                    question: question._id,
-                    answer: answer._id
-                });
-                if (io && connectedUsers) {
-                    const receiverSocketId = connectedUsers.get(userId.toString());
-                    if (receiverSocketId) {
-                        io.to(receiverSocketId).emit("new_notification", {
-                            ...notification.toObject(),
-                            sender: { _id: req.user._id, fullName: req.user.fullName }
-                        });
-                        console.log("Emitted notification to previous answerer:", userId.toString(), receiverSocketId);
-                    }
-                }
-            }
-        }
-        // --- Copilot: End notification logic ---
+        // --- End Notification Logic ---
 
         return res.json(
             new ApiResponse(201, answer, "Answer posted successfully")
         );
+
     } catch (error) {
-        console.log(error.message);
-        return res.json(
-            new ApiError(500, "Error while posting answer")
-        );
+        console.log("Post answer error:", error.message);
+        return res.json(new ApiError(500, "Internal server error."));
     }
 });
-
 
 
 const getAnswerDetails = asyncHandler(async (req, res) => {
