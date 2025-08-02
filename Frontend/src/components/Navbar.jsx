@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { useNotifications } from "../contexts/NotificationContext";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
@@ -11,8 +12,6 @@ export default function Navbar({ className = "" }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const profileRef = useRef(null);
   const notifRef = useRef(null);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
     const handler = (e) => {
@@ -26,6 +25,37 @@ export default function Navbar({ className = "" }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const renderNotificationText = (n) => {
+    const name = n?.sender?.fullName || "Someone";
+    const question = n?.question?.title || "";
+    const shortAnswer = n?.answer?.content
+      ? stripHtml(n.answer.content).slice(0, 40)
+      : "";
+
+    switch (n.type) {
+      case "like":
+        return n.answer
+          ? `${name} liked your answer: ${shortAnswer}`
+          : `${name} liked your question: ${question}`;
+      case "dislike":
+        return n.answer
+          ? `${name} disliked your answer: ${shortAnswer}`
+          : `${name} disliked your question: ${question}`;
+      case "answer":
+        return `${name} answered your question: ${question}`;
+      case "relatedAnswer":
+        return `${name} also answered a question you answered: ${question}`;
+      default:
+        return `${name} sent you a notification`;
+    }
+  };
+
+  const stripHtml = (html) => {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
 
   return (
     <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md z-50">
@@ -46,7 +76,7 @@ export default function Navbar({ className = "" }) {
               placeholder="Search..."
               className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] focus:border-[#C8ACD6] transition duration-200"
             />
-            <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] pointer-events-none" />
+            <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6]" />
           </div>
         </div>
 
@@ -69,16 +99,16 @@ export default function Navbar({ className = "" }) {
             </>
           ) : (
             <>
-              {/* Notification Bell */}
+              {/* Notifications */}
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setNotifOpen((v) => !v)}
                   className="relative p-2 rounded-full hover:bg-[#433D8B]/40 transition"
                 >
                   <Bell className="w-5 h-5 text-[#C8ACD6]" />
-                  {unreadCount > 0 && (
+                  {notifications.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                      {unreadCount}
+                      {notifications.length}
                     </span>
                   )}
                 </button>
@@ -90,7 +120,10 @@ export default function Navbar({ className = "" }) {
                         Notifications
                       </h3>
                       <button
-                        onClick={markAllAsRead}
+                        onClick={() => {
+                          markAllAsRead();
+                          setNotifOpen(false);
+                        }}
                         className="text-sm text-blue-600 hover:underline"
                       >
                         Mark all as read
@@ -102,29 +135,17 @@ export default function Navbar({ className = "" }) {
                         No notifications
                       </div>
                     ) : (
-                      <div className="max-h-80 overflow-y-auto">
+                      <div className="max-h-80 overflow-y-auto divide-y">
                         {notifications.map((n) => (
                           <div
                             key={n._id}
-                            className={`px-4 py-3 text-sm transition hover:bg-gray-50 ${
-                              n.isRead ? "bg-white" : "bg-blue-50"
-                            } border-b`}
+                            className="px-4 py-3 text-sm bg-white hover:bg-gray-50"
                           >
                             <p className="text-gray-800">
-                              <b>{n.sender.fullName}</b>{" "}
-                              {n.type === "like"
-                                ? "liked your question"
-                                : n.type === "answer"
-                                ? "answered your question"
-                                : n.type}
+                              {renderNotificationText(n)}
                             </p>
-                            {n.question?.title && (
-                              <p className="text-gray-600 italic truncate">
-                                {n.question.title}
-                              </p>
-                            )}
                             <p className="text-xs text-gray-400 mt-1">
-                              {new Date(n.createdAt).toLocaleString()}
+                              {formatDistanceToNow(new Date(n.createdAt))} ago
                             </p>
                           </div>
                         ))}
@@ -137,14 +158,14 @@ export default function Navbar({ className = "" }) {
               {/* Profile Dropdown */}
               <div className="relative" ref={profileRef}>
                 <button
-                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#C8ACD6] focus:outline-none"
+                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#C8ACD6]"
                   onClick={() => setProfileOpen((v) => !v)}
                 >
                   <img
                     src={
                       user.user.avatar ||
                       "https://ui-avatars.com/api/?name=" +
-                        (user.user.fullName[0] || "U")
+                        (user.user.fullName || "U")
                     }
                     alt="Profile"
                     className="w-full h-full object-cover"
@@ -172,7 +193,7 @@ export default function Navbar({ className = "" }) {
           )}
         </div>
 
-        {/* Search bar on mobile */}
+        {/* Search bar (Mobile) */}
         <div className="w-full mt-4 md:hidden">
           <div className="relative w-full">
             <input
@@ -180,7 +201,7 @@ export default function Navbar({ className = "" }) {
               placeholder="Search..."
               className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] focus:border-[#C8ACD6] transition duration-200"
             />
-            <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] pointer-events-none" />
+            <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6]" />
           </div>
         </div>
       </div>

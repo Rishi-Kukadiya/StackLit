@@ -1,13 +1,7 @@
-// [CHANGED BY GITHUB COPILOT]
-// Added null check for useUser() to prevent destructuring error
-// Lines changed: 10-12
-
-// filepath: e:\MERN-projects\stacklt\StackLit\Frontend\src\contexts\NotificationContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useSocket } from "./SocketContext";
 import { useUser } from "../Components/UserContext";
-import { io } from "socket.io-client";
 
 const NotificationContext = createContext();
 
@@ -17,39 +11,52 @@ export const NotificationProvider = ({ children }) => {
   const userContext = useUser();
   const user = userContext?.user;
 
-  // Fetch notifications on mount
+  // Fetch notifications when user is available
   useEffect(() => {
     if (!user?.user?._id) return;
+
     axios
       .get(`${import.meta.env.VITE_SERVER}/notifications/`, {
         withCredentials: true,
       })
       .then((res) => {
-        console.log(res.data.data);
-
         setNotifications(res.data.data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch notifications:", err);
       });
   }, [user?.user?._id]);
 
-  // Listen for real-time notifications
+  // Handle real-time notification via socket
   useEffect(() => {
     if (!socket) return;
-    socket.on("new_notification", (notification) => {
+
+    const handleNewNotification = (notification) => {
       console.log("Received notification:", notification);
       setNotifications((prev) => [notification, ...prev]);
-    });
+    };
+
+    socket.on("new_notification", handleNewNotification);
+
     return () => {
-      socket.off("new_notification");
+      socket.off("new_notification", handleNewNotification);
     };
   }, [socket]);
 
+  // Delete all notifications on markAsRead
   const markAllAsRead = async () => {
-    await axios.post(
-      `${import.meta.env.VITE_SERVER}/notifications/mark-as-read`,
-      {},
-      { withCredentials: true }
-    );
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      const res = await axios.delete(
+        `${import.meta.env.VITE_SERVER}/notifications/mark-as-read`,
+        { withCredentials: true }
+      );
+
+      console.log(res);
+      
+      setNotifications([]); 
+    } catch (err) {
+      console.error("Failed to mark notifications as read:", err);
+    }
   };
 
   return (
