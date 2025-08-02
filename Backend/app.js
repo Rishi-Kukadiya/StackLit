@@ -35,6 +35,9 @@ app.use("/api/v1/tags", tagRouter)
 import chatRouter from "./src/routes/chatBot.routes.js";
 app.use("/api/v1", chatRouter);
 
+import searchRouter from "./src/routes/search.routes.js";
+app.use("/api/v1/search", searchRouter);
+
 
 
 export { app }
