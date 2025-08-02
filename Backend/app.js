@@ -31,13 +31,16 @@ import likeRouter from "./src/routes/like.routes.js";
 app.use("/api/v1/likes", likeRouter);
 
 import tagRouter from "./src/routes/tags.route.js";
-app.use("/api/v1/tags",tagRouter)
+app.use("/api/v1/tags", tagRouter)
 
 import chatRouter from "./src/routes/chatBot.routes.js";
 app.use("/api/v1", chatRouter);
 
 import notificationRouter from "./src/routes/notification.route.js";
-app.use("/api/v1/notifications",notificationRouter)
+app.use("/api/v1/notifications", notificationRouter)
+
+import searchRouter from "./src/routes/search.routes.js";
+app.use("/api/v1/search", searchRouter)
 
 
 
