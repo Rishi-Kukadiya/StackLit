@@ -47,7 +47,7 @@ function DeleteModal({ type, onConfirm, onCancel }) {
 }
 
 export default function UpdateProfile() {
-  const { user, updateUser , setUser } = useUser();
+  const { user, updateUser, setUser } = useUser();
   const userId = user?.user?._id;
   const { clearQuestions, setRefresh } = useQuestions();
   const navigate = useNavigate();
@@ -92,26 +92,26 @@ export default function UpdateProfile() {
   }, [questionToModify, answerToModify]);
 
   // Fetch user profile data
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_SERVER}/users/get-userProfile/${userId}`,
+        { withCredentials: true }
+      );
+      setUserData(response.data);
+      setFormData({
+        fullName: response.data.user.fullName,
+        email: response.data.user.email,
+        avatar: null, // Reset on fetch
+        previewAvatar: response.data.user.avatar || Avtart,
+      });
+      setLoading(false);
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_SERVER}/users/get-userProfile/${userId}`,
-          { withCredentials: true }
-        );
-        setUserData(response.data);
-        setFormData({
-          fullName: response.data.user.fullName,
-          email: response.data.user.email,
-          avatar: null, // Reset on fetch
-          previewAvatar: response.data.user.avatar || Avtart,
-        });
-        setLoading(false);
-      } catch (err) {
-        setError(err);
-        setLoading(false);
-      }
-    };
     if (userId) fetchUserProfile();
   }, [userId]);
 
@@ -303,21 +303,74 @@ export default function UpdateProfile() {
       } finally {
         setLoading(false);
       }
-      // } else if (showDeleteModal.type === "question") {
-      //   setUserData((prev) => ({
-      //     ...prev,
-      //     questions: prev.questions.filter((q) => q._id !== showDeleteModal.id),
-      //   }));
-      // } else if (showDeleteModal.type === "answer") {
-      //   setUserData((prev) => ({
-      //     ...prev,
-      //     answers: prev.answers.filter((a) => a._id !== showDeleteModal.id),
-      //   }));
-      // }
+    } else if (showDeleteModal.type === "question") {
+      setLoading(true);
+      try {
+        const response = await axios.delete(
+          `${import.meta.env.VITE_SERVER}/questions/delete-question/${
+            showDeleteModal.id
+          }`,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
 
-      setShowDeleteModal({ show: false, type: null, id: null });
+        if (response.data.statusCode != 200) {
+          setError(response.data.message || "Netwrok Error");
+        } else {
+          setSuccess(
+            response.data.message || "Question Deleted Successfully!!"
+          );
+          clearQuestions();
+          setRefresh((prev) => !prev);
+
+          setUserData((prev) => ({
+            ...prev,
+            questions: prev.questions.filter(
+              (q) => q._id !== showDeleteModal.id
+            ),
+          }));
+        }
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    } else if (showDeleteModal.type === "answer") {
+      setLoading(true);
+      try {
+        const response = await axios.delete(
+          `${import.meta.env.VITE_SERVER}/answers/delete-answer/${
+            showDeleteModal.id
+          }`,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
+
+        if (response.data.statusCode != 200) {
+          setError(response.data.message || "Netwrok Error");
+        } else {
+          setSuccess(response.data.message || "Answer Deleted Successfully!!");
+          clearQuestions();
+          setRefresh((prev) => !prev);
+
+          setUserData((prev) => ({
+            ...prev,
+            answers: prev.answers.filter((a) => a._id !== showDeleteModal.id),
+          }));
+        }
+      } catch (err) {
+        setError("somthing wrong!!");
+      } finally {
+        setLoading(false);
+      }
     }
+    setShowDeleteModal({ show: false, type: null, id: null });
   };
+
   useEffect(() => {
     if (!userId) navigate("/signin");
   }, [userId, navigate]);
@@ -325,7 +378,9 @@ export default function UpdateProfile() {
   if (loading || !userData) {
     return (
       <>
-        <ShimmerLoader></ShimmerLoader>
+        <div className="mt-6">
+          <ShimmerLoader />
+        </div>
       </>
     );
   }
@@ -460,7 +515,7 @@ export default function UpdateProfile() {
   }
 
   return (
-    <div className="bg-transparent h-screen flex">
+    <div className="bg-transparent h-screen flex z-50">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-64">
         <header className="flex-shrink-0 z-40">
@@ -786,7 +841,12 @@ export default function UpdateProfile() {
             <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
               <ModifyQuestion
                 question={questionToModify}
-                onClose={() => setQuestionToModify(null)}
+                onClose={() => {
+                  setQuestionToModify(null),
+                    fetchUserProfile(),
+                    clearQuestions(),
+                    setRefresh((prev) => !prev);
+                }}
               />
             </div>
           </div>
@@ -797,7 +857,12 @@ export default function UpdateProfile() {
             <div className="w-full max-w-3xl rounded-xl shadow-2xl border-2 border-[#433D8B]/40 bg-[#1a133a] h-[90vh] flex flex-col overflow-hidden">
               <ModifyAnswer
                 answer={answerToModify}
-                onClose={() => setAnswerToModify(null)}
+                onClose={() => {
+                  setAnswerToModify(null),
+                    fetchUserProfile(),
+                    clearQuestions(),
+                    setRefresh((prev) => !prev);
+                }}
               />
             </div>
           </div>

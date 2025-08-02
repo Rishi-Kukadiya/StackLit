@@ -10,6 +10,10 @@ import {
   FileText,
   AlertTriangle,
 } from "lucide-react";
+import ShimmerLoader from "./ShimmerLoader";
+import ErrorPopup from "./ErrorPopup";
+import SuccessPopup from "./SuccessPopup";
+import axios from "axios";
 
 // A reusable section wrapper for consistent styling
 const SectionWrapper = ({ title, icon, children, onEdit, isEditing }) => (
@@ -55,32 +59,110 @@ export default function ModifyQuestion({ question, onClose }) {
   const [editTags, setEditTags] = useState(question.tags || []);
   const [editImages, setEditImages] = useState(question.images || []);
 
+  const [retainImages, setRetainImages] = useState(question.images);
   const [newTag, setNewTag] = useState("");
   const [editingField, setEditingField] = useState(null); // 'title', 'content', 'tags', 'images'
   const imageInputRef = useRef(null);
+  const [Error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // --- Generic Handlers ---
-  const handleSave = (field) => {
+  const handleSave = async (field) => {
     switch (field) {
       case "title":
         // TODO: PATCH /edit-title/:questionId (body: {title})
-        console.log(`PATCH /edit-title/${question._id}`, { title: editTitle });
+        setLoading(true);
+        try {
+          const response = await axios.patch(
+            `${import.meta.env.VITE_SERVER}/questions/edit-title/${
+              question._id
+            }`,
+            { title: editTitle },
+            {
+              headers: { "Content-Type": "application/json" },
+              withCredentials: true,
+            }
+          );
+
+          if (response.data.statusCode != 200) {
+            setError(response.data.message || "Network Error!!");
+          } else {
+            setSuccess(response.data.message || "Title Updated successfully!!");
+          }
+        } catch (err) {
+          setError(err);
+        } finally {
+          setLoading(false);
+        }
         break;
       case "content":
         // TODO: PATCH /edit-content/:questionId (body: {content})
-        console.log(`PATCH /edit-content/${question._id}`, {
-          content: editContent,
-        });
+        setLoading(true);
+        try {
+          const response = await axios.patch(
+            `${import.meta.env.VITE_SERVER}/questions/edit-content/${
+              question._id
+            }`,
+            { content: editContent },
+            {
+              headers: { "Content-Type": "application/json" },
+              withCredentials: true,
+            }
+          );
+
+          if (response.data.statusCode != 200) {
+            setError(response.data.message || "Network Error!!");
+          } else {
+            setSuccess(
+              response.data.message || "Content Updated successfully!!"
+            );
+          }
+        } catch (err) {
+          setError("Something Went Wrong!!");
+        } finally {
+          setLoading(false);
+        }
         break;
-      case "tags":
-        // TODO: PATCH /edit-tags/:questionId (body: {tags})
-        console.log(`PATCH /edit-tags/${question._id}`, { tags: editTags });
-        break;
+
+
       case "images":
-        // TODO: PATCH /edit-images/:questionId (body: {images})
-        console.log(`PATCH /edit-images/${question._id}`, {
-          images: editImages,
-        });
+        const filteredImages = editImages.filter(
+          (img) => !retainImages.includes(img)
+        );
+
+        const data = new FormData();
+        data.append("retainImages", JSON.stringify(retainImages));
+        if (editImages && editImages.length > 0) {
+          editImages.forEach((file) => {
+            data.append("image", file);
+          });
+        }
+        setEditImages(filteredImages);
+        setLoading(true);
+        try {
+          const response = await axios.patch(
+            `${import.meta.env.VITE_SERVER}/questions/edit-images/${
+              question._id
+            }`,
+            data,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              withCredentials: true,
+            }
+          );
+
+          if (!response.data.success) {
+            setError(response.data.message || "Network Error!!");
+          } else {
+            console.log("Successfull doen");
+            setSuccess(response.data.message || "Image Updated successfully!!");
+          }
+        } catch (err) {
+          setError("Something Went Wrong!!");
+        } finally {
+          setLoading(false);
+        }
         break;
       default:
         break;
@@ -91,17 +173,17 @@ export default function ModifyQuestion({ question, onClose }) {
   const handleCancel = (field) => {
     switch (field) {
       case "title":
-        setEditTitle(question.title);
+        setEditTitle(editTitle);
         break;
       case "content":
-        setEditContent(question.content);
+        setEditContent(editContent);
         break;
       case "tags":
-        setEditTags(question.tags || []);
+        setEditTags(editTags);
         setNewTag("");
         break;
       case "images":
-        setEditImages(question.images || []);
+        setEditImages([...editImages, ...retainImages]);
         break;
       default:
         break;
@@ -110,16 +192,64 @@ export default function ModifyQuestion({ question, onClose }) {
   };
 
   // --- Specific Logic Handlers ---
-  const handleAddTag = () => {
+  const handleAddTag = async () => {
     const tag = newTag.trim();
+    if (!tag) {
+      setError("Tag is Required!!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_SERVER}/questions/add-tag/${question._id}`,
+        { tag: tag },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Network Error!!");
+      } else {
+        setSuccess(response.data.message || "Tag Updated successfully!!");
+      }
+    } catch (error) {
+      setError("Something went Wrong!!");
+    } finally {
+      setLoading(false);
+    }
+
     if (tag && !editTags.includes(tag) && editTags.length < 10) {
       setEditTags([...editTags, tag]);
       setNewTag("");
     }
   };
 
-  const handleDeleteTag = (idx) => {
-    setEditTags((prev) => prev.filter((_, i) => i !== idx));
+  // deleting tags
+  const handleDeleteTag = async (idx, questionId, tag) => {
+    setLoading(true);
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_SERVER}/questions/delete-tag/${questionId}`,
+        { tag: tag },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Network Error!!");
+      } else {
+        setSuccess(response.data.message || "Tags deleted successfully!!");
+        setEditTags((prev) => prev.filter((_, i) => i !== idx));
+      }
+    } catch (err) {
+      setError("Something went wrong!!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -128,15 +258,44 @@ export default function ModifyQuestion({ question, onClose }) {
     setEditImages(combined);
   };
 
-  const handleDeleteImage = (idx) => {
-    setEditImages(editImages.filter((_, i) => i !== idx));
+  const handleDeleteImage = (idx, url) => {
+    setEditImages((prev) => prev.filter((_, i) => i !== idx));
+    if (retainImages.includes(url)) {
+      const updatedRetainImages = retainImages.filter((img) => img !== url);
+      setRetainImages(updatedRetainImages);
+    }
   };
 
-  const handleDeleteQuestion = () => {
-    // TODO: DELETE /delete-question/:questionId
-    console.log(`DELETE /delete-question/${question._id}`);
+  const handleDeleteQuestion = async () => {
+    // console.log(`DELETE /delete-question/${question._id}`);
+    setLoading(true);
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_SERVER}/questions/delete-question/${
+          question._id
+        }`,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.statusCode != 200) {
+        setError(response.data.message || "Netwrok Error");
+      } else {
+        setSuccess(response.data.message || "Question Deleted Successfully!!");
+      }
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
     if (onClose) onClose();
   };
+
+  if (loading) {
+    return <ShimmerLoader></ShimmerLoader>;
+  }
 
   return (
     <div className="relative w-full h-full flex flex-col bg-[#1a133a] text-white">
@@ -236,7 +395,7 @@ export default function ModifyQuestion({ question, onClose }) {
                     {tag}
                     <button
                       type="button"
-                      onClick={() => handleDeleteTag(idx)}
+                      onClick={() => handleDeleteTag(idx, question._id, tag)}
                       className="text-white/70 hover:text-red-400 transition-colors rounded-full bg-black/20 w-5 h-5 flex items-center justify-center"
                       aria-label={`Delete tag ${tag}`}
                     >
@@ -264,9 +423,6 @@ export default function ModifyQuestion({ question, onClose }) {
                 <ActionButton onClick={handleAddTag}>Add</ActionButton>
               </div>
               <div className="flex gap-3">
-                <ActionButton onClick={() => handleSave("tags")}>
-                  <Save className="w-4 h-4" /> Save Tags
-                </ActionButton>
                 <ActionButton
                   onClick={() => handleCancel("tags")}
                   variant="cancel"
@@ -315,10 +471,10 @@ export default function ModifyQuestion({ question, onClose }) {
                       alt={`upload-preview-${idx}`}
                       className="object-cover w-full h-full"
                     />
-                    <button
+                    <button 
                       aria-label="Remove image"
-                      onClick={() => handleDeleteImage(idx)}
-                      className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteImage(idx, img)}
+                      className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1  transition-opacity"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -393,6 +549,11 @@ export default function ModifyQuestion({ question, onClose }) {
           </ActionButton>
         </div>
       </div>
+
+      {Error && <ErrorPopup message={Error} onClose={() => setError("")} />}
+      {success && (
+        <SuccessPopup message={success} onClose={() => setSuccess("")} />
+      )}
     </div>
   );
 }
