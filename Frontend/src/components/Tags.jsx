@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { MessageSquare, Search, ArrowLeft } from "lucide-react";
+import { MessageSquare, Search, ArrowLeft, MessageSquareX } from "lucide-react";
 import { FaTags } from "react-icons/fa";
 import ShimmerLoader from "./ShimmerLoader";
 import Navbar from "./Navbar";
@@ -39,7 +39,7 @@ const LoadingDots = () => {
 };
 
 export default function Tags() {
-  // --- States for Tags ---
+  // --- States for Tags View ---
   const [tags, setTags] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
@@ -50,13 +50,14 @@ export default function Tags() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
 
-  // --- NEW: States for displaying questions for a selected tag ---
-  const [selectedTag, setSelectedTag] = useState(null); // To store the selected tag object
-  const [tagQuestions, setTagQuestions] = useState([]); // To store fetched questions
+  // --- States for Component View & Questions ---
+  const [currentView, setCurrentView] = useState("tags"); // 'tags' or 'questions'
+  const [questions, setQuestions] = useState([]);
+  const [questionViewTitle, setQuestionViewTitle] = useState("");
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [questionsError, setQuestionsError] = useState(null);
 
-  // Debounce search input
+  // Debounce search input for filtering tags
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -72,8 +73,7 @@ export default function Tags() {
       setError(null);
       try {
         const response = await fetch(
-          `${
-            import.meta.env.VITE_SERVER
+          `${import.meta.env.VITE_SERVER
           }/tags/getTags?page=${pageNumber}&limit=${limit}&search=${encodeURIComponent(
             search
           )}`,
@@ -103,22 +103,23 @@ export default function Tags() {
     [limit]
   );
 
-  // --- NEW: Function to fetch questions for a specific tag ---
-  const fetchQuestionsByTag = useCallback(async (tagId) => {
-    if (!tagId) return;
+  // --- NEW: Generic function to fetch questions and switch view ---
+  const fetchAndShowQuestions = useCallback(async (url, title) => {
     setQuestionsLoading(true);
     setQuestionsError(null);
+    setQuestions([]);
+    setQuestionViewTitle(title);
+
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER}/tags/get-questions/${tagId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(url, { credentials: "include" });
       const data = await response.json();
-      // console.log("API Response for Tag Questions:", data); 
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch questions.");
       }
-      setTagQuestions(data.data.questions || []);
+      // Handles both API response structures: one nests questions in `data.questions`, the other has it in `data`
+      const questionData = data.data.questions || data.data || [];
+      setQuestions(questionData);
+      setCurrentView("questions"); // Switch to question view on success
     } catch (err) {
       setQuestionsError(err.message);
     } finally {
@@ -126,17 +127,16 @@ export default function Tags() {
     }
   }, []);
 
-  // Load tags initially and on debounced search changes
+  // Load tags initially and on debounced search changes (only in tags view)
   useEffect(() => {
-    // Only fetch tags if no tag is selected
-    if (!selectedTag) {
+    if (currentView === "tags") {
       fetchTags(1, debouncedSearch);
     }
-  }, [fetchTags, debouncedSearch, selectedTag]);
+  }, [fetchTags, debouncedSearch, currentView]);
 
-  // Infinite scroll handler for tags
+  // Infinite scroll handler for tags (only in tags view)
   useEffect(() => {
-    if (!hasMore || loading || selectedTag) return; // Stop if a tag is selected
+    if (currentView !== "tags" || !hasMore || loading) return;
 
     const handleScroll = () => {
       if (
@@ -149,23 +149,33 @@ export default function Tags() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loading, fetchTags, page, debouncedSearch, selectedTag]);
+  }, [hasMore, loading, fetchTags, page, debouncedSearch, currentView]);
 
-  const handleSearch = (e) => setSearchQuery(e.target.value);
-  
-  // --- NEW: Handler to select a tag and fetch its questions ---
+  // Handler for the search input field
+  const handleSearchChange = (e) => setSearchQuery(e.target.value);
+
+  // --- NEW: Handler for submitting a search for questions ---
+  const handleSearchSubmit = () => {
+    if (!searchQuery.trim()) return;
+    const url = `${import.meta.env.VITE_SERVER}/search/tags?q=${encodeURIComponent(searchQuery)}`;
+    const title = `Search results for: "${searchQuery}"`;
+    fetchAndShowQuestions(url, title);
+  };
+
+  // Handler to select a tag and fetch its questions
   const handleSelectTag = (tag) => {
-    setSelectedTag(tag);
-    fetchQuestionsByTag(tag._id);
-  };
-  
-  // --- NEW: Handler to go back to the tags list ---
-  const handleBackToTags = () => {
-    setSelectedTag(null);
-    setTagQuestions([]);
-    setQuestionsError(null);
+    const url = `${import.meta.env.VITE_SERVER}/tags/get-questions/${tag._id}`;
+    const title = `Questions for tag: "${tag.tagName}"`;
+    fetchAndShowQuestions(url, title);
   };
 
+  // Handler to go back to the tags list
+  const handleBackToTags = () => {
+    setCurrentView("tags");
+    setQuestions([]);
+    setQuestionsError(null);
+    setQuestionViewTitle("");
+  };
 
   return (
     <div className="min-h-screen">
@@ -179,8 +189,8 @@ export default function Tags() {
       <div className="h-24 sm:h-28" />
 
       <div className="lg:pl-64 px-4 pb-10 max-w-7xl 2xl:max-w-[90vw] mx-auto">
-        {selectedTag ? (
-          // --- NEW: View for displaying questions of a selected tag ---
+        {currentView === "questions" ? (
+          // --- View for displaying questions (from search or tag click) ---
           <div>
             <button
               onClick={handleBackToTags}
@@ -189,20 +199,37 @@ export default function Tags() {
               <ArrowLeft className="w-4 h-4" />
               Back to All Tags
             </button>
-            
+            <h1 className="text-xl sm:text-2xl font-bold text-white leading-tight mb-8">
+              {questionViewTitle}
+            </h1>
+
             {questionsLoading ? (
               <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <ShimmerLoader key={i} />)}
+                {[...Array(5)].map((_, i) => <ShimmerLoader key={i} />)}
               </div>
             ) : questionsError ? (
               <ErrorPopup message={questionsError} onClose={() => setQuestionsError(null)} />
-            ) : tagQuestions.length > 0 ? (
-              <QuestionList questions={tagQuestions} />
+            ) : questions.length > 0 ? (
+              <QuestionList questions={questions} />
             ) : (
-              <div className="text-center py-12">
-                <p className="text-[#C8ACD6] text-lg">
-                  No questions found for this tag yet.
-                </p>
+              // <div className="text-center py-12">
+              //   <p className="text-[#C8ACD6] text-lg">
+              //     No questions found.
+              //   </p>
+              // </div>
+              <div className="flex w-full items-center justify-center pt-16">
+                <div className="flex w-full max-w-md flex-col items-center rounded-xl bg-[#2E236C]/20 p-8 text-center border-2 border-[#433D8B]/30">
+                  <MessageSquareX className="h-16 w-16 text-[#C8ACD6]/50" />
+                  <h3 className="mt-4 text-xl font-bold text-white">
+                    No Questions Found
+                  </h3>
+                  <p className="mt-2 text-center text-[#C8ACD6]">
+                    It looks like there are no questions here yet.
+                  </p>
+                  <p className="mt-4 text-sm text-[#C8ACD6]/70">
+                    When a question is added, it will show up here.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -219,12 +246,21 @@ export default function Tags() {
               <div className="relative w-full sm:w-96 lg:w-[420px] xl:w-[520px]">
                 <input
                   type="text"
-                  placeholder="Search tags..."
+                  placeholder="Search for questions by tag..."
                   value={searchQuery}
-                  onChange={handleSearch}
+                  onChange={handleSearchChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSearchSubmit();
+                  }}
                   className="w-full px-4 py-2 pl-10 bg-[#2E236C]/30 border border-[#433D8B]/30 rounded-lg text-white placeholder-[#C8ACD6]/60 focus:outline-none focus:border-[#C8ACD6]/60 transition-all duration-300"
                 />
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#C8ACD6]" />
+                <button
+                  onClick={handleSearchSubmit}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-1"
+                  aria-label="Search"
+                >
+                  <Search className="w-4 h-4 text-[#C8ACD6]" />
+                </button>
               </div>
             </div>
 
@@ -264,14 +300,13 @@ export default function Tags() {
                   </div>
                   <button
                     className="mt-4 text-sm text-left text-[#C8ACD6] hover:text-white transition-colors cursor-pointer font-semibold"
-                    // --- MODIFIED: onClick now calls the new handler ---
                     onClick={() => handleSelectTag(tag)}
                   >
                     View questions →
                   </button>
                 </div>
               ))}
-            
+
               {loading && page === 1 && tags.length === 0 &&
                 [...Array(6)].map((_, i) => <ShimmerLoader key={i} />)}
             </div>

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { FileSearch } from "lucide-react"; // Icon import
 import { useQuestions } from "../contexts/QuestionContext";
 import Navbar from "./Navbar";
 import CanvasBackground from "../CanvasBackground";
@@ -7,54 +9,84 @@ import QuestionList from "./QuestionList";
 import { AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const { questions, loading, error, hasMore, fetchQuestions, unanswerQuestions } = useQuestions();
+  const {
+    questions,
+    loading,
+    error,
+    hasMore,
+    fetchQuestions,
+    unanswerQuestions,
+    searchQuestions,
+  } = useQuestions();
+
   const [page, setPage] = useState(1);
-  const [questionType, setQuestionType] = useState('all'); // 'all' or 'unanswered'
-  const loadingRef = useRef(null);
+  const [questionType, setQuestionType] = useState("all");
+  const [showLoadMore, setShowLoadMore] = useState(false);
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("q");
+  const loadMoreRef = useRef(null);
 
-  // Clear questions and reset page when component mounts
+  // Effect for initial data fetching (page 1)
   useEffect(() => {
     setPage(1);
-    fetchQuestions(1);
-  }, []); // Empty dependency array to run only on mount
-
-  // Reset questions when changing question type
-  useEffect(() => {
-    setPage(1);
-    if (questionType === 'all') {
-      fetchQuestions(1);
+    setShowLoadMore(false);
+    if (searchQuery) {
+      searchQuestions(searchQuery, 1);
     } else {
-      unanswerQuestions(1);
+      if (questionType === "all") {
+        fetchQuestions(1);
+      } else {
+        unanswerQuestions(1);
+      }
     }
-  }, [questionType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, questionType]);
 
-  // Handle pagination
+  // Effect for handling pagination (pages > 1)
   useEffect(() => {
     if (page > 1) {
-      if (questionType === 'all') {
+      if (searchQuery) {
+        searchQuestions(searchQuery, page);
+      } else if (questionType === "all") {
         fetchQuestions(page);
       } else {
         unanswerQuestions(page);
       }
     }
-  }, [page, questionType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
+  // Observer to show the "Load More" button when user scrolls to the bottom
   useEffect(() => {
+    if (!hasMore || loading) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          setPage((prev) => prev + 1);
+        if (entries[0].isIntersecting) {
+          setShowLoadMore(true);
+          if (loadMoreRef.current) {
+            observer.unobserve(loadMoreRef.current);
+          }
         }
       },
-      { threshold: 0.5 }
+      { threshold: 1.0 }
     );
 
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
     }
 
-    return () => observer.disconnect();
-  }, [hasMore, loading]);
+    return () => {
+      if (loadMoreRef.current) {
+        observer.unobserve(loadMoreRef.current);
+      }
+    };
+  }, [hasMore, loading, questions]);
+
+  const handleLoadMore = () => {
+    setShowLoadMore(false);
+    setPage((prevPage) => prevPage + 1);
+  };
 
   return (
     <>
@@ -63,16 +95,41 @@ export default function Home() {
         <Navbar className="sticky top-0 z-50" />
         <Sidebar />
 
-        {/* Main content area */}
         <main className="lg:ml-64 flex-1 overflow-y-auto transition-all duration-300">
           <div className="w-full px-4 py-4 md:py-6 lg:py-8">
             <div className="max-w-6xl mx-auto">
               <AnimatePresence>
                 <div className="space-y-4">
-                  <QuestionList questions={questions} />
+                  {searchQuery && !loading && (
+                    <h2 className="text-xl font-bold text-white px-4">
+                      Search Results for: "{searchQuery}"
+                    </h2>
+                  )}
 
-                  {/* Loading indicator */}
-                  <div ref={loadingRef} className="py-4 text-center">
+                  {/* --- MODIFIED SECTION --- */}
+                  {/* Shows "Not Found" message only on an empty search result */}
+                  {!loading && searchQuery && questions.length === 0 ? (
+                    <div className="flex w-full items-center justify-center pt-16">
+                      <div className="flex w-full max-w-md flex-col items-center rounded-xl bg-[#2E236C]/20 p-8 text-center border-2 border-[#433D8B]/30">
+                        <FileSearch className="h-16 w-16 text-[#C8ACD6]/50" />
+                        <h3 className="mt-4 text-xl font-bold text-white">
+                          No Questions Found
+                        </h3>
+                        <p className="mt-2 text-[#C8ACD6]">
+                          We couldn't find any questions matching your search.
+                        </p>
+                        <p className="mt-4 text-sm text-[#C8ACD6]/70">
+                          Try using different keywords or ask a new question!
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <QuestionList questions={questions} />
+                  )}
+                  {/* --- END MODIFIED SECTION --- */}
+
+                  {/* Loading indicator and other messages */}
+                  <div className="py-4 text-center">
                     {loading && (
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-2 h-2 bg-[#C8ACD6] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -80,13 +137,17 @@ export default function Home() {
                         <div className="w-2 h-2 bg-[#C8ACD6] rounded-full animate-bounce"></div>
                       </div>
                     )}
-                    {!hasMore && questions.length > 0 && (
+
+                    {!loading && !hasMore && questions.length > 0 && (
                       <p className="text-[#C8ACD6] text-sm">
-                        No more questions to load
+                        You've reached the end.
                       </p>
                     )}
+                    
                     {error && <p className="text-red-400 text-sm">{error}</p>}
                   </div>
+
+                  <div ref={loadMoreRef} style={{ height: "1px" }} />
                 </div>
               </AnimatePresence>
             </div>

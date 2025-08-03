@@ -1,12 +1,13 @@
-import { Layers, Search, LogIn, UserPlus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Layers, Search, LogIn, UserPlus, Bell, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
-import { Bell, LogOut } from "lucide-react";
 
 export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
   const profileRef = useRef(null);
 
   useEffect(() => {
@@ -18,7 +19,23 @@ export default function Navbar({ className = "" }) {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [profileOpen]);  
+  }, [profileOpen]);
+
+  // Unified function to execute the search
+  const executeSearch = () => {
+    if (query.trim() !== "") {
+      navigate(`/?q=${query.trim()}`);
+      setQuery(""); // Optional: clear input after search
+    }
+  };
+
+  // Handler for Enter key press in the input field
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      executeSearch();
+    }
+  };
+
   return (
     <nav className="bg-[#17153B] text-white px-4 py-3 shadow-md ">
       <div className="container mx-auto flex items-center justify-between flex-wrap">
@@ -36,30 +53,37 @@ export default function Navbar({ className = "" }) {
             <input
               type="text"
               placeholder="Search..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown} // Changed handler name for clarity
               className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] 
                 border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] 
                 focus:border-[#C8ACD6] transition duration-200"
             />
-            <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] pointer-events-none" />
+            {/* Made the icon a clickable button */}
+            <Search
+              className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] cursor-pointer hover:text-white transition-colors"
+              onClick={executeSearch}
+            />
           </div>
         </div>
 
-        {/* Right: Auth buttons (only visible on large screens) */}
+        {/* Right: Auth buttons */}
         <div className="hidden lg:flex items-center space-x-2 mt-2 lg:mt-0">
           {!user ? (
             <>
               <Link to="/signup">
                 <button className="flex items-center gap-2 bg-[#433D8B] text-white 
-          hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-          transition-all duration-300 cursor-pointer">
+                hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
+                transition-all duration-300 cursor-pointer">
                   <LogIn className="w-4 h-4 cursor-pointer" />
                   Sign Up
                 </button>
               </Link>
               <Link to="/signin">
                 <button className="flex items-center gap-2 bg-[#433D8B] text-white 
-          hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
-          transition-all duration-300 cursor-pointer">
+                hover:bg-[#C8ACD6] hover:text-[#2E236C] px-4 py-2 rounded-md 
+                transition-all duration-300 cursor-pointer">
                   <UserPlus className="w-4 h-4 cursor-pointer" />
                   Log In
                 </button>
@@ -112,13 +136,21 @@ export default function Navbar({ className = "" }) {
             <input
               type="text"
               placeholder="Search..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown} // Changed handler name for clarity
               className="w-full pl-4 pr-10 py-2 rounded-lg bg-[#2E236C] text-white placeholder-[#C8ACD6] 
                 border-2 border-[#433D8B] focus:outline-none focus:ring-2 focus:ring-[#C8ACD6] 
                 focus:border-[#C8ACD6] transition duration-200"
             />
-            <Search className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] pointer-events-none" />
+            {/* Made the icon a clickable button */}
+            <Search
+              className="absolute right-3 top-2.5 w-5 h-5 text-[#C8ACD6] cursor-pointer active:text-white"
+              onClick={executeSearch}
+            />
           </div>
         </div>
       </div>
     </nav>
-  )};
+  );
+}
