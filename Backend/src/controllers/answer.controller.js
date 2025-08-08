@@ -613,4 +613,4 @@ const editImages = asyncHandler(async (req, res) => {
     });
 });
 
-export { postAnswer, deleteAnswer, getAnswerDetails, editContent, addTag, deleteTag, editImages };
+export { postAnswer, deleteAnswer, getAnswerDetails, editContent, addTag, deleteTag, editImages };
