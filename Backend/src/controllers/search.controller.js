@@ -68,7 +68,7 @@ const searchQuestionsByTag = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const regex = new RegExp(`^${q}$`, "i");
+    const regex = new RegExp(`^${q}$`, "i"); 
     try {
         const tag = await Tag.findOne({ tag: regex }).populate({
             path: "questions",

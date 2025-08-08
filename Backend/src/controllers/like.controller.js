@@ -74,31 +74,12 @@ import { Answer } from "../models/answer.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
-import Notification from "../models/notification.model.js";
-
-
-const sendNotification = async ({ type, senderId, receiverId, questionId, answerId }, req) => {
-    const notification = await Notification.create({
-        sender: senderId,
-        receiver: receiverId,
-        type,
-        question: questionId,
-        answer: answerId
-    });
-
-    const io = req.app.get("io");
-    const connectedUsers = req.app.get("connectedUsers");
-    const receiverSocketId = connectedUsers.get(receiverId.toString());
-
-    if (receiverSocketId) {
-        io.to(receiverSocketId).emit("new_notification", notification);
-    }
-};
+import { Notification } from "../models/notification.model.js";
 
 const likeOrDislike = asyncHandler(async (req, res) => {
     try {
         const { targetId, targetType, isLike } = req.body;
-        const userId = req?.user?._id;
+        const userId = req.user._id;
 
         if (!targetId || !targetType || typeof isLike !== "boolean") {
             throw new ApiError(400, "targetId, targetType, and isLike are required");
@@ -109,7 +90,7 @@ const likeOrDislike = asyncHandler(async (req, res) => {
         }
 
         const TargetModel = targetType === "Question" ? Question : Answer;
-        const target = await TargetModel.findById(targetId).populate("owner");
+        const target = await TargetModel.findById(targetId);
 
         if (!target) {
             throw new ApiError(404, `${targetType} not found`);
@@ -118,43 +99,104 @@ const likeOrDislike = asyncHandler(async (req, res) => {
         const existing = await Like.findOne({
             likedBy: userId,
             targetType,
-            target: targetId
+            target: targetId,
         });
 
+        const shouldNotify = target.owner.toString() !== userId.toString();
+        const notifType = isLike ? "like" : "dislike";
+
+        const io = req.app.get("io");
+        const connectedUsers = req.app.get("connectedUsers");
+
+        // ====== CASE 1: Already liked/disliked ======
         if (existing) {
             if (existing.isLike === isLike) {
                 await existing.deleteOne();
-                return res.json(new ApiResponse(200, null, `${isLike ? "Like" : "Dislike"} removed`));
+                return res.json(
+                    new ApiResponse(200, null, `${isLike ? "Like" : "Dislike"} removed`)
+                );
             } else {
                 existing.isLike = isLike;
                 await existing.save();
-                return res.json(new ApiResponse(200, existing, `${isLike ? "Liked" : "Disliked"} updated`));
+
+                // Send notification only if not self-action
+                if (shouldNotify) {
+                    const notificationPayload = {
+                        sender: userId,
+                        receiver: target.owner,
+                        type: notifType,
+                        ...(targetType === "Question"
+                            ? { question: targetId }
+                            : { answer: targetId })
+                    };
+
+                    const notification = await Notification.create(notificationPayload);
+
+                    const populatedNotification = await Notification.findById(notification._id)
+                        .populate("sender", "fullName avatar")
+                        .populate("question", "title")
+                        .populate("answer", "content")
+                        .lean();
+
+                    const receiverSocketId = connectedUsers?.get(target.owner.toString());
+                    if (receiverSocketId) {
+                        io.to(receiverSocketId).emit("new_notification", populatedNotification);
+                    }
+                }
+
+                return res.json(
+                    new ApiResponse(
+                        200,
+                        existing,
+                        `${isLike ? "Liked" : "Disliked"} updated`
+                    )
+                );
             }
         }
 
+        // ====== CASE 2: New like/dislike ======
         const newLike = await Like.create({
             likedBy: userId,
             targetType,
             target: targetId,
-            isLike
+            isLike,
         });
 
-        if (target.owner._id.toString() !== userId.toString()) {
-            await sendNotification({
-                type: isLike ? "like" : "dislike",
-                senderId: userId,
-                receiverId: target.owner._id,
-                questionId: targetType === "Question" ? target._id : undefined,
-                answerId: targetType === "Answer" ? target._id : undefined
-            }, req);
+        if (shouldNotify) {
+            const notificationPayload = {
+                sender: userId,
+                receiver: target.owner,
+                type: notifType,
+                ...(targetType === "Question"
+                    ? { question: targetId }
+                    : { answer: targetId })
+            };
+
+            const notification = await Notification.create(notificationPayload);
+
+            const populatedNotification = await Notification.findById(notification._id)
+                .populate("sender", "fullName avatar")
+                .populate("question", "title")
+                .populate("answer", "content")
+                .lean();
+
+            const receiverSocketId = connectedUsers?.get(target.owner.toString());
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("new_notification", populatedNotification);
+            }
         }
 
-        return res.json(new ApiResponse(201, newLike, `${isLike ? "Liked" : "Disliked"} successfully`));
+        return res.json(
+            new ApiResponse(
+                201,
+                newLike,
+                `${isLike ? "Liked" : "Disliked"} successfully`
+            )
+        );
     } catch (error) {
-        console.log("Like Error:", error);
+        console.log("Like/Dislike Error:", error);
         return res.json(new ApiError(500, error.message));
     }
 });
 
 export { likeOrDislike };
-

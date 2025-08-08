@@ -6,25 +6,29 @@ import connectDB from "./db/index.js"
 
 import { createServer } from "http"
 import { Server } from "socket.io"
-import { setupSocket } from "./socket/socket.js"  
+import { setupSocket } from "./socket.js"
 
-const server = createServer(app);
-
+const server = createServer(app)
 const io = new Server(server, {
     cors: {
         origin: process.env.CORS_ORIGIN,
-        methods: ["GET", "POST"],
-        credentials: true
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true 
     }
-})
+});
+
+
+setupSocket(io, app)
+app.set("io", io)
 
 connectDB().then(() => {
-    setupSocket(io); 
+    app.on("error", (err) => {
+        console.log("Server connection error: ", err)
+    })
 
     server.listen(process.env.PORT, () => {
-        console.log(`Server running on port ${process.env.PORT}`);
-    });
-
+        console.log("Server is running")
+    })
 }).catch((err) => {
-    console.log("MongoDB connection failed: ", err);
-});
+    console.log("Error in connection with mongoDB: ", err)
+})

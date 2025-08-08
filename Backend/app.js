@@ -5,6 +5,7 @@ const app = express();
 import dotenv from "dotenv";
 dotenv.config();
 
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
@@ -37,6 +38,9 @@ app.use("/api/v1", chatRouter);
 
 import searchRouter from "./src/routes/search.routes.js";
 app.use("/api/v1/search", searchRouter);
+import notificationRouter from "./src/routes/notification.route.js";
+app.use("/api/v1/notifications", notificationRouter)
+
 
 
 
