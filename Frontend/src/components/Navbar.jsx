@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { useNotifications } from "../contexts/NotificationContext";
 import { formatDistanceToNow } from "date-fns";
-
+import NotificationBell from "./Notification.jsx";
 export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
   const { notifications, markAllAsRead } = useNotifications();
@@ -98,9 +98,11 @@ export default function Navbar({ className = "" }) {
               </Link>
             </>
           ) : (
-            <>
+              <>
+                
+                <NotificationBell/>
               {/* Notifications */}
-              <div className="relative" ref={notifRef}>
+              {/* <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => setNotifOpen((v) => !v)}
                   className="relative p-2 rounded-full hover:bg-[#433D8B]/40 transition"
@@ -153,7 +155,7 @@ export default function Navbar({ className = "" }) {
                     )}
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Profile Dropdown */}
               <div className="relative" ref={profileRef}>
