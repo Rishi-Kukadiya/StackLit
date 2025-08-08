@@ -555,7 +555,7 @@ const getUserProfileDetails = asyncHandler(async (req, res) => {
 const deleteUserProfile = asyncHandler(async (req, res) => {
     try {
         const userId = req.user?._id;
-    
+
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ success: false, message: "Invalid user ID" });
         }
@@ -587,7 +587,7 @@ const deleteUserProfile = asyncHandler(async (req, res) => {
         await User.findByIdAndDelete(userId);
 
         return res.status(200).json(
-            new ApiResponse(200, {}, "User and all associated data deleted successfully")
+            new ApiResponse(200, { questionIds, answerIds }, "User and all associated data deleted successfully")
         );
 
     } catch (error) {
