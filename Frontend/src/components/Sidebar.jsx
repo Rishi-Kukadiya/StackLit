@@ -13,9 +13,10 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useUser } from "./UserContext";
+import { useUser } from "./UserContext.jsx";
 import { Bell, LogOut, ImageUp } from "lucide-react";
 import Chatbot from "./Chatbot.jsx";
+import Avtart from "../assets/avtart.jpg";
 
 const sidebarOptions = [
   { label: "Home", icon: <Home />, to: "/" },
@@ -142,9 +143,7 @@ export default function Sidebar() {
                   >
                     <img
                       src={
-                        user.user.avatar ||
-                        "https://ui-avatars.com/api/?name=" +
-                          (user.user.fullName || "U")
+                        user.user.avatar || Avtart
                       }
                       alt="Profile"
                       className="w-full h-full object-cover"

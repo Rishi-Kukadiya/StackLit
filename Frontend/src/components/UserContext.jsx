@@ -22,8 +22,14 @@ export function UserProvider({ children }) {
     sessionStorage.setItem("user", JSON.stringify(userData));
   };
 
+  // upadte the user
+  const updateUser = (newUserData) => {
+    setUser(newUserData);
+    sessionStorage.setItem("user", JSON.stringify(newUserData));
+  };
   // Logout: shimmer + axios + clear state and sessionStorage
   const logout = async () => {
+    console.log("Rishis!!");
     setLoading(true);
     try {
       const res = await axios.post(
@@ -39,17 +45,19 @@ export function UserProvider({ children }) {
       }
 
       setSuccessMessage(res.data.message || "Logout successful!");
+      setUser(null);
+      sessionStorage.removeItem("user");
+      setLoading(false);
       setTimeout(() => setSuccessMessage(""), 2000);
     } catch (err) {
       console.error("Logout failed:", err);
+    }finally {
+      setLoading(false);
     }
-    setUser(null);
-    sessionStorage.removeItem("user");
-    setLoading(false);
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, updateUser ,setUser }}>
       {children}
       {loading && <ShimmerLoader />}
 

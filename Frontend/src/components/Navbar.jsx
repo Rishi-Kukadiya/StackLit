@@ -2,6 +2,9 @@ import { Layers, Search, LogIn, UserPlus, Bell, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "./UserContext";
+// import { Bell, LogOut } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+import Avtart from "../assets/avtart.jpg";
 
 export default function Navbar({ className = "" }) {
   const { user, logout } = useUser();
@@ -9,6 +12,8 @@ export default function Navbar({ className = "" }) {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const profileRef = useRef(null);
+
+  // const navigate = useNavigate();
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -101,8 +106,7 @@ export default function Navbar({ className = "" }) {
                 >
                   <img
                     src={
-                      user.user.avatar ||
-                      "https://ui-avatars.com/api/?name=" + (user.user.fullName[0] || "U")
+                      user.user.avatar || Avtart
                     }
                     alt="Profile"
                     className="w-full h-full object-cover"
@@ -112,7 +116,7 @@ export default function Navbar({ className = "" }) {
                   <div className="absolute right-0 mt-2 w-40 bg-[#2E236C] rounded-lg shadow-lg py-2 z-50 border border-[#433D8B]">
                     <button
                       className="block w-full text-left px-4 py-2 text-[#C8ACD6] hover:bg-[#433D8B]/30"
-                      onClick={() => alert("Update Profile (coming soon)")}
+                      onClick={() => navigate("/update-profile")}
                     >
                       Update Profile
                     </button>
