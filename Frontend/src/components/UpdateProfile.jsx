@@ -291,6 +291,12 @@ export default function UpdateProfile() {
           setError(response.data.message || "Something Went Wrong!!");
         } else {
           setSuccess(response.data.message || "Account Deleted Succesfully !!");
+          Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith(`${user.user._id}`)) {
+              localStorage.removeItem(key);
+            }
+          });
+
           setUserData(null);
           navigate("/");
           clearQuestions();
@@ -322,6 +328,13 @@ export default function UpdateProfile() {
           setSuccess(
             response.data.message || "Question Deleted Successfully!!"
           );
+
+          Object.keys(localStorage).forEach((key) => {
+            if (key.includes(`${showDeleteModal.id}`)) {
+              localStorage.removeItem(key);
+            }
+          });
+
           clearQuestions();
           setRefresh((prev) => !prev);
 
@@ -356,6 +369,12 @@ export default function UpdateProfile() {
           setSuccess(response.data.message || "Answer Deleted Successfully!!");
           clearQuestions();
           setRefresh((prev) => !prev);
+
+          Object.keys(localStorage).forEach((key) => {
+            if (key.includes(`${showDeleteModal.id}`)) {
+              localStorage.removeItem(key);
+            }
+          });
 
           setUserData((prev) => ({
             ...prev,

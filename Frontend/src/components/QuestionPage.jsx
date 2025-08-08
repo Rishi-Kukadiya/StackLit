@@ -47,6 +47,7 @@ export default function QuestionPage() {
   const [showTooltip, setShowTooltip] = useState(null);
   const [expandedAnswerId, setExpandedAnswerId] = useState(null);
   const [Errors, setError] = useState("");
+  const { user } = useUser();
 
   const { items, loading, error } = useSelector((state) => state.questions);
   const questionFromStore = items.find((q) => q._id === id);
@@ -68,10 +69,10 @@ export default function QuestionPage() {
   }, [questionFromStore]);
 
   const [liked, setLiked] = useState(
-    localStorage.getItem(`${id}_liked`) === "like"
+    localStorage.getItem(`${user?.user?._id}_${id}_liked`) === "like"
   );
   const [disliked, setDisliked] = useState(
-    localStorage.getItem(`${id}_liked`) === "dislike"
+    localStorage.getItem(`${user?.user?._id}_${id}_liked`) === "dislike"
   );
 
   const [likesCount, setLikesCount] = useState(question?.likes || 0);
@@ -83,11 +84,10 @@ export default function QuestionPage() {
     setDislikesCount(question?.dislikes || 0);
   }, [question?.likes, question?.dislikes]);
 
-  const { user } = useUser();
+
 
   const handleLike = async (e) => {
     e.stopPropagation();
-
     if (!user) {
       setError("Please Login for posting your views!!");
       setTimeout(() => {
@@ -106,7 +106,7 @@ export default function QuestionPage() {
       if (liked) {
         newLikesCount--;
         setLiked(false);
-        localStorage.removeItem(`${question._id}_liked`);
+        localStorage.removeItem(`${user?.user?._id}_${question?._id}_liked`);
       } else {
         newLikesCount++;
         setLiked(true);
@@ -114,7 +114,7 @@ export default function QuestionPage() {
           newDislikesCount--;
           setDisliked(false);
         }
-        localStorage.setItem(`${question._id}_liked`, "like");
+        localStorage.setItem(`${user?.user?._id}_${question?._id}_liked`, "like");
       }
 
       setLikesCount(newLikesCount);
@@ -156,7 +156,6 @@ export default function QuestionPage() {
 
   const handleDislike = async (e) => {
     e.stopPropagation();
-
     if (!user) {
       setError("Please Login for posting your views!!.");
       setTimeout(() => {
@@ -175,7 +174,7 @@ export default function QuestionPage() {
       if (disliked) {
         newDislikesCount--;
         setDisliked(false);
-        localStorage.removeItem(`${question._id}_liked`);
+        localStorage.removeItem(`${user?.user?._id}_${question?._id}_liked`);
       } else {
         newDislikesCount++;
         setDisliked(true);
@@ -183,7 +182,7 @@ export default function QuestionPage() {
           newLikesCount--;
           setLiked(false);
         }
-        localStorage.setItem(`${question._id}_liked`, "dislike");
+        localStorage.setItem(`${user?.user?._id}_${question?._id}_liked`, "dislike");
       }
 
       setLikesCount(newLikesCount);

@@ -133,15 +133,15 @@ export default function QuestionCard({ question }) {
     return <div className="space-y-1">{formattedParts}</div>;
   }
 
+  const { user } = useUser();
   const [liked, setLiked] = useState(
-    localStorage.getItem(`${question._id}_liked`) === "like"
+    localStorage.getItem(`${user?.user?._id}_${question?._id}_liked`) === "like"
   );
   const [disliked, setDisliked] = useState(
-    localStorage.getItem(`${question._id}_liked`) === "dislike"
+    localStorage.getItem(`${user?.user?._id}_${question?._id}_liked`) === "dislike"
   );
 
   const [loadingReaction, setLoadingReaction] = useState(false);
-  const { user } = useUser();
   const [error, setError] = useState("");
   const { updateQuestionInContext } = useQuestions();
   const dispatch = useDispatch();
@@ -191,7 +191,7 @@ export default function QuestionCard({ question }) {
       if (liked) {
         newLikesCount--;
         setLiked(false);
-        localStorage.removeItem(`${question._id}_liked`);
+        localStorage.removeItem(`${user?.user?._id}_${question?._id}_liked`);
       } else {
         newLikesCount++;
         setLiked(true);
@@ -199,7 +199,7 @@ export default function QuestionCard({ question }) {
           newDislikesCount--;
           setDisliked(false);
         }
-        localStorage.setItem(`${question._id}_liked`, "like");
+        localStorage.setItem(`${user?.user?._id}_${question?._id}_liked`, "like");
       }
 
       setLikesCount(newLikesCount);
@@ -260,7 +260,7 @@ export default function QuestionCard({ question }) {
       if (disliked) {
         newDislikesCount--;
         setDisliked(false);
-        localStorage.removeItem(`${question._id}_liked`);
+        localStorage.removeItem(`${user?.user?._id}_${question?._id}_liked`);
       } else {
         newDislikesCount++;
         setDisliked(true);
@@ -268,7 +268,7 @@ export default function QuestionCard({ question }) {
           newLikesCount--;
           setLiked(false);
         }
-        localStorage.setItem(`${question._id}_liked`, "dislike");
+        localStorage.setItem(`${user?.user?._id}_${question?._id}_liked`, "dislike");
       }
 
       setLikesCount(newLikesCount);

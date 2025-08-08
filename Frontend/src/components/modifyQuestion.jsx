@@ -125,7 +125,6 @@ export default function ModifyQuestion({ question, onClose }) {
         }
         break;
 
-
       case "images":
         const filteredImages = editImages.filter(
           (img) => !retainImages.includes(img)
@@ -284,6 +283,11 @@ export default function ModifyQuestion({ question, onClose }) {
         setError(response.data.message || "Netwrok Error");
       } else {
         setSuccess(response.data.message || "Question Deleted Successfully!!");
+        Object.keys(localStorage).forEach((key) => {
+          if (key.includes(`${question._id}`)) {
+            localStorage.removeItem(key);
+          }
+        });
       }
     } catch (err) {
       setError(err);
@@ -471,7 +475,7 @@ export default function ModifyQuestion({ question, onClose }) {
                       alt={`upload-preview-${idx}`}
                       className="object-cover w-full h-full"
                     />
-                    <button 
+                    <button
                       aria-label="Remove image"
                       onClick={() => handleDeleteImage(idx, img)}
                       className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1  transition-opacity"

@@ -20,10 +20,10 @@ export default function LikeDislikeBar({
 
   // State for 'did the user like/dislike THIS answer' (use unique key per answer!)
   const [liked, setLiked] = useState(
-    localStorage.getItem(`${targetId}_liked`) === "like"
+    localStorage.getItem(`${user?.user?._id}_${targetId}_liked`) === "like"
   );
   const [disliked, setDisliked] = useState(
-    localStorage.getItem(`${targetId}_liked`) === "dislike"
+    localStorage.getItem(`${user?.user?._id}_${targetId}_liked`) === "dislike"
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,11 +50,11 @@ export default function LikeDislikeBar({
       if (liked) {
         newLikes--;
         setLiked(false);
-        localStorage.removeItem(`${targetId}_liked`);
+        localStorage.removeItem(`${user?.user?._id}_${targetId}_liked`);
       } else {
         newLikes++;
         setLiked(true);
-        localStorage.setItem(`${targetId}_liked`, "like");
+        localStorage.setItem(`${user?.user?._id}_${targetId}_liked`, "like");
         if (disliked) {
           newDislikes--;
           setDisliked(false);
@@ -82,7 +82,7 @@ export default function LikeDislikeBar({
     }
   };
 
-  // Dislike handler
+  
   const handleDislike = async (e) => {
     e.stopPropagation();
     if (!user) {
@@ -98,11 +98,11 @@ export default function LikeDislikeBar({
       if (disliked) {
         newDislikes--;
         setDisliked(false);
-        localStorage.removeItem(`${targetId}_liked`);
+        localStorage.removeItem(`${user?.user?._id}_${targetId}_liked`);
       } else {
         newDislikes++;
         setDisliked(true);
-        localStorage.setItem(`${targetId}_liked`, "dislike");
+        localStorage.setItem(`${user?.user?._id}_${targetId}_liked`, "dislike");
         if (liked) {
           newLikes--;
           setLiked(false);

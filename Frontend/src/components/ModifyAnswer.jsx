@@ -114,9 +114,7 @@ export default function ModifyAnswer({ answer, onClose }) {
         setLoading(true);
         try {
           const response = await axios.patch(
-            `${import.meta.env.VITE_SERVER}/answers/edit-images/${
-              answer._id
-            }`,
+            `${import.meta.env.VITE_SERVER}/answers/edit-images/${answer._id}`,
             data,
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -248,6 +246,13 @@ export default function ModifyAnswer({ answer, onClose }) {
         setError(response.data.message || "Netwrok Error");
       } else {
         setSuccess(response.data.message || "Answer Deleted Successfully!!");
+
+        Object.keys(localStorage).forEach((key) => {
+          if (key.includes(`${answer._id}`)) {
+            localStorage.removeItem(key);
+          }
+        });
+        
       }
     } catch (err) {
       setError("Something went Wrong!!");
