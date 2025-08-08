@@ -3,6 +3,7 @@ import { changeCurrentPassword, loginUser, logoutUser, refreshAccessToken, regis
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import checkOtpVerified from "../middlewares/checkOtpVerified.js";
+// import { getNotifications } from "../controllers/notification.controller.js";
 const userRouter = Router();
 userRouter.route('/register').post(
     upload.fields([

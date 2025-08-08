@@ -17,6 +17,8 @@ import { useUser } from "./UserContext.jsx";
 import { Bell, LogOut, ImageUp } from "lucide-react";
 import Chatbot from "./Chatbot.jsx";
 import Avtart from "../assets/avtart.jpg";
+import { Navigate, useNavigate } from "react-router-dom";
+import NotificationBell from "./Notification.jsx";
 
 const sidebarOptions = [
   { label: "Home", icon: <Home />, to: "/" },
@@ -29,6 +31,7 @@ const sidebarOptions = [
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const { user, logout } = useUser();
   return (
@@ -96,16 +99,31 @@ export default function Sidebar() {
             </>
           ) : (
             <>
-              <button
+              {/* <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
-                onClick={() => alert("Notifications (coming soon)")}
+                onClick={() => navigate("/notification")}
               >
                 <span className="w-5 h-5 flex items-center justify-center">
                   <Bell />
                 </span>
                 Notifications
-              </button>
+              </button> */}
+              {/* <div className="flex items-center gap-3 py-3 px-3 w-full">
+                Notifications
+                <NotificationBell />
+              </div> */}
+              {/* Updated Notification Button */}
+              {/* <div className="flex items-center justify-between w-full gap-3 py-3 px-3 rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <span className="w-5 h-5 flex items-center justify-center">
+                    <Bell />
+                  </span>
+                  <span>Notifications</span>
+                </div>
+                <NotificationBell />
+              </div> */}
+
               {/* <button
                 type="button"
                 className="flex items-center gap-3 py-3 px-3 w-full rounded-md text-[#C8ACD6] hover:bg-[#433D8B]/50 hover:text-white transition-all mb-0.5 font-medium text-base"
