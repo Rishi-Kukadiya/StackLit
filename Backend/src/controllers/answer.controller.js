@@ -262,19 +262,6 @@ const postAnswer = asyncHandler(async (req, res) => {
             images: imageUrls,
             tags: parsedTags
         });
-        await Notification.create({
-            receiver: question.owner,
-            sender: currentUser._id,
-            type: "answer",
-            question: question._id,
-        });
-
-        io.to(question.owner.toString()).emit("new-notification", {
-            type: "answer",
-            sender: currentUser.username,
-            questionId: question._id,
-        });
-
 
         if (!answer) return res.json(new ApiError(500, "Failed to post answer."));
 
@@ -626,4 +613,4 @@ const editImages = asyncHandler(async (req, res) => {
     });
 });
 
-export { postAnswer, deleteAnswer, getAnswerDetails, editContent, addTag, deleteTag, editImages };
+export { postAnswer, deleteAnswer, getAnswerDetails, editContent, addTag, deleteTag, editImages };
