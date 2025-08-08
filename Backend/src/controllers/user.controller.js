@@ -107,8 +107,8 @@ const loginUser = async (req, res) => {
         httpOnly: true,
         secure: true
     }
-    console.log(accessToken);
-    console.log(refreshToken);
+    // console.log(accessToken);
+    // console.log(refreshToken);
 
     return res
         .status(200)

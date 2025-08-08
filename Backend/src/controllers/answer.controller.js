@@ -97,7 +97,7 @@ import uploadOnCloudinary, { deleteImageFromCloudinary } from "../utils/cloudina
 import { Answer } from "../models/answer.model.js";
 import { Question } from "../models/question.model.js";
 import { Like } from "../models/like.model.js";
-import {Notification} from "../models/notification.model.js"; // Added for notification
+import { Notification } from "../models/notification.model.js"; // Added for notification
 
 // const postAnswer = asyncHandler(async (req, res) => {
 //     try {
@@ -262,19 +262,6 @@ const postAnswer = asyncHandler(async (req, res) => {
             images: imageUrls,
             tags: parsedTags
         });
-        await Notification.create({
-            receiver: question.owner,
-            sender: currentUser._id,
-            type: "answer",
-            question: question._id,
-        });
-
-        io.to(question.owner.toString()).emit("new-notification", {
-            type: "answer",
-            sender: currentUser.username,
-            questionId: question._id,
-        });
-
 
         if (!answer) return res.json(new ApiError(500, "Failed to post answer."));
 
