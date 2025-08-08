@@ -249,7 +249,11 @@ const deleteQuestion = asyncHandler(async (req, res) => {
     await question.deleteOne();
 
     return res.status(200).json(
-        new ApiResponse(200, null, "Question, its answers, images, and related likes/dislikes deleted.")
+        new ApiResponse(200, {
+            questionId,
+            answerIds
+            
+        }, "Question, its answers, images, and related likes/dislikes deleted.")
     );
 });
 

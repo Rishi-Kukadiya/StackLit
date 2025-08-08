@@ -450,7 +450,7 @@ const deleteAnswer = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    {},
+                    {answerId},
                     "Answer and all associated data deleted successfully."
                 )
             );
