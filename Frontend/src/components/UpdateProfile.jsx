@@ -4,7 +4,7 @@ import { Edit2, Save, X, Upload, Trash2, Camera, Check } from "lucide-react";
 import axios from "axios";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import ModifyQuestion from "./ModifyQuestion";
+import ModifyQuestion from "./ModifyQuestions";
 import ModifyAnswer from "./ModifyAnswer"; // Assuming this new component exists
 import { useUser } from "./UserContext";
 import Avtart from "../assets/avtart.jpg";
