@@ -14,21 +14,26 @@ const io = new Server(server, {
         origin: process.env.CORS_ORIGIN,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         credentials: true 
-    }
+    },
+    pingInterval: 25000,  
+    pingTimeout: 60000
 });
 
 
 setupSocket(io, app)
 app.set("io", io)
 
+const PORT = process.env.PORT || 5000;
+
 connectDB().then(() => {
     app.on("error", (err) => {
         console.log("Server connection error: ", err)
     })
 
-    server.listen(process.env.PORT, () => {
-        console.log("Server is running")
+    server.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
     })
 }).catch((err) => {
     console.log("Error in connection with mongoDB: ", err)
 })
+
