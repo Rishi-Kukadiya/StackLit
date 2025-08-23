@@ -61,7 +61,7 @@ export default function QuestionPage() {
   useEffect(() => {
     if (questionFromStore) {
       setQuestion(questionFromStore);
-      console.log(questionFromStore);
+      // console.log(questionFromStore);
       if (questionFromStore.answers) {
         setAnswers(questionFromStore.answers);
       }

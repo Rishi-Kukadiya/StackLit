@@ -32,7 +32,7 @@ export const NotificationProvider = ({ children }) => {
     if (!socket) return;
 
     const handleNewNotification = (notification) => {
-      console.log("Received notification:", notification);
+      // console.log("Received notification:", notification);
       setNotifications((prev) => [notification, ...prev]);
     };
 
@@ -51,7 +51,7 @@ export const NotificationProvider = ({ children }) => {
         { withCredentials: true }
       );
 
-      console.log(res);
+      // console.log(res);
       
       setNotifications([]); 
     } catch (err) {

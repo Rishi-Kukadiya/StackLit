@@ -5,7 +5,7 @@ import { Tag } from "../models/tag.model.js";
 
 const searchQuestions = async (req, res) => {
     const query = req.query.q?.trim(); // sanitize
-    console.log("Search Query:", query);
+    // console.log("Search Query:", query);
 
     if (!query) {
         return res

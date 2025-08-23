@@ -159,7 +159,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             return res.json(new ApiError(401, "Invalid refreshToken"));
         }
         if (incommingRefreshToken != user.refreshToken) {
-            console.log(incommingRefreshToken);
+            // console.log(incommingRefreshToken);
             return res.json(new ApiError(401, "Refresh token is expired or used"));
         }
         const options = {
@@ -354,7 +354,7 @@ const getUsers = asyncHandler(async (req, res) => {
             users: result
         });
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.status(500).json(
             new ApiError(500, "Error while fetching Users.")
         )
@@ -406,7 +406,7 @@ const removeAvatar = asyncHandler(async (req, res) => {
             new ApiResponse(200, updatedUser, "Avatar removed Successfully")
         )
     } catch (error) {
-        console.log(error.message);
+        // console.log(error.message);
         return res.json(
             new ApiError(500, "Error while removing Avatar of User.")
         )
@@ -417,7 +417,7 @@ const removeAvatar = asyncHandler(async (req, res) => {
 const updateAvatar = asyncHandler(async (req, res) => {
     try {
         const userId = req.user?._id;
-        console.log(req?.files);
+        // console.log(req?.files);
 
         const avatarLocalPath = req.files?.avatar[0]?.path;
 
@@ -438,7 +438,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
             new ApiResponse(200, updatedUser, "Avatar updated Successfully")
         )
     } catch (error) {
-        console.log(error.message);
+        // console.log(error.message);
         return res.json(
             new ApiError(500, "Error while removing Avatar of User.")
         )

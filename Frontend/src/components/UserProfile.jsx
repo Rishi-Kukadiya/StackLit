@@ -33,7 +33,7 @@ export default function UserProfile() {
           `${import.meta.env.VITE_SERVER}/users/get-userProfile/${userId}`,
           { withCredentials: true }
         );
-        console.log('response', response);
+        // console.log('response', response);
         setUserData(response.data);
         setLoading(false);
       } catch (err) {

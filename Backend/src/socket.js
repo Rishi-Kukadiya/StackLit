@@ -6,13 +6,13 @@ export function setupSocket(io, app) {
         const userId = socket.handshake.auth?.userId;
         if (userId) {
             connectedUsers.set(userId, socket.id);
-            console.log("User connected:", userId, socket.id);
+            // console.log("User connected:", userId, socket.id);
         }
 
         socket.on("disconnect", () => {
             if (userId) {
                 connectedUsers.delete(userId);
-                console.log("User disconnected:", userId);
+                // console.log("User disconnected:", userId);
             }
         });
     });

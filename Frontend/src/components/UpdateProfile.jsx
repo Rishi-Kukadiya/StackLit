@@ -275,7 +275,7 @@ export default function UpdateProfile() {
 
   // --- Delete Handler ---
   const handleDelete = async () => {
-    console.log(`DELETE ${showDeleteModal.type} id=`, showDeleteModal.id);
+    // console.log(`DELETE ${showDeleteModal.type} id=`, showDeleteModal.id);
     if (showDeleteModal.type === "profile") {
       setLoading(true);
       try {

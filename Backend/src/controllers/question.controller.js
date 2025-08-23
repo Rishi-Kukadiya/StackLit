@@ -17,7 +17,7 @@ dotenv.config();
 const postQuestion = asyncHandler(async (req, res) => {
     try {
         const { title, content, tags } = req.body;
-        console.log(title, content, req?.user);
+        // console.log(title, content, req?.user);
 
         if (!title) {
             return res.json(new ApiError(400, "Title of question is required!"));
@@ -74,7 +74,7 @@ const postQuestion = asyncHandler(async (req, res) => {
             new ApiResponse(201, question, "Question posted successfully")
         );
     } catch (error) {
-        console.log(error.message);
+        // console.log(error.message);
         return res.json(
             new ApiError(500, "Error while posting question")
         );
@@ -84,7 +84,7 @@ const postQuestion = asyncHandler(async (req, res) => {
 
 const getQuestionDetails = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
-    console.log(questionId);
+    // console.log(questionId);
 
 
     if (!questionId) {
@@ -295,7 +295,7 @@ const addTag = asyncHandler(async (req, res) => {
 
         return res.json(new ApiResponse(200, question.tags, "Tag added successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(new ApiError(500, "Internal server error"));
     }
 });
@@ -344,7 +344,7 @@ const deleteTag = asyncHandler(async (req, res) => {
 
         return res.json(new ApiResponse(200, question.tags, "Tag removed successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(new ApiError(500, "Internal server Error"));
     }
 });

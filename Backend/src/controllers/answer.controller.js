@@ -119,7 +119,7 @@ const postAnswer = asyncHandler(async (req, res) => {
         );
 
     } catch (error) {
-        console.log("Post answer error:", error.message);
+        // console.log("Post answer error:", error.message);
         return res.json(new ApiError(500, "Internal server error."));
     }
 });
@@ -212,7 +212,7 @@ const deleteAnswer = asyncHandler(async (req, res) => {
                 )
             );
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(
             new ApiError(500, "Error while deleting answer")
         )
@@ -240,7 +240,7 @@ const editContent = asyncHandler(async (req, res) => {
         await answer.save();
         return res.json(new ApiResponse(200, answer, "Answer content updated successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(
             new ApiError(500, "Error while updating content of Answer.")
         )
@@ -273,7 +273,7 @@ const addTag = asyncHandler(async (req, res) => {
 
         return res.json(new ApiResponse(200, answer.tags, "Tag added successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(
             new ApiError(500, "Internal server error")
         )
@@ -312,7 +312,7 @@ const deleteTag = asyncHandler(async (req, res) => {
         await answer.save();
         return res.json(new ApiResponse(200, answer.tags, "Tag removed successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(new ApiError(500, "Internal server error"));
     }
 });

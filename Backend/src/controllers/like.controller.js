@@ -124,7 +124,7 @@ const likeOrDislike = asyncHandler(async (req, res) => {
             )
         );
     } catch (error) {
-        console.log("Like/Dislike Error:", error);
+        // console.log("Like/Dislike Error:", error);
         return res.json(new ApiError(500, error.message));
     }
 });

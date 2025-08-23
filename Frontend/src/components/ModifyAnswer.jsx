@@ -125,7 +125,7 @@ export default function ModifyAnswer({ answer, onClose }) {
           if (!response.data.success) {
             setError(response.data.message || "Network Error!!");
           } else {
-            console.log("Successfull doen");
+            // console.log("Successfull doen");
             setSuccess(response.data.message || "Image Updated successfully!!");
           }
         } catch (err) {
