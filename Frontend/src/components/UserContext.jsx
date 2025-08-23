@@ -29,7 +29,7 @@ export function UserProvider({ children }) {
   };
   // Logout: shimmer + axios + clear state and sessionStorage
   const logout = async () => {
-    console.log("Rishis!!");
+    // console.log("Rishis!!");
     setLoading(true);
     try {
       const res = await axios.post(

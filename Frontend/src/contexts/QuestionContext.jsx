@@ -29,7 +29,7 @@ export function QuestionProvider({ children }) {
           withCredentials: true,
         }
       );
-      console.log(response);
+      // console.log(response);
 
       if (response.data.success) {
         const newQuestions = response?.data?.data;
@@ -73,7 +73,7 @@ export function QuestionProvider({ children }) {
 
       if (response.data.success) {
         const newQuestions = response?.data?.questions;
-        console.log("Unanswered Questions:", newQuestions);
+        // console.log("Unanswered Questions:", newQuestions);
         if (pageNum === 1) {
           setQuestions(newQuestions);
         } else {

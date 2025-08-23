@@ -13,7 +13,7 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) {
-            console.log("No file path provided");
+            // console.log("No file path provided");
             return null;
         }
 
@@ -28,7 +28,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     } catch (error) {
         fs.unlinkSync(localFilePath);
-        console.log("Error uploading file to Cloudinary:", error);
+        // console.log("Error uploading file to Cloudinary:", error);
         return null;
     }
 }
@@ -56,7 +56,7 @@ const deleteImageFromCloudinary = async (secureUrl) => {
         const result = await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
 
         if (result.result === 'ok') {
-            console.log(`Successfully deleted asset with public_id: ${publicId}`);
+            // console.log(`Successfully deleted asset with public_id: ${publicId}`);
         } else {
             console.warn(`Cloudinary deletion failed for public_id ${publicId}:`, result.result);
         }

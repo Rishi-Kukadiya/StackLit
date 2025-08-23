@@ -17,7 +17,7 @@ dotenv.config();
 const postQuestion = asyncHandler(async (req, res) => {
     try {
         const { title, content, tags } = req.body;
-        console.log(title, content, req?.user);
+        // console.log(title, content, req?.user);
 
         if (!title) {
             return res.json(new ApiError(400, "Title of question is required!"));
@@ -74,7 +74,7 @@ const postQuestion = asyncHandler(async (req, res) => {
             new ApiResponse(201, question, "Question posted successfully")
         );
     } catch (error) {
-        console.log(error.message);
+        // console.log(error.message);
         return res.json(
             new ApiError(500, "Error while posting question")
         );
@@ -84,7 +84,7 @@ const postQuestion = asyncHandler(async (req, res) => {
 
 const getQuestionDetails = asyncHandler(async (req, res) => {
     const { questionId } = req.params;
-    console.log(questionId);
+    // console.log(questionId);
 
 
     if (!questionId) {
@@ -296,54 +296,6 @@ const editContent = asyncHandler(async (req, res) => {
 })
 
 
-// const addTag = asyncHandler(async (req, res) => {
-//     try {
-//         const { questionId } = req.params;
-//         const { tag } = req.body;
-
-//         if (!questionId || !tag?.trim()) {
-//             return res.json(new ApiError(400, "Question ID and tag are required."));
-//         }
-
-//         const question = await Question.findById(questionId);
-//         if (!question) {
-//             return res.json(new ApiError(404, "Question not found."));
-//         }
-
-//         if (question.owner.toString() !== req.user._id.toString()) {
-//             return res.json(new ApiError(403, "Unauthorized to edit this question."));
-//         }
-
-
-//         const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
-//         if (t) {
-//             t.questions.push(question._id);
-//             await t.save();
-//         } else {
-
-//         }
-
-
-
-
-//         if (!question.tags.includes(tag)) {
-//             question.tags.push(tag.trim());
-//             await question.save();
-//         }
-
-//         return res.json(new ApiResponse(200, question.tags, "Tag added successfully."));
-
-//     } catch (error) {
-//         console.log(error);
-//         return res.json(
-//             new ApiError(500, "Internal server Error")
-//         )
-
-
-//     }
-// });
-
-
 const addTag = asyncHandler(async (req, res) => {
     try {
         const { questionId } = req.params;
@@ -382,45 +334,10 @@ const addTag = asyncHandler(async (req, res) => {
 
         return res.json(new ApiResponse(200, question.tags, "Tag added successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(new ApiError(500, "Internal server error"));
     }
 });
-
-// const deleteTag = asyncHandler(async (req, res) => {
-//     try {
-//         const { questionId } = req.params;
-//         const { tag } = req.body;
-
-//         if (!questionId || !tag?.trim()) {
-//             return res.json(new ApiError(400, "Question ID and tag are required."));
-//         }
-
-//         const question = await Question.findById(questionId);
-//         if (!question) {
-//             return res.json(new ApiError(404, "Question not found."));
-//         }
-
-//         if (question.owner.toString() !== req.user._id.toString()) {
-//             return res.json(new ApiError(403, "Unauthorized to edit this question."));
-//         }
-
-//         const originalLength = question.tags.length;
-//         question.tags = question.tags.filter(t => t !== tag.trim());
-
-//         if (question.tags.length === originalLength) {
-//             return res.json(new ApiError(404, "Tag not found in question."));
-//         }
-
-//         await question.save();
-//         return res.json(new ApiResponse(200, question.tags, "Tag removed successfully."));
-//     } catch (error) {
-//         console.log(error);
-//         return res.json(
-//             new ApiError(500, "Internal server Error")
-//         )
-//     }
-// });
 
 const deleteTag = asyncHandler(async (req, res) => {
     try {
@@ -465,7 +382,7 @@ const deleteTag = asyncHandler(async (req, res) => {
 
         return res.json(new ApiResponse(200, question.tags, "Tag removed successfully."));
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.json(new ApiError(500, "Internal server Error"));
     }
 });

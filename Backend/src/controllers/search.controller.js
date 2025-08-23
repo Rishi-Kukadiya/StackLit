@@ -5,7 +5,7 @@ import { Tag } from "../models/tag.model.js";
 
 const searchQuestions = async (req, res) => {
     const query = req.query.q?.trim(); // sanitize
-    console.log("Search Query:", query);
+    // console.log("Search Query:", query);
 
     if (!query) {
         return res
@@ -23,7 +23,7 @@ const searchQuestions = async (req, res) => {
             ],
         }).populate("owner", "fullName avatar");
 
-        console.log("Results found:", questions.length);
+        // console.log("Results found:", questions.length);
         return res.status(200).json({ success: true, questions });
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });

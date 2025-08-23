@@ -151,12 +151,12 @@ const createTag = async (questioId, tag) => {
         response = await axios.post(`${process.env.BACKEND_SERVER}/chat`, {
             text: prompt,
         });
-        console.log(prompt);
+        // console.log(prompt);
 
     } catch (err) {
         console.error(`Error generating description for tag "${tag}":`, err.message);
     }
-    console.log("response of tag generated:" , response);
+    // console.log("response of tag generated:" , response);
     
 
     await Tag.create({
