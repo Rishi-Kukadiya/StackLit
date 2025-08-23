@@ -23,7 +23,6 @@ const Chatbot = () => {
     sessionStorage.setItem("chat_responses", JSON.stringify(responses));
   }, [responses]);
 
-
   const autoResizeTextarea = () => {
     const el = textareaRef.current;
     if (el) {
@@ -46,9 +45,12 @@ const Chatbot = () => {
     }
 
     try {
-      const { data } = await axios.post("http://localhost:5000/api/v1/chat", {
-        text,
-      });
+      const { data } = await axios.post(
+        "https://stacklit.onrender.com/api/v1/chat",
+        {
+          text,
+        }
+      );
 
       const botContent = data.response || data.text || "No response available";
       setResponses((prev) => [...prev, { type: "bot", content: botContent }]);
