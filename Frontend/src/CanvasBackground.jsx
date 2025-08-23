@@ -7,19 +7,33 @@ const CanvasBackground = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    const resizeCanvas = () => {
+    let particles = [];
+    let numParticles;
+    let connectDistance;
+
+    // A single function to set up and reset the animation
+    const setup = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-    };
 
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+      // Responsive logic based on screen width
+      if (canvas.width < 768) { // Mobile devices
+        numParticles = 35;
+        connectDistance = 85;
+      } else { // Desktop
+        numParticles = 80;
+        connectDistance = 100;
+      }
+
+      // Re-create particles for the new size
+      particles = [];
+      for (let i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+      }
+    };
 
     const width = () => canvas.width;
     const height = () => canvas.height;
-
-    const particles = [];
-    const numParticles = 80;
 
     class Particle {
       constructor() {
@@ -41,15 +55,12 @@ const CanvasBackground = () => {
       draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.9)"; // almost white
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
         ctx.fill();
       }
     }
 
-    for (let i = 0; i < numParticles; i++) {
-      particles.push(new Particle());
-    }
-
+    let animationFrameId;
     const animate = () => {
       ctx.fillStyle = "#17153B";
       ctx.fillRect(0, 0, width(), height());
@@ -64,24 +75,32 @@ const CanvasBackground = () => {
           const dy = p.y - q.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 100) {
+          // Use the dynamic connectDistance
+          if (dist < connectDistance) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.15)"; // light line
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
             ctx.lineWidth = 1;
             ctx.stroke();
           }
         }
       });
 
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
     };
-
+    
+    // Initial setup
+    setup();
     animate();
 
+    // Update on resize
+    window.addEventListener("resize", setup);
+
+    // Cleanup function
     return () => {
-      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("resize", setup);
+      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
