@@ -6,7 +6,7 @@
 
 ## 🚀 Live Demo
 
-🌐 [https://your-live-demo-link.com](https://your-live-demo-link.com)
+🌐 [https://stack-lit.vercel.app](https://stack-lit.vercel.app)
 
 ---
 
@@ -14,25 +14,18 @@
 
 Here are some example pages from the app:
 
-| Home | Question Page | Ask Form |
+| Home | Question Page | Ask Question |
 |------|---------------|----------|
-| ![](https://picsum.photos/600/300?random=1) | ![](https://picsum.photos/600/300?random=2) | ![](https://picsum.photos/600/300?random=3) |
+| ![](./Backend/public/screenshots/home.png) | ![](./Backend/public/screenshots/unanswered_questions.png) | ![](./Backend/public/screenshots/question.png) |
 
-| Tags | Notifications | Chat |
+| Tags | Notifications | Ai Assistance |
 |------|---------------|------|
-| ![](https://picsum.photos/600/300?random=4) | ![](https://picsum.photos/600/300?random=5) | ![](https://picsum.photos/600/300?random=6) |
+| ![](./Backend/public/screenshots/tags.png) | ![](./Backend/public/screenshots/notification.png) | ![](./Backend/public/screenshots/ai_assistance.png) |
 
-| Search | Profile | Group Chat |
+| Users | Profile | Update Profile |
 |--------|---------|-------------|
-| ![](https://picsum.photos/600/300?random=7) | ![](https://picsum.photos/600/300?random=8) | ![](https://picsum.photos/600/300?random=9) |
+| ![](./Backend/public/screenshots/users.png) | ![](./Backend/public/screenshots/profile.png) | ![](./Backend/public/screenshots/update_profile.png) |
 
-| Dark Mode | Rich Editor | Responsive |
-|-----------|-------------|-------------|
-| ![](https://picsum.photos/600/300?random=10) | ![](https://picsum.photos/600/300?random=11) | ![](https://picsum.photos/600/300?random=12) |
-
-| Pagination | Sidebar | Auth Pages |
-|------------|----------|-------------|
-| ![](https://picsum.photos/600/300?random=13) | ![](https://picsum.photos/600/300?random=14) | ![](https://picsum.photos/600/300?random=15) |
 
 ---
 
@@ -62,99 +55,6 @@ Here are some example pages from the app:
 
 ---
 
-## 📂 Project Structure
-
-```bash
-StackLit/
-│
-├── Backend/
-│   ├── app.js
-│   ├── server.js
-│   ├── config/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── sockets/
-│   └── utils/
-│
-└── Frontend/
-    ├── src/
-    │   ├── api/
-    │   ├── components/
-    │   ├── context/
-    │   ├── pages/
-    │   ├── redux/
-    │   ├── routes/
-    │   ├── App.jsx
-    │   └── main.jsx
-```
-
----
-
-## 🔧 Setup Instructions
-
-### 1. Clone Repo
-
-```bash
-git clone https://github.com/your-username/stacklit.git
-cd stacklit
-```
-
-### 2. Backend Setup
-
-```bash
-cd Backend
-npm install
-touch .env
-```
-
-Fill in your `.env` file with:
-
-```env
-PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-CLOUDINARY_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_key
-CLOUDINARY_API_SECRET=your_secret
-```
-
-Start backend server:
-
-```bash
-npm run dev
-```
-
-### 3. Frontend Setup
-
-```bash
-cd ../Frontend
-npm install
-npm run dev
-```
-
----
-
-## 🔑 Environment Variables
-
-You need these for your backend `.env`:
-
-```env
-PORT=5000
-MONGO_URI=mongodb+srv://...
-JWT_SECRET=secret123
-CLOUDINARY_NAME=yourname
-CLOUDINARY_API_KEY=123456
-CLOUDINARY_API_SECRET=abcdef
-```
-
----
-
-## 📬 Feedback or Contribution
-
-Pull requests are welcome. For major changes, open an issue first.
-
----
 
 ## 📄 License
 
