@@ -1,8 +1,4 @@
-// [CHANGED BY GITHUB COPILOT]
-// Basic socket setup with logging and user tracking
-// filepath: e:\MERN-projects\stacklt\StackLit\Backend\src\socket.js
 export function setupSocket(io, app) {
-    // Store connected users: userId -> socketId
     const connectedUsers = new Map();
     app.set("connectedUsers", connectedUsers);
 

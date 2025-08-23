@@ -142,45 +142,6 @@ const getQuestionDetails = asyncHandler(async (req, res) => {
 });
 
 
-// const deleteQuestion = asyncHandler(async (req, res) => {
-
-//     const { questionId } = req.params;
-//     if (!questionId) {
-//         return res.json(new ApiError(400, "Question ID is required."));
-//     }
-//     const question = await Question.findById(questionId);
-//     if (!question) {
-//         return res.json(new ApiError(404, "Question not found"));
-//     }
-//     if (question.owner.toString() !== req?.user?._id.toString()) {
-//         return res.json(new ApiError(403, "You are not authorized to delete this question."));
-//     }
-
-//     // Delete All Answers related to the question
-//     const answers = await Answer.find({ questionId });
-//     const answerIds = answers.map(ans => ans._id);
-//     await Answer.deleteMany({ questionId })
-
-//     // Delete likes and dislikes on this question
-//     await Like.deleteMany({ target: questionId, targetType: "Question" });
-
-//     // Delete all likes and dislikes on its answers
-//     if (answerIds.length > 0) {
-//         await Like.deleteMany({ targetType: "Answer", target: { $in: answerIds } })
-//     }
-
-//     // Delete the question
-//     await question.deleteOne();
-
-//     return res.status(200).json(
-//         new ApiResponse(200, null, "Question, its answers, and related likes/dislikes deleted.")
-//     );
-
-
-// })
-
-
-
 
 
 const deleteQuestion = asyncHandler(async (req, res) => {
@@ -296,54 +257,6 @@ const editContent = asyncHandler(async (req, res) => {
 })
 
 
-// const addTag = asyncHandler(async (req, res) => {
-//     try {
-//         const { questionId } = req.params;
-//         const { tag } = req.body;
-
-//         if (!questionId || !tag?.trim()) {
-//             return res.json(new ApiError(400, "Question ID and tag are required."));
-//         }
-
-//         const question = await Question.findById(questionId);
-//         if (!question) {
-//             return res.json(new ApiError(404, "Question not found."));
-//         }
-
-//         if (question.owner.toString() !== req.user._id.toString()) {
-//             return res.json(new ApiError(403, "Unauthorized to edit this question."));
-//         }
-
-
-//         const t = await Tag.findOne({ tag: tag.toLowerCase().trim() });
-//         if (t) {
-//             t.questions.push(question._id);
-//             await t.save();
-//         } else {
-
-//         }
-
-
-
-
-//         if (!question.tags.includes(tag)) {
-//             question.tags.push(tag.trim());
-//             await question.save();
-//         }
-
-//         return res.json(new ApiResponse(200, question.tags, "Tag added successfully."));
-
-//     } catch (error) {
-//         console.log(error);
-//         return res.json(
-//             new ApiError(500, "Internal server Error")
-//         )
-
-
-//     }
-// });
-
-
 const addTag = asyncHandler(async (req, res) => {
     try {
         const { questionId } = req.params;
@@ -387,40 +300,6 @@ const addTag = asyncHandler(async (req, res) => {
     }
 });
 
-// const deleteTag = asyncHandler(async (req, res) => {
-//     try {
-//         const { questionId } = req.params;
-//         const { tag } = req.body;
-
-//         if (!questionId || !tag?.trim()) {
-//             return res.json(new ApiError(400, "Question ID and tag are required."));
-//         }
-
-//         const question = await Question.findById(questionId);
-//         if (!question) {
-//             return res.json(new ApiError(404, "Question not found."));
-//         }
-
-//         if (question.owner.toString() !== req.user._id.toString()) {
-//             return res.json(new ApiError(403, "Unauthorized to edit this question."));
-//         }
-
-//         const originalLength = question.tags.length;
-//         question.tags = question.tags.filter(t => t !== tag.trim());
-
-//         if (question.tags.length === originalLength) {
-//             return res.json(new ApiError(404, "Tag not found in question."));
-//         }
-
-//         await question.save();
-//         return res.json(new ApiResponse(200, question.tags, "Tag removed successfully."));
-//     } catch (error) {
-//         console.log(error);
-//         return res.json(
-//             new ApiError(500, "Internal server Error")
-//         )
-//     }
-// });
 
 const deleteTag = asyncHandler(async (req, res) => {
     try {
@@ -524,67 +403,6 @@ const editImages = asyncHandler(async (req, res) => {
     });
 });
 
-
-
-// const editImages = asyncHandler(async (req, res) => {
-//     const { questionId } = req.params;
-//     // Correctly handle the already-parsed array from the request body.
-//     const retainImages = Array.isArray(req.body?.retainImages) ? req.body.retainImages : [];
-
-//     if (!questionId) {
-//         return req.json(
-//             new ApiError(400, "Question ID is required.")
-//         )
-//     }
-
-//     const question = await Question.findById(questionId);
-//     if (!question) {
-//         return res.json(
-//             new ApiError(404, "Question not found.")
-//         )
-//     }
-
-//     if (question.owner.toString() !== req.user?._id.toString()) {
-//         return res.json(
-//             new ApiError(403, "Unauthorized to edit this question.")
-//         )
-//     }
-
-//     const existingImages = question.images || [];
-//     const imagesToDelete = existingImages.filter(img => !retainImages.includes(img));
-
-//     // Efficiently delete images in parallel
-//     if (imagesToDelete.length > 0) {
-//         await Promise.all(imagesToDelete.map(url => deleteImageFromCloudinary(url)));
-//     }
-
-//     let updatedImages = [...retainImages];
-//     const maxNewUploads = 5 - updatedImages.length;
-
-//     if (req.files?.images && req.files.images.length > 0 && maxNewUploads > 0) {
-//         const filesToUpload = req.files.images.slice(0, maxNewUploads);
-
-//         const uploadPromises = filesToUpload.map(file => uploadOnCloudinary(file.path));
-//         const uploadResults = await Promise.all(uploadPromises);
-
-//         uploadResults.forEach(uploaded => {
-//             if (uploaded?.secure_url) {
-//                 updatedImages.push(uploaded.secure_url);
-//             }
-//         });
-//     }
-
-//     if (updatedImages.length > 5) {
-//         return res.json(new ApiError(400, "Cannot have more than 5 images per question."));
-//     }
-
-//     question.images = updatedImages;
-//     await question.save({ validateBeforeSave: false });
-
-//     return res
-//         .status(200)
-//         .json(new ApiResponse(200, question, "Question images updated successfully."));
-// });
 
 
 

@@ -23,9 +23,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false })
-        // console.log(accessToken);
-        // console.log(refreshToken);
-
+       
         return { accessToken, refreshToken };
 
     } catch (error) {
@@ -51,7 +49,6 @@ const registerUser = asyncHandler(async (req, res) => {
     if (isUserExist) {
         return res.json(new ApiError(400, "User with email already Exists"));
     }
-    console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
 
     if (!avatarLocalPath) {
@@ -109,8 +106,6 @@ const loginUser = async (req, res) => {
         sameSite: "None",
     };
 
-    // console.log(accessToken);
-    // console.log(refreshToken);
 
     return res
         .status(200)
@@ -163,8 +158,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         if (!user) {
             return res.json(new ApiError(401, "Invalid refreshToken"));
         }
-        // console.log(user.refreshToken);
-
         if (incommingRefreshToken != user.refreshToken) {
             console.log(incommingRefreshToken);
             return res.json(new ApiError(401, "Refresh token is expired or used"));
@@ -276,9 +269,6 @@ const verifyOtp = asyncHandler(async (req, res) => {
 const forgetPassword = asyncHandler(async (req, res) => {
     const { newPassword, email } = req.body;
     const user = await User.findOne({ email });
-
-    // console.log(user);
-
     if (!newPassword) {
         user.isOtpVerified = false;
         await user.save();

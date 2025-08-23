@@ -68,7 +68,7 @@ const sendEmail = async ({ to, subject, otp }) => {
             from: `"StackLit Support" <${process.env.SMTP_USER}>`,
             to,
             subject,
-            html: generateOtpHTML(otp), // 👈 use HTML template instead of plain text
+            html: generateOtpHTML(otp), 
         };
 
         const info = await transporter.sendMail(mailOptions);
